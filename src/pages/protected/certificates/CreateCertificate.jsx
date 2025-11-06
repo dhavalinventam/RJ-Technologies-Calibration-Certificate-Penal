@@ -1,7 +1,25 @@
 import { useCallback, useMemo, useState } from 'react'
-import { Box, Typography, Button, TextField, LinearProgress, useTheme, useMediaQuery } from '@mui/material'
+import {
+  Box,
+  Typography,
+  Button,
+  TextField,
+  LinearProgress,
+  useTheme,
+  useMediaQuery,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  IconButton
+} from '@mui/material'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf'
+import AddIcon from '@mui/icons-material/Add'
+import DeleteIcon from '@mui/icons-material/Delete'
 import Sidebar from '@/layout/Sidebar'
 import Header from '@/layout/Header'
 import { useTheme as useThemeContext } from '@/context/ThemeContext'
@@ -65,6 +83,20 @@ const CreateCertificate = () => {
     verificationValue: '',
     location: ''
   })
+
+  // Procedure Template (Step 3) field
+  const [procedureTemplate, setProcedureTemplate] = useState('')
+
+  // Linearity (Step 4) records
+  const [linearityRecords, setLinearityRecords] = useState([
+    {
+      nominalValue: '',
+      reading: '',
+      error: '',
+      allowableError: '',
+      withinTolerances: ''
+    }
+  ])
 
   // PDF Generation function
   const generatePDF = useCallback(() => {
@@ -250,10 +282,218 @@ const CreateCertificate = () => {
     doc.text('Verification Value:', rightColX, deviceRightY)
     drawUnderlinedText(rightColX + 40, deviceRightY, device.verificationValue || '', 10)
 
+    // Procedure Template Section
+    yPos = Math.max(deviceY, deviceRightY) + 15
+
+    // Check if we need a new page
+    if (yPos > pageHeight - 40) {
+      doc.addPage()
+      yPos = margin
+    }
+
+    doc.setFontSize(12)
+    doc.setFont(undefined, 'bold')
+    doc.text('Procedure Template :', margin, yPos)
+    doc.setFont(undefined, 'normal')
+    yPos += 8
+
+    // Helper function to wrap text for procedure template
+    const wrapText = (text, maxWidth, fontSize = 10) => {
+      if (!text) return ['']
+      doc.setFontSize(fontSize)
+      const words = text.split(' ')
+      const lines = []
+      let currentLine = ''
+
+      words.forEach(word => {
+        const testLine = currentLine ? `${currentLine} ${word}` : word
+        if (doc.getTextWidth(testLine) <= maxWidth) {
+          currentLine = testLine
+        } else {
+          if (currentLine) {
+            lines.push(currentLine)
+            currentLine = word
+          } else {
+            // Word itself is too long, add it anyway
+            lines.push(word)
+            currentLine = ''
+          }
+        }
+      })
+      if (currentLine) lines.push(currentLine)
+      return lines.length > 0 ? lines : ['']
+    }
+
+    // Display Procedure Template with word wrapping
+    const procedureText = procedureTemplate || ''
+    const maxWidth = pageWidth - margin * 2
+    const procedureLines = wrapText(procedureText, maxWidth, 10)
+    const templateLineHeight = 6
+
+    procedureLines.forEach((line, idx) => {
+      // Check if we need a new page
+      if (yPos > pageHeight - 20) {
+        doc.addPage()
+        yPos = margin
+      }
+      doc.setFontSize(10)
+      doc.text(line, margin, yPos)
+      yPos += templateLineHeight
+    })
+
+    // Linearity Section
+    yPos += 10
+    // Check if we need a new page
+    if (yPos > pageHeight - 60) {
+      doc.addPage()
+      yPos = margin
+    }
+
+    doc.setFontSize(12)
+    doc.setFont(undefined, 'bold')
+    doc.text('Linearity :', margin, yPos)
+    doc.setFont(undefined, 'normal')
+    yPos += 10
+
+    // Filter out empty records
+    const validRecords = linearityRecords.filter(
+      record =>
+        record.nominalValue || record.reading || record.error || record.allowableError || record.withinTolerances
+    )
+
+    if (validRecords.length > 0) {
+      // Table setup
+      const tableStartY = yPos
+      const colWidths = [
+        (pageWidth - margin * 2) * 0.2, // Nominal Value
+        (pageWidth - margin * 2) * 0.2, // Reading
+        (pageWidth - margin * 2) * 0.2, // Error
+        (pageWidth - margin * 2) * 0.2, // Allowable Error
+        (pageWidth - margin * 2) * 0.2 // Within Tolerances
+      ]
+      const rowHeight = 8
+      let currentX = margin
+
+      // Draw table header
+      doc.setFontSize(10)
+      doc.setFont(undefined, 'bold')
+      doc.setFillColor(240, 240, 240)
+      const headerY = yPos - 5
+      doc.rect(currentX, headerY, pageWidth - margin * 2, rowHeight, 'F')
+      doc.text('Nominal Value', currentX + 2, yPos)
+      currentX += colWidths[0]
+      doc.text('Reading', currentX + 2, yPos)
+      currentX += colWidths[1]
+      doc.text('Error', currentX + 2, yPos)
+      currentX += colWidths[2]
+      doc.text('Allowable Error', currentX + 2, yPos)
+      currentX += colWidths[3]
+      doc.text('Within Tolerances', currentX + 2, yPos)
+
+      // Draw header border
+      doc.setLineWidth(0.5)
+      doc.setDrawColor(0, 0, 0)
+      doc.rect(margin, headerY, pageWidth - margin * 2, rowHeight, 'S')
+
+      // Draw vertical lines for header
+      currentX = margin
+      for (let i = 0; i < colWidths.length; i++) {
+        currentX += colWidths[i]
+        if (i < colWidths.length - 1) {
+          doc.line(currentX, headerY, currentX, headerY + rowHeight)
+        }
+      }
+
+      yPos += rowHeight
+      doc.setFont(undefined, 'normal')
+
+      // Draw table rows
+      validRecords.forEach((record, index) => {
+        // Check if we need a new page
+        if (yPos > pageHeight - 20) {
+          doc.addPage()
+          yPos = margin
+          // Redraw header on new page
+          currentX = margin
+          doc.setFontSize(10)
+          doc.setFont(undefined, 'bold')
+          doc.setFillColor(240, 240, 240)
+          const newHeaderY = yPos - 5
+          doc.rect(currentX, newHeaderY, pageWidth - margin * 2, rowHeight, 'F')
+          doc.text('Nominal Value', currentX + 2, yPos)
+          currentX += colWidths[0]
+          doc.text('Reading', currentX + 2, yPos)
+          currentX += colWidths[1]
+          doc.text('Error', currentX + 2, yPos)
+          currentX += colWidths[2]
+          doc.text('Allowable Error', currentX + 2, yPos)
+          currentX += colWidths[3]
+          doc.text('Within Tolerances', currentX + 2, yPos)
+
+          // Draw header border
+          doc.setLineWidth(0.5)
+          doc.setDrawColor(0, 0, 0)
+          doc.rect(margin, newHeaderY, pageWidth - margin * 2, rowHeight, 'S')
+
+          // Draw vertical lines for header
+          currentX = margin
+          for (let i = 0; i < colWidths.length; i++) {
+            currentX += colWidths[i]
+            if (i < colWidths.length - 1) {
+              doc.line(currentX, newHeaderY, currentX, newHeaderY + rowHeight)
+            }
+          }
+
+          yPos += rowHeight
+          doc.setFont(undefined, 'normal')
+        }
+
+        currentX = margin
+        doc.setFontSize(9)
+        const rowY = yPos - 3
+
+        // Draw cell content
+        doc.text(record.nominalValue || '', currentX + 2, yPos)
+        currentX += colWidths[0]
+
+        doc.text(record.reading || '', currentX + 2, yPos)
+        currentX += colWidths[1]
+
+        doc.text(record.error || '', currentX + 2, yPos)
+        currentX += colWidths[2]
+
+        doc.text(record.allowableError || '', currentX + 2, yPos)
+        currentX += colWidths[3]
+
+        doc.text(record.withinTolerances || '', currentX + 2, yPos)
+
+        // Draw row border (bottom)
+        doc.setDrawColor(0, 0, 0)
+        doc.setLineWidth(0.1)
+        doc.line(margin, rowY + rowHeight, pageWidth - margin, rowY + rowHeight)
+
+        // Draw vertical lines
+        currentX = margin
+        for (let i = 0; i < colWidths.length; i++) {
+          currentX += colWidths[i]
+          if (i < colWidths.length - 1) {
+            doc.line(currentX, rowY, currentX, rowY + rowHeight)
+          }
+        }
+
+        yPos += rowHeight
+      })
+
+      // Draw bottom border
+      doc.setLineWidth(0.5)
+      doc.setDrawColor(0, 0, 0)
+      doc.line(margin, yPos - 3, pageWidth - margin, yPos - 3)
+    }
+
     // Open PDF in new window
     const fileName = `Calibration_Certificate_${certificateNo || 'Certificate'}.pdf`
     doc.output('dataurlnewwindow')
-  }, [certificateNo, customer, device])
+  }, [certificateNo, customer, device, procedureTemplate, linearityRecords])
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', flexDirection: 'row' }}>
@@ -637,6 +877,162 @@ const CreateCertificate = () => {
                     />
                   </div>
                 </div>
+              </Box>
+            ) : activeStep === 3 ? (
+              <Box className='cc_card'>
+                <Box sx={{ mb: 2 }}>
+                  <Typography variant='h6' sx={{ fontWeight: 600, mb: 0.5, fontSize: '1.125rem' }}>
+                    Procedure Template
+                  </Typography>
+                </Box>
+
+                <div className='row'>
+                  <div className='col-12'>
+                    <Typography variant='body2' sx={{ mb: 0.7 }} component='label' className='cc_label'>
+                      Procedure Template
+                    </Typography>
+                    <TextField
+                      value={procedureTemplate}
+                      onChange={e => setProcedureTemplate(e.target.value)}
+                      fullWidth
+                      size='small'
+                      multiline
+                      rows={8}
+                      placeholder='Enter procedure template details...'
+                    />
+                  </div>
+                </div>
+              </Box>
+            ) : activeStep === 4 ? (
+              <Box className='cc_card'>
+                <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Typography variant='h6' sx={{ fontWeight: 600, mb: 0.5, fontSize: '1.125rem' }}>
+                    Linearity
+                  </Typography>
+                  <Button
+                    variant='outlined'
+                    size='small'
+                    startIcon={<AddIcon />}
+                    onClick={() => {
+                      setLinearityRecords([
+                        ...linearityRecords,
+                        {
+                          nominalValue: '',
+                          reading: '',
+                          error: '',
+                          allowableError: '',
+                          withinTolerances: ''
+                        }
+                      ])
+                    }}
+                    sx={{ textTransform: 'none' }}
+                  >
+                    Add Row
+                  </Button>
+                </Box>
+
+                <TableContainer
+                  component={Paper}
+                  sx={{ mt: 2, boxShadow: 'none', border: '1px solid rgba(0, 0, 0, 0.12)' }}
+                >
+                  <Table size='small'>
+                    <TableHead>
+                      <TableRow sx={{ backgroundColor: 'rgba(0, 0, 0, 0.04)' }}>
+                        <TableCell sx={{ fontWeight: 600, fontSize: '0.875rem' }}>Nominal Value</TableCell>
+                        <TableCell sx={{ fontWeight: 600, fontSize: '0.875rem' }}>Reading</TableCell>
+                        <TableCell sx={{ fontWeight: 600, fontSize: '0.875rem' }}>Error</TableCell>
+                        <TableCell sx={{ fontWeight: 600, fontSize: '0.875rem' }}>Allowable Error</TableCell>
+                        <TableCell sx={{ fontWeight: 600, fontSize: '0.875rem' }}>Within Tolerances</TableCell>
+                        <TableCell sx={{ fontWeight: 600, fontSize: '0.875rem', width: '80px' }}>Action</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {linearityRecords.map((record, index) => (
+                        <TableRow key={index}>
+                          <TableCell sx={{ padding: '8px' }}>
+                            <TextField
+                              value={record.nominalValue}
+                              onChange={e => {
+                                const updated = [...linearityRecords]
+                                updated[index].nominalValue = e.target.value
+                                setLinearityRecords(updated)
+                              }}
+                              size='small'
+                              fullWidth
+                              placeholder='Enter value'
+                            />
+                          </TableCell>
+                          <TableCell sx={{ padding: '8px' }}>
+                            <TextField
+                              value={record.reading}
+                              onChange={e => {
+                                const updated = [...linearityRecords]
+                                updated[index].reading = e.target.value
+                                setLinearityRecords(updated)
+                              }}
+                              size='small'
+                              fullWidth
+                              placeholder='Enter reading'
+                            />
+                          </TableCell>
+                          <TableCell sx={{ padding: '8px' }}>
+                            <TextField
+                              value={record.error}
+                              onChange={e => {
+                                const updated = [...linearityRecords]
+                                updated[index].error = e.target.value
+                                setLinearityRecords(updated)
+                              }}
+                              size='small'
+                              fullWidth
+                              placeholder='Enter error'
+                            />
+                          </TableCell>
+                          <TableCell sx={{ padding: '8px' }}>
+                            <TextField
+                              value={record.allowableError}
+                              onChange={e => {
+                                const updated = [...linearityRecords]
+                                updated[index].allowableError = e.target.value
+                                setLinearityRecords(updated)
+                              }}
+                              size='small'
+                              fullWidth
+                              placeholder='Enter allowable error'
+                            />
+                          </TableCell>
+                          <TableCell sx={{ padding: '8px' }}>
+                            <TextField
+                              value={record.withinTolerances}
+                              onChange={e => {
+                                const updated = [...linearityRecords]
+                                updated[index].withinTolerances = e.target.value
+                                setLinearityRecords(updated)
+                              }}
+                              size='small'
+                              fullWidth
+                              placeholder='Yes/No'
+                            />
+                          </TableCell>
+                          <TableCell sx={{ padding: '8px' }}>
+                            <IconButton
+                              size='small'
+                              color='error'
+                              onClick={() => {
+                                if (linearityRecords.length > 1) {
+                                  setLinearityRecords(linearityRecords.filter((_, i) => i !== index))
+                                }
+                              }}
+                              disabled={linearityRecords.length === 1}
+                            >
+                              <DeleteIcon fontSize='small' />
+                            </IconButton>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
               </Box>
             ) : (
               <Box className='cc_card'>
