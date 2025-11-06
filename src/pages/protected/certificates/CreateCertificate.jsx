@@ -51,6 +51,19 @@ const CreateCertificate = () => {
     mobile: ''
   })
 
+  // Device (Step 2) fields
+  const [device, setDevice] = useState({
+    manufacturer: '',
+    serialNo: '',
+    model: '',
+    terminalModel: '',
+    maxCapacity: '',
+    tagNo: '',
+    readability: '',
+    verificationValue: '',
+    location: ''
+  })
+
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', flexDirection: 'row' }}>
       <Sidebar open={sidebarOpen} onToggle={handleToggleSidebar} />
@@ -305,6 +318,129 @@ const CreateCertificate = () => {
                     <TextField
                       value={customer.mobile}
                       onChange={e => setCustomer(p => ({ ...p, mobile: e.target.value }))}
+                      fullWidth
+                      size='small'
+                    />
+                  </div>
+                </div>
+              </Box>
+            ) : activeStep === 2 ? (
+              <Box className='cc_card'>
+                <Box sx={{ mb: 2 }}>
+                  <Typography variant='h6' sx={{ fontWeight: 600, mb: 0.5, fontSize: '1.125rem' }}>
+                    Device
+                  </Typography>
+                </Box>
+
+                {/* Bootstrap-style rows/cols (no Grid) */}
+                <div className='row'>
+                  <div className='col-12 col-md-6'>
+                    <Typography variant='body2' component='label' sx={{ mb: 0.7 }} className='cc_label'>
+                      Manufacturer
+                    </Typography>
+                    <TextField
+                      value={device.manufacturer}
+                      onChange={e => setDevice(p => ({ ...p, manufacturer: e.target.value }))}
+                      fullWidth
+                      size='small'
+                    />
+                  </div>
+                  <div className='col-12 col-md-6'>
+                    <Typography variant='body2' component='label' sx={{ mb: 0.7 }} className='cc_label'>
+                      Serial No
+                    </Typography>
+                    <TextField
+                      value={device.serialNo}
+                      onChange={e => setDevice(p => ({ ...p, serialNo: e.target.value }))}
+                      fullWidth
+                      size='small'
+                    />
+                  </div>
+                </div>
+
+                <div className='row'>
+                  <div className='col-12 col-md-6'>
+                    <Typography variant='body2' component='label' sx={{ mb: 0.7 }} className='cc_label'>
+                      Model
+                    </Typography>
+                    <TextField
+                      value={device.model}
+                      onChange={e => setDevice(p => ({ ...p, model: e.target.value }))}
+                      fullWidth
+                      size='small'
+                    />
+                  </div>
+                  <div className='col-12 col-md-6'>
+                    <Typography variant='body2' component='label' sx={{ mb: 0.7 }} className='cc_label'>
+                      Terminal Model
+                    </Typography>
+                    <TextField
+                      value={device.terminalModel}
+                      onChange={e => setDevice(p => ({ ...p, terminalModel: e.target.value }))}
+                      fullWidth
+                      size='small'
+                    />
+                  </div>
+                </div>
+
+                <div className='row'>
+                  <div className='col-12 col-md-6'>
+                    <Typography variant='body2' component='label' sx={{ mb: 0.7 }} className='cc_label'>
+                      Max Capacity
+                    </Typography>
+                    <TextField
+                      value={device.maxCapacity}
+                      onChange={e => setDevice(p => ({ ...p, maxCapacity: e.target.value }))}
+                      fullWidth
+                      size='small'
+                    />
+                  </div>
+                  <div className='col-12 col-md-6'>
+                    <Typography variant='body2' component='label' sx={{ mb: 0.7 }} className='cc_label'>
+                      Tag No
+                    </Typography>
+                    <TextField
+                      value={device.tagNo}
+                      onChange={e => setDevice(p => ({ ...p, tagNo: e.target.value }))}
+                      fullWidth
+                      size='small'
+                    />
+                  </div>
+                </div>
+
+                <div className='row'>
+                  <div className='col-12 col-md-6'>
+                    <Typography variant='body2' component='label' sx={{ mb: 0.7 }} className='cc_label'>
+                      Readability
+                    </Typography>
+                    <TextField
+                      value={device.readability}
+                      onChange={e => setDevice(p => ({ ...p, readability: e.target.value }))}
+                      fullWidth
+                      size='small'
+                    />
+                  </div>
+                  <div className='col-12 col-md-6'>
+                    <Typography variant='body2' component='label' sx={{ mb: 0.7 }} className='cc_label'>
+                      Verification Value
+                    </Typography>
+                    <TextField
+                      value={device.verificationValue}
+                      onChange={e => setDevice(p => ({ ...p, verificationValue: e.target.value }))}
+                      fullWidth
+                      size='small'
+                    />
+                  </div>
+                </div>
+
+                <div className='row'>
+                  <div className='col-12 col-md-6'>
+                    <Typography variant='body2' component='label' sx={{ mb: 0.7 }} className='cc_label'>
+                      Location
+                    </Typography>
+                    <TextField
+                      value={device.location}
+                      onChange={e => setDevice(p => ({ ...p, location: e.target.value }))}
                       fullWidth
                       size='small'
                     />
