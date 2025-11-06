@@ -1,14 +1,18 @@
 import React, { useCallback, useState } from 'react'
-import { Box, Typography, useTheme, useMediaQuery } from '@mui/material'
+import { Box, Typography, TextField, InputAdornment, Button, useTheme, useMediaQuery } from '@mui/material'
+import SearchIcon from '@mui/icons-material/Search'
+import { useNavigate } from 'react-router-dom'
 import Sidebar from '@/layout/Sidebar'
 import Header from '@/layout/Header'
 import { useTheme as useThemeContext } from '@/context/ThemeContext'
 
-const Dashboard = () => {
+const Certificates = () => {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
   const [sidebarOpen, setSidebarOpen] = useState(!isMobile)
   const { mode, toggleTheme } = useThemeContext()
+
+  const navigate = useNavigate()
 
   const handleToggleSidebar = useCallback(() => {
     setSidebarOpen(!sidebarOpen)
@@ -76,12 +80,59 @@ const Dashboard = () => {
             }
           }}
         >
-          <Box sx={{ mb: 4 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-              <Typography variant='body1' component='h1' sx={{ fontWeight: 600, color: 'primary.main' }}>
-                Dashboard
+          {/* Page header */}
+          <Box
+            sx={{
+              mb: 3,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 2,
+              flexWrap: 'wrap'
+            }}
+          >
+            <Box>
+              <Typography variant='h5' component='h1' sx={{ fontWeight: 700 }}>
+                Certificates
+              </Typography>
+              <Typography variant='body2' color='text.secondary'>
+                Browse calibration certificates
               </Typography>
             </Box>
+
+            <Button variant='contained' size='medium' onClick={() => navigate('/certificates/create')}>
+              Create New Certificate
+            </Button>
+          </Box>
+
+          {/* Search input */}
+          <Box sx={{ maxWidth: 460, width: '100%', mb: 6 }}>
+            <TextField
+              fullWidth
+              placeholder='Search by certificate number...'
+              size='small'
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position='start'>
+                    <SearchIcon fontSize='small' />
+                  </InputAdornment>
+                )
+              }}
+            />
+          </Box>
+
+          {/* Empty state */}
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              textAlign: 'center',
+              color: 'text.secondary',
+              minHeight: { xs: '40vh', md: '50vh' }
+            }}
+          >
+            <Typography variant='body1'>No certificates found. Create your first one!</Typography>
           </Box>
         </Box>
       </Box>
@@ -89,4 +140,4 @@ const Dashboard = () => {
   )
 }
 
-export default Dashboard
+export default Certificates
