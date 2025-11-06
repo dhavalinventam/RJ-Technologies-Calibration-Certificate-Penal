@@ -1,0 +1,51 @@
+.status-cards-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+
+  @media only screen and (min-width: 320px) and (max-width: 575px) {
+    grid-template-columns: repeat(auto-fit, minmax(100%, 1fr));
+  }
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    justify-content: space-between;
+    background-color: unset !important;
+    padding: 0 !important;
+    font-size: 0.9rem;
+    color: #333;
+  
+    span {
+      flex: 1;
+      font-weight: 400;
+      font-size: 14px;
+      line-height: 18px;
+      color: rgba(var(--color-sf-on-surface-variant));
+    }
+  
+    strong {
+      color: rgba(var(--color-sf-secondary), 0.6);
+      font-size: 14px;
+      line-height: 1;
+      font-weight: 500;
+    }
+  
+    svg {
+      flex-shrink: 0;
+      color: #666;
+    }
+  }
+  
+  .progress-bar {
+    height: 6px;
+    background: #e9ecef !important;
+    border-radius: 4px;
+    overflow: hidden;
+  
+    .progress-fill {
+      height: 100%;
+      transition: width 0.4s ease;
+    }
+  }
+}

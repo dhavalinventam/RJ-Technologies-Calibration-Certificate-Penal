@@ -1,0 +1,42 @@
+.Comment_toolbar_data {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 5px;
+}
+.avatar-block {
+    height: 27px;
+    width: 27px;
+    min-width: 27px;
+    background: rgba(var(--color-sf-secondary),0.3);;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: rgba(var(--color-sf-white));
+}
+.Comment_toolbar_user_name {
+    font-weight: bolder;
+    font-size: 14px;
+    line-height: 100%;
+    color: rgba(var(--color-sf-secondary));
+    margin-bottom: 0px;
+}
+.Comment_toolbar_user_time {
+    font-weight: 600;
+    font-size: 12px;
+    line-height: 100%;
+    color: rgba(var(--color-sf-secondary), 0.5);
+    margin-bottom: 0px;
+}
+.comment_content {
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 20px;
+    color: rgba(var(--color-sf-secondary));
+    word-wrap: break-word;
+    p {
+        margin-bottom: 0px;
+    }
+}

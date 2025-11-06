@@ -1,0 +1,12 @@
+.chart-card {
+  .card-header {
+    display: flex;
+    align-items: center;
+    font-weight: 400;
+    color: rgba(var(--color-sf-secondary));
+    font-size: 15px;
+    border-bottom: 1px solid rgba(var(--color-sf-secondary), 0.1) !important;
+    line-height: 1;
+    gap: 7px;
+  }
+}

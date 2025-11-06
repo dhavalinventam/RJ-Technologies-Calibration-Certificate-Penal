@@ -1,0 +1,45 @@
+.table_main_row {
+  .table-responsive {
+    overflow-y: auto;
+    max-height: 400px;
+  }
+  table {
+    thead {
+      position: sticky;
+      top: 0;
+      z-index: 1001;
+      background: white;
+    }
+    tr {
+      position: relative;
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      .text_filed_dropdown {
+        .MuiFormControl-root {
+          min-width: 200px;
+          margin-bottom: 0;
+        }
+      }
+      td {
+        padding: 15px 10px !important;
+        .filed_space_div {
+          margin-bottom: 0px !important;
+        }
+      }
+      .sticky_btn {
+        display: flex;
+        align-items: center;
+        position: sticky;
+        right: 1px;
+        background: white;
+        border: 0;
+        z-index: 1000;
+        button {
+          transform: unset !important;
+          box-shadow: none !important;
+        }
+      }
+    }
+  }
+}

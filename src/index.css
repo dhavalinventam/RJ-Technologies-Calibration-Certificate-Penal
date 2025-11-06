@@ -1,0 +1,187 @@
+/* Reset and base styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Global scrollbar styling for entire project */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(25, 118, 210, 0.3);
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(25, 118, 210, 0.5);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Firefox scrollbar styling */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(25, 118, 210, 0.3) rgba(0, 0, 0, 0.05);
+}
+
+/* Common scrollable container class */
+.scrollable-container {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.scrollable-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollable-container::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 3px;
+}
+
+.scrollable-container::-webkit-scrollbar-thumb {
+  background: rgba(25, 118, 210, 0.3);
+  border-radius: 3px;
+  transition: background-color 0.2s ease;
+}
+
+.scrollable-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(25, 118, 210, 0.5);
+}
+
+/* Thin scrollbar for small containers */
+.scrollable-thin {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.scrollable-thin::-webkit-scrollbar {
+  width: 4px;
+}
+
+.scrollable-thin::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 2px;
+}
+
+.scrollable-thin::-webkit-scrollbar-thumb {
+  background: rgba(25, 118, 210, 0.2);
+  border-radius: 2px;
+  transition: background-color 0.2s ease;
+}
+
+.scrollable-thin::-webkit-scrollbar-thumb:hover {
+  background: rgba(25, 118, 210, 0.4);
+}
+
+/* Dark mode scrollbar */
+@media (prefers-color-scheme: dark) {
+  ::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(25, 118, 210, 0.4);
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(25, 118, 210, 0.6);
+  }
+
+  .scrollable-container::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .scrollable-container::-webkit-scrollbar-thumb {
+    background: rgba(25, 118, 210, 0.4);
+  }
+
+  .scrollable-container::-webkit-scrollbar-thumb:hover {
+    background: rgba(25, 118, 210, 0.6);
+  }
+
+  .scrollable-thin::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  .scrollable-thin::-webkit-scrollbar-thumb {
+    background: rgba(25, 118, 210, 0.3);
+  }
+
+  .scrollable-thin::-webkit-scrollbar-thumb:hover {
+    background: rgba(25, 118, 210, 0.5);
+  }
+
+  * {
+    scrollbar-color: rgba(25, 118, 210, 0.4) rgba(255, 255, 255, 0.05);
+  }
+}
+
+/* Focus styles for accessibility */
+*:focus {
+  outline: 2px solid #1976d2;
+  outline-offset: 2px;
+}
+
+/* Smooth transitions for theme changes */
+* {
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
+    border-color 0.3s ease;
+}
+
+/* Utility classes */
+.text-center {
+  text-align: center;
+}
+
+.text-left {
+  text-align: left;
+}
+
+.text-right {
+  text-align: right;
+}
+
+/* Responsive utilities */
+@media (max-width: 768px) {
+  .hide-mobile {
+    display: none !important;
+  }
+}
+
+@media (min-width: 769px) {
+  .hide-desktop {
+    display: none !important;
+  }
+}
+
+.multi_action_btn_div {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 30px;
+}

@@ -1,0 +1,24 @@
+.custom_table {
+  tr {
+    border: 1px solid rgba(var(--color-sf-outline-variant), 0.4) !important;
+    th {
+      background-color: rgba(var(--color-sf-secondary), 0.09) !important;
+      padding: 6px 16px;
+      font-weight: 600;
+      font-size: 14px;
+      text-transform: capitalize;
+      text-align: left;
+      color: rgba(var(--color-sf-on-surface));
+      border: 0 !important;
+    }
+    td {
+      background: rgba(var(--color-sf-white)) !important;
+      box-shadow: unset;
+      padding: 6px 16px;
+      font-weight: 400;
+      font-size: 14px;
+      color: rgba(var(--color-sf-on-surface));
+      border: 0 !important;
+    }
+  }
+}

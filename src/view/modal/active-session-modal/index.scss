@@ -1,0 +1,53 @@
+.session_div {
+  max-height: 250px;
+  overflow-y: auto;
+  padding-right: 3px;
+  position: relative;
+  height: 100%;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(var(--color-sf-outline-variant), 0.1);
+    border-radius: 3px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(var(--color-sf-outline-variant), 0.4);
+    border-radius: 3px;
+  }
+
+  .session_div_item {
+    .card-title {
+      .date {
+        color: rgba(var(--color-sf-outline), 0.9);
+        font-weight: 400;
+        font-size: 12px;
+        line-height: 100%;
+        letter-spacing: 0%;
+        text-transform: capitalize;
+      }
+
+      .btn-log-out {
+        cursor: pointer;
+      }
+    }
+
+    .details {
+      font-weight: 500;
+      font-size: 12px;
+      line-height: 18px;
+      letter-spacing: 0%;
+      text-transform: capitalize;
+      max-width: 600px;
+    }
+
+    &:not(:last-child) {
+      border-bottom: 1px solid rgba(var(--color-sf-outline-variant), 0.4);
+      padding-bottom: 10px;
+      margin-bottom: 10px;
+    }
+  }
+}
