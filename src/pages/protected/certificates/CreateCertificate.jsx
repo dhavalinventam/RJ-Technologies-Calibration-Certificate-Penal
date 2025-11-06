@@ -40,6 +40,17 @@ const CreateCertificate = () => {
   const [certificateNo, setCertificateNo] = useState('RJ-2511-018')
   const [draftId, setDraftId] = useState('09262b61-2bc5-447d-b5de-6d4531392a74')
 
+  // Customer (Step 1) fields
+  const [customer, setCustomer] = useState({
+    company: '',
+    address: '',
+    city: '',
+    state: '',
+    zip: '',
+    contact: '',
+    mobile: ''
+  })
+
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', flexDirection: 'row' }}>
       <Sidebar open={sidebarOpen} onToggle={handleToggleSidebar} />
@@ -86,7 +97,7 @@ const CreateCertificate = () => {
             backgroundColor: theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.02)' : 'rgba(0, 0, 0, 0.01)'
           }}
         >
-          <Box sx={{ mx: 'auto', px: { xs: 2, sm: 3, md: 4 }, py: { xs: 2, sm: 3 } }}>
+          <Box>
             {/* Top header */}
             <Box
               sx={{
@@ -102,7 +113,7 @@ const CreateCertificate = () => {
                 <Typography
                   variant='h4'
                   component='h1'
-                  sx={{ fontWeight: 700, mb: 0.5, fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2rem' } }}
+                  sx={{ fontWeight: 700, mb: 0.5, fontSize: { xs: '1.5rem', sm: '1.5rem', md: '1.75rem' } }}
                 >
                   Create Calibration Certificate
                 </Typography>
@@ -167,7 +178,7 @@ const CreateCertificate = () => {
             {/* Step content */}
             {activeStep === 0 ? (
               <Box className='cc_card'>
-                <Box sx={{ mb: 3 }}>
+                <Box sx={{ mb: 2 }}>
                   <Typography variant='h6' sx={{ fontWeight: 600, mb: 0.5, fontSize: '1.125rem' }}>
                     Certificate Number
                   </Typography>
@@ -176,19 +187,10 @@ const CreateCertificate = () => {
                   </Typography>
                 </Box>
 
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-                  <Box>
-                    <Typography
-                      variant='body2'
-                      component='label'
-                      sx={{
-                        display: 'block',
-                        fontWeight: 500,
-                        mb: 0.75,
-                        color: 'text.primary',
-                        fontSize: '0.875rem'
-                      }}
-                    >
+                {/* Bootstrap-style rows/cols (no Grid) */}
+                <div className='row'>
+                  <div className='col-12'>
+                    <Typography variant='body2' sx={{ mb: 0.7 }} component='label' className='cc_label'>
                       Certificate Number
                     </Typography>
                     <TextField
@@ -196,58 +198,118 @@ const CreateCertificate = () => {
                       onChange={e => setCertificateNo(e.target.value)}
                       fullWidth
                       size='small'
-                      sx={{
-                        '& .MuiOutlinedInput-root': {
-                          borderRadius: 2,
-                          backgroundColor:
-                            theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
-                          '&:hover': {
-                            backgroundColor:
-                              theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)'
-                          },
-                          '&.Mui-focused': {
-                            backgroundColor: 'transparent'
-                          }
-                        }
-                      }}
                     />
-                  </Box>
-                  <Box>
-                    <Typography
-                      variant='body2'
-                      component='label'
-                      sx={{
-                        display: 'block',
-                        fontWeight: 500,
-                        mb: 0.75,
-                        color: 'text.primary',
-                        fontSize: '0.875rem'
-                      }}
-                    >
+                  </div>
+                </div>
+
+                <div className='row'>
+                  <div className='col-12'>
+                    <Typography variant='body2' sx={{ mb: 0.7 }} component='label' className='cc_label'>
                       Draft ID
                     </Typography>
+                    <TextField value={draftId} onChange={e => setDraftId(e.target.value)} fullWidth size='small' />
+                  </div>
+                </div>
+              </Box>
+            ) : activeStep === 1 ? (
+              <Box className='cc_card'>
+                <Box sx={{ mb: 2 }}>
+                  <Typography variant='h6' sx={{ fontWeight: 600, mb: 0.5, fontSize: '1.125rem' }}>
+                    Customer
+                  </Typography>
+                </Box>
+
+                {/* Bootstrap-style rows/cols (no Grid) */}
+                <div className='row'>
+                  <div className='col-12'>
+                    <Typography variant='body2' sx={{ mb: 0.7 }} component='label' className='cc_label'>
+                      Company
+                    </Typography>
                     <TextField
-                      value={draftId}
-                      onChange={e => setDraftId(e.target.value)}
+                      value={customer.company}
+                      onChange={e => setCustomer(p => ({ ...p, company: e.target.value }))}
                       fullWidth
                       size='small'
-                      sx={{
-                        '& .MuiOutlinedInput-root': {
-                          borderRadius: 2,
-                          backgroundColor:
-                            theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
-                          '&:hover': {
-                            backgroundColor:
-                              theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)'
-                          },
-                          '&.Mui-focused': {
-                            backgroundColor: 'transparent'
-                          }
-                        }
-                      }}
                     />
-                  </Box>
-                </Box>
+                  </div>
+                </div>
+
+                <div className='row'>
+                  <div className='col-12'>
+                    <Typography variant='body2' sx={{ mb: 0.7 }} component='label' className='cc_label'>
+                      Address
+                    </Typography>
+                    <TextField
+                      value={customer.address}
+                      onChange={e => setCustomer(p => ({ ...p, address: e.target.value }))}
+                      fullWidth
+                      size='small'
+                      multiline
+                      rows={2}
+                    />
+                  </div>
+                </div>
+
+                <div className='row'>
+                  <div className='col-12 col-md-4'>
+                    <Typography variant='body2' component='label' sx={{ mb: 0.7 }} className='cc_label'>
+                      City
+                    </Typography>
+                    <TextField
+                      value={customer.city}
+                      onChange={e => setCustomer(p => ({ ...p, city: e.target.value }))}
+                      fullWidth
+                      size='small'
+                    />
+                  </div>
+                  <div className='col-12 col-md-4'>
+                    <Typography variant='body2' component='label' sx={{ mb: 0.7 }} className='cc_label'>
+                      State/Province
+                    </Typography>
+                    <TextField
+                      value={customer.state}
+                      onChange={e => setCustomer(p => ({ ...p, state: e.target.value }))}
+                      fullWidth
+                      size='small'
+                    />
+                  </div>
+                  <div className='col-12 col-md-4'>
+                    <Typography variant='body2' component='label' sx={{ mb: 0.7 }} className='cc_label'>
+                      Zip/Postal
+                    </Typography>
+                    <TextField
+                      value={customer.zip}
+                      onChange={e => setCustomer(p => ({ ...p, zip: e.target.value }))}
+                      fullWidth
+                      size='small'
+                    />
+                  </div>
+                </div>
+
+                <div className='row'>
+                  <div className='col-12 col-md-6'>
+                    <Typography variant='body2' component='label' sx={{ mb: 0.7 }} className='cc_label'>
+                      Contact
+                    </Typography>
+                    <TextField
+                      value={customer.contact}
+                      onChange={e => setCustomer(p => ({ ...p, contact: e.target.value }))}
+                      fullWidth
+                      size='small'
+                    />
+                  </div>
+                  <div className='col-12 col-md-6'>
+                    <Typography variant='body2' component='label' sx={{ mb: 0.7 }} className='cc_label'>
+                      Mobile NO.
+                    </Typography>
+                    <TextField
+                      value={customer.mobile}
+                      onChange={e => setCustomer(p => ({ ...p, mobile: e.target.value }))}
+                      fullWidth
+                      size='small'
+                    />
+                  </div>
+                </div>
               </Box>
             ) : (
               <Box className='cc_card'>

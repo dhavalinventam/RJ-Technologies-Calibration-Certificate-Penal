@@ -130,4 +130,42 @@
   }
 }
 
+/* Form helpers */
+.cc_form_row {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.cc_field {
+  flex: 1 1 260px;
+}
+
+.cc_field_wide {
+  flex: 2 1 400px;
+}
+
+.cc_field_full {
+  flex: 1 1 100%;
+}
+
+.cc_label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 6px;
+  font-size: 0.875rem;
+}
+
+/* Customer form spacing */
+.cc_card .row:last-of-type {
+  margin-bottom: 0;
+  padding-bottom: 8px;
+}
+
+.cc_card .row {
+  margin-bottom: 16px;
+}
+
 
