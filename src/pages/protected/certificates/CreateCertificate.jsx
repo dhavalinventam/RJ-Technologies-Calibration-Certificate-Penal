@@ -1,11 +1,13 @@
 import { useCallback, useMemo, useState } from 'react'
 import { Box, Typography, Button, TextField, LinearProgress, useTheme, useMediaQuery } from '@mui/material'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf'
 import Sidebar from '@/layout/Sidebar'
 import Header from '@/layout/Header'
 import { useTheme as useThemeContext } from '@/context/ThemeContext'
 import './CreateCertificate.css'
 import { useNavigate } from 'react-router-dom'
+import jsPDF from 'jspdf'
 
 const steps = [
   'Certificate Number',
@@ -63,6 +65,195 @@ const CreateCertificate = () => {
     verificationValue: '',
     location: ''
   })
+
+  // PDF Generation function
+  const generatePDF = useCallback(() => {
+    const doc = new jsPDF()
+    const pageWidth = doc.internal.pageSize.getWidth()
+    const pageHeight = doc.internal.pageSize.getHeight()
+    const margin = 20
+    let yPos = margin
+
+    // Helper function to draw underlined text
+    const drawUnderlinedText = (x, y, text, fontSize = 10) => {
+      doc.setFontSize(fontSize)
+      const textWidth = doc.getTextWidth(text)
+      doc.text(text, x, y)
+      doc.setLineWidth(0.1)
+      doc.line(x, y + 1, x + textWidth, y + 1)
+    }
+
+    // Helper function to split address into multiple lines
+    const splitAddress = (address, maxWidth) => {
+      const words = address.split(' ')
+      const lines = []
+      let currentLine = ''
+
+      words.forEach(word => {
+        const testLine = currentLine ? `${currentLine} ${word}` : word
+        if (doc.getTextWidth(testLine) <= maxWidth) {
+          currentLine = testLine
+        } else {
+          if (currentLine) lines.push(currentLine)
+          currentLine = word
+        }
+      })
+      if (currentLine) lines.push(currentLine)
+      return lines
+    }
+
+    // Header Section
+    // Certificate Number (top-left)
+    doc.setFontSize(10)
+    doc.text('Certificate No.:', margin, yPos)
+    doc.setFontSize(12)
+    doc.setFont(undefined, 'bold')
+    doc.text(certificateNo || '', margin + 40, yPos)
+    doc.setFont(undefined, 'normal')
+
+    // RJ Technologies (top-right)
+    doc.setFontSize(18)
+    doc.setFont(undefined, 'bold')
+    const companyName = 'RJ Technologies'
+    const companyNameWidth = doc.getTextWidth(companyName)
+    doc.text(companyName, pageWidth - margin - companyNameWidth, yPos)
+    doc.setFont(undefined, 'normal')
+
+    // Address below certificate number
+    yPos += 7
+    doc.setFontSize(9)
+    const addressLines = splitAddress(
+      '301, Shahjanand Plaza, Bhattha, Paldi, Ahmedabad - 380007.',
+      pageWidth - margin * 2 - 50
+    )
+    addressLines.forEach((line, index) => {
+      doc.text(line, margin, yPos + index * 4)
+    })
+    yPos += addressLines.length * 4 + 5
+
+    // Title: Calibration Certificate (centered)
+    yPos += 10
+    doc.setFontSize(20)
+    doc.setFont(undefined, 'bold')
+    const title = 'Calibration Certificate'
+    const titleWidth = doc.getTextWidth(title)
+    doc.text(title, (pageWidth - titleWidth) / 2, yPos)
+    doc.setFont(undefined, 'normal')
+
+    // Customer Section
+    yPos += 20
+    doc.setFontSize(12)
+    doc.setFont(undefined, 'bold')
+    doc.text('Customer :', margin, yPos)
+    doc.setFont(undefined, 'normal')
+    yPos += 8
+
+    // Customer details in two columns
+    const leftColX = margin
+    const rightColX = pageWidth / 2 + 10
+    const lineHeight = 7
+    let customerY = yPos
+
+    // Left column
+    doc.setFontSize(10)
+    doc.text('Company:', leftColX, customerY)
+    drawUnderlinedText(leftColX + 30, customerY, customer.company || '', 10)
+
+    customerY += lineHeight
+    doc.text('Address:', leftColX, customerY)
+    const addressText = customer.address || ''
+    if (addressText) {
+      // Handle multi-line addresses (split by newline or wrap if too long)
+      const addressParts = addressText.split('\n').filter(part => part.trim())
+      if (addressParts.length > 0) {
+        addressParts.forEach((part, idx) => {
+          drawUnderlinedText(leftColX + 30, customerY + idx * lineHeight, part, 10)
+        })
+        customerY += addressParts.length * lineHeight
+      } else {
+        drawUnderlinedText(leftColX + 30, customerY, '', 10)
+        customerY += lineHeight
+      }
+    } else {
+      drawUnderlinedText(leftColX + 30, customerY, '', 10)
+      customerY += lineHeight
+    }
+
+    customerY += lineHeight
+    doc.text('City:', leftColX, customerY)
+    drawUnderlinedText(leftColX + 30, customerY, customer.city || '', 10)
+
+    customerY += lineHeight
+    doc.text('Zip/Postal:', leftColX, customerY)
+    drawUnderlinedText(leftColX + 30, customerY, customer.zip || '', 10)
+
+    customerY += lineHeight
+    doc.text('Contact:', leftColX, customerY)
+    drawUnderlinedText(leftColX + 30, customerY, customer.contact || '', 10)
+
+    // Right column
+    let rightColY = yPos
+    doc.text('State/Province:', rightColX, rightColY)
+    drawUnderlinedText(rightColX + 40, rightColY, customer.state || '', 10)
+
+    rightColY += lineHeight * 2 // Align with Mobile NO. position
+    doc.text('Mobile NO.:', rightColX, rightColY)
+    drawUnderlinedText(rightColX + 40, rightColY, customer.mobile || '', 10)
+
+    // Device Section
+    yPos = Math.max(customerY, rightColY) + 15
+    doc.setFontSize(12)
+    doc.setFont(undefined, 'bold')
+    doc.text('Device :', margin, yPos)
+    doc.setFont(undefined, 'normal')
+    yPos += 8
+
+    // Device details in two columns
+    let deviceY = yPos
+    const deviceLineHeight = 7
+
+    // Left column
+    doc.setFontSize(10)
+    doc.text('Manufacturer:', leftColX, deviceY)
+    drawUnderlinedText(leftColX + 35, deviceY, device.manufacturer || '', 10)
+
+    deviceY += deviceLineHeight
+    doc.text('Model:', leftColX, deviceY)
+    drawUnderlinedText(leftColX + 35, deviceY, device.model || '', 10)
+
+    deviceY += deviceLineHeight
+    doc.text('Max Capacity:', leftColX, deviceY)
+    drawUnderlinedText(leftColX + 35, deviceY, device.maxCapacity || '', 10)
+
+    deviceY += deviceLineHeight
+    doc.text('Readability:', leftColX, deviceY)
+    drawUnderlinedText(leftColX + 35, deviceY, device.readability || '', 10)
+
+    deviceY += deviceLineHeight
+    doc.text('Location:', leftColX, deviceY)
+    drawUnderlinedText(leftColX + 35, deviceY, device.location || '', 10)
+
+    // Right column
+    let deviceRightY = yPos
+    doc.text('Serial No.:', rightColX, deviceRightY)
+    drawUnderlinedText(rightColX + 40, deviceRightY, device.serialNo || '', 10)
+
+    deviceRightY += deviceLineHeight
+    doc.text('Terminal Model:', rightColX, deviceRightY)
+    drawUnderlinedText(rightColX + 40, deviceRightY, device.terminalModel || '', 10)
+
+    deviceRightY += deviceLineHeight
+    doc.text('Tag No.:', rightColX, deviceRightY)
+    drawUnderlinedText(rightColX + 40, deviceRightY, device.tagNo || '', 10)
+
+    deviceRightY += deviceLineHeight
+    doc.text('Verification Value:', rightColX, deviceRightY)
+    drawUnderlinedText(rightColX + 40, deviceRightY, device.verificationValue || '', 10)
+
+    // Open PDF in new window
+    const fileName = `Calibration_Certificate_${certificateNo || 'Certificate'}.pdf`
+    doc.output('dataurlnewwindow')
+  }, [certificateNo, customer, device])
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', flexDirection: 'row' }}>
@@ -207,7 +398,7 @@ const CreateCertificate = () => {
                       Certificate Number
                     </Typography>
                     <TextField
-                      value={certificateNo}
+                      // value={certificateNo}
                       onChange={e => setCertificateNo(e.target.value)}
                       fullWidth
                       size='small'
@@ -220,7 +411,7 @@ const CreateCertificate = () => {
                     <Typography variant='body2' sx={{ mb: 0.7 }} component='label' className='cc_label'>
                       Draft ID
                     </Typography>
-                    <TextField value={draftId} onChange={e => setDraftId(e.target.value)} fullWidth size='small' />
+                    <TextField onChange={e => setDraftId(e.target.value)} fullWidth size='small' />
                   </div>
                 </div>
               </Box>
@@ -481,25 +672,52 @@ const CreateCertificate = () => {
               >
                 Previous
               </Button>
-              <Button
-                variant='contained'
-                sx={{
-                  px: 3,
-                  py: 1,
-                  borderRadius: 2,
-                  textTransform: 'none',
-                  fontWeight: 500,
-                  minWidth: '100px',
-                  boxShadow: 'none',
-                  '&:hover': {
-                    boxShadow: theme.shadows[4]
-                  }
-                }}
-                endIcon={<ArrowForwardIcon fontSize='small' />}
-                onClick={() => setActiveStep(s => Math.min(steps.length - 1, s + 1))}
-              >
-                Next
-              </Button>
+              <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                {activeStep < steps.length - 1 ? (
+                  <Button
+                    variant='contained'
+                    sx={{
+                      px: 3,
+                      py: 1,
+                      borderRadius: 2,
+                      textTransform: 'none',
+                      fontWeight: 500,
+                      minWidth: '100px',
+                      boxShadow: 'none',
+                      '&:hover': {
+                        boxShadow: theme.shadows[4]
+                      }
+                    }}
+                    endIcon={<ArrowForwardIcon fontSize='small' />}
+                    onClick={() => setActiveStep(s => Math.min(steps.length - 1, s + 1))}
+                  >
+                    Next
+                  </Button>
+                ) : (
+                  <Button
+                    variant='outlined'
+                    color='primary'
+                    sx={{
+                      px: 3,
+                      py: 1,
+                      borderRadius: 2,
+                      textTransform: 'none',
+                      fontWeight: 500,
+                      minWidth: '100px',
+                      borderColor: 'primary.main',
+                      '&:hover': {
+                        borderColor: 'primary.dark',
+                        backgroundColor: 'primary.light',
+                        color: 'white'
+                      }
+                    }}
+                    startIcon={<PictureAsPdfIcon fontSize='small' />}
+                    onClick={generatePDF}
+                  >
+                    PDF
+                  </Button>
+                )}
+              </Box>
             </Box>
           </Box>
         </Box>
