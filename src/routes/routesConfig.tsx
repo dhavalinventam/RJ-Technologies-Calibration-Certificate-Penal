@@ -1,6 +1,7 @@
 import Dashboard from '@/pages/protected/dashboard'
 import Certificates from '@/pages/protected/certificates'
 import Customers from '@/pages/protected/customers'
+import Devices from '@/pages/protected/devices'
 // JS component import
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-expect-error - importing .jsx file in TS route config
@@ -10,7 +11,8 @@ export const publicRoutes = [
   { path: '/dashboard', element: <Dashboard /> },
   { path: '/certificates', element: <Certificates /> },
   { path: '/certificates/create', element: <CreateCertificate /> },
-  { path: '/customers', element: <Customers /> }
+  { path: '/customers', element: <Customers /> },
+  { path: '/devices', element: <Devices /> }
 ]
 
 export const protectedRoutes = []
