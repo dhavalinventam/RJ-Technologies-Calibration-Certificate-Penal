@@ -6,8 +6,11 @@ import WeightSets from '@/pages/protected/weight-sets'
 import AddWeightSet from '@/pages/protected/weight-sets/AddWeightSet'
 import ViewWeightSet from '@/pages/protected/weight-sets/ViewWeightSet'
 import EditWeightSet from '@/pages/protected/weight-sets/EditWeightSet'
+import ProcedureTemplates from '@/pages/protected/procedure-templates'
+import AddTemplate from '@/pages/protected/procedure-templates/AddTemplate'
+import ViewTemplate from '@/pages/protected/procedure-templates/ViewTemplate'
+import EditTemplate from '@/pages/protected/procedure-templates/EditTemplate'
 // JS component import
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-expect-error - importing .jsx file in TS route config
 import CreateCertificate from '@/pages/protected/certificates/CreateCertificate.jsx'
 
@@ -20,7 +23,11 @@ export const publicRoutes = [
   { path: '/weight-sets', element: <WeightSets /> },
   { path: '/weight-sets/add', element: <AddWeightSet /> },
   { path: '/weight-sets/:id', element: <ViewWeightSet /> },
-  { path: '/weight-sets/:id/edit', element: <EditWeightSet /> }
+  { path: '/weight-sets/:id/edit', element: <EditWeightSet /> },
+  { path: '/procedure-templates', element: <ProcedureTemplates /> },
+  { path: '/procedure-templates/add', element: <AddTemplate /> },
+  { path: '/procedure-templates/:id', element: <ViewTemplate /> },
+  { path: '/procedure-templates/:id/edit', element: <EditTemplate /> }
 ]
 
 export const protectedRoutes = []
