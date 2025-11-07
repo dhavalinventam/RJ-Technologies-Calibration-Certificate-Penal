@@ -216,384 +216,365 @@ const Customers = () => {
             }
           }}
         >
-          {/* Page Header */}
-          <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
-            <IconButton
-              onClick={() => navigate(-1)}
-              sx={{
-                color: 'text.primary',
-                '&:hover': {
-                  backgroundColor: 'action.hover'
-                }
-              }}
-            >
-              <ArrowBackIcon />
-            </IconButton>
-            <Box>
-              <Typography variant='h5' component='h1' sx={{ fontWeight: 700 }}>
-                Customer Management
-              </Typography>
-              <Typography variant='body2' color='text.secondary'>
-                Manage customer records for calibration certificates
-              </Typography>
-            </Box>
-          </Box>
-
-          {/* Tabs */}
-          <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3, overflowX: 'auto' }}>
-            <Tabs
-              value={tabValue}
-              onChange={handleTabChange}
-              aria-label='customer management tabs'
-              sx={{
-                minWidth: { xs: 300, sm: 'auto' },
-                '& .MuiTabs-scrollButtons': {
-                  '&.Mui-disabled': {
-                    opacity: 0.3
-                  }
-                }
-              }}
-            >
-              <Tab
-                label='List Customers'
+          <Box sx={{ px: { xs: 2, sm: 3, md: 4 }, py: { xs: 3, sm: 4 } }}>
+            {/* Page Header */}
+            <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
+              <IconButton
+                onClick={() => navigate(-1)}
                 sx={{
-                  textTransform: 'none',
-                  fontWeight: tabValue === 0 ? 600 : 400,
-                  minHeight: 48,
-                  px: { xs: 2, sm: 3 },
-                  '&.Mui-selected': {
-                    color: 'primary.main'
+                  color: 'text.primary',
+                  '&:hover': {
+                    backgroundColor: 'action.hover'
                   }
                 }}
-              />
-              <Tab
-                label='Add Customer'
-                sx={{
-                  textTransform: 'none',
-                  fontWeight: tabValue === 1 ? 600 : 400,
-                  minHeight: 48,
-                  px: { xs: 2, sm: 3 },
-                  '&.Mui-selected': {
-                    color: 'primary.main'
-                  }
-                }}
-              />
-            </Tabs>
-          </Box>
-
-          {/* Tab Panel: List Customers */}
-          <TabPanel value={tabValue} index={0}>
-            {/* Search Bar */}
-            <Box sx={{ maxWidth: 600, width: '100%', mb: 3 }}>
-              <TextField
-                fullWidth
-                placeholder='Search by name, company, city, or contact person...'
-                size='small'
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position='start'>
-                      <SearchIcon fontSize='small' />
-                    </InputAdornment>
-                  )
-                }}
-              />
+              >
+                <ArrowBackIcon />
+              </IconButton>
+              <Box>
+                <Typography variant='h5' component='h1' sx={{ fontWeight: 700 }}>
+                  Customer Management
+                </Typography>
+                <Typography variant='body2' color='text.secondary'>
+                  Manage customer records for calibration certificates
+                </Typography>
+              </Box>
             </Box>
 
-            {/* Customer Table */}
-            <TableContainer
-              component={Paper}
-              sx={{
-                boxShadow: 'none',
-                border: '1px solid',
-                borderColor: 'divider',
-                borderRadius: 1,
-                overflowX: 'auto',
-                maxWidth: '100%'
-              }}
-            >
-              <Table sx={{ minWidth: 800 }}>
-                <TableHead>
-                  <TableRow sx={{ backgroundColor: 'action.hover' }}>
-                    <TableCell sx={{ fontWeight: 600, whiteSpace: 'nowrap' }}>Name</TableCell>
-                    <TableCell sx={{ fontWeight: 600, whiteSpace: 'nowrap' }}>Company</TableCell>
-                    <TableCell sx={{ fontWeight: 600, whiteSpace: 'nowrap' }}>Location</TableCell>
-                    <TableCell sx={{ fontWeight: 600, whiteSpace: 'nowrap' }}>Contact Person</TableCell>
-                    <TableCell sx={{ fontWeight: 600, whiteSpace: 'nowrap' }}>Mobile</TableCell>
-                    <TableCell sx={{ fontWeight: 600, whiteSpace: 'nowrap' }}>Email</TableCell>
-                    <TableCell sx={{ fontWeight: 600, whiteSpace: 'nowrap' }}>Actions</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {filteredCustomers.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={7} align='center' sx={{ py: 4 }}>
-                        <Typography variant='body2' color='text.secondary'>
-                          No customers found
-                        </Typography>
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    filteredCustomers.map(customer => (
-                      <TableRow key={customer.id} hover>
-                        <TableCell sx={{ whiteSpace: 'nowrap' }}>{customer.name}</TableCell>
-                        <TableCell sx={{ whiteSpace: 'nowrap' }}>{customer.company}</TableCell>
-                        <TableCell sx={{ whiteSpace: 'nowrap' }}>{customer.location}</TableCell>
-                        <TableCell sx={{ whiteSpace: 'nowrap' }}>{customer.contactPerson}</TableCell>
-                        <TableCell sx={{ whiteSpace: 'nowrap' }}>{customer.mobile}</TableCell>
-                        <TableCell sx={{ whiteSpace: 'nowrap' }}>{customer.email}</TableCell>
-                        <TableCell>
-                          <Box sx={{ display: 'flex', gap: 1, flexWrap: { xs: 'wrap', sm: 'nowrap' } }}>
-                            <Button
-                              variant='outlined'
-                              size='small'
-                              startIcon={<EditIcon fontSize='small' />}
-                              onClick={() => handleEdit(customer)}
-                              sx={{
-                                textTransform: 'none',
-                                borderColor: 'text.secondary',
-                                color: 'text.primary',
-                                '&:hover': {
-                                  borderColor: 'text.secondary',
-                                  backgroundColor: 'action.hover'
-                                }
-                              }}
-                            >
-                              Edit
-                            </Button>
-                            <IconButton
-                              size='small'
-                              color='error'
-                              onClick={() => handleDelete(customer.id)}
-                              sx={{
-                                backgroundColor: 'error.main',
-                                color: 'white',
-                                '&:hover': {
-                                  backgroundColor: 'error.dark'
-                                }
-                              }}
-                            >
-                              <DeleteIcon fontSize='small' />
-                            </IconButton>
-                          </Box>
-                        </TableCell>
+            {/* Tabs */}
+            <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3, overflowX: 'auto' }}>
+              <Tabs
+                value={tabValue}
+                onChange={handleTabChange}
+                aria-label='customer management tabs'
+                textColor='inherit'
+                sx={{
+                  minWidth: { xs: 300, sm: 'auto' },
+                  '& .MuiTabs-indicator': {
+                    height: 3,
+                    backgroundColor: 'primary.main'
+                  },
+                  '& .MuiTab-root': {
+                    fontWeight: 500
+                  }
+                }}
+              >
+                <Tab label='List Customers' sx={{ textTransform: 'none', minHeight: 48, px: { xs: 2, sm: 3 } }} />
+                <Tab label='Add Customer' sx={{ textTransform: 'none', minHeight: 48, px: { xs: 2, sm: 3 } }} />
+              </Tabs>
+            </Box>
+
+            {/* Tab Panel: List Customers */}
+            <TabPanel value={tabValue} index={0}>
+              <Paper
+                sx={{
+                  borderRadius: 2,
+                  boxShadow: '0px 4px 20px rgba(15, 23, 42, 0.08)',
+                  overflow: 'hidden'
+                }}
+              >
+                <Box sx={{ p: { xs: 2, sm: 3 } }}>
+                  <TextField
+                    fullWidth
+                    placeholder='Search by name, company, city, or contact person...'
+                    size='small'
+                    value={searchTerm}
+                    onChange={e => setSearchTerm(e.target.value)}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position='start'>
+                          <SearchIcon fontSize='small' />
+                        </InputAdornment>
+                      )
+                    }}
+                    sx={{ maxWidth: 640, width: '100%' }}
+                  />
+                </Box>
+
+                {/* Customer Table */}
+                <TableContainer sx={{ maxHeight: 480 }}>
+                  <Table stickyHeader sx={{ minWidth: 800 }}>
+                    <TableHead>
+                      <TableRow sx={{ backgroundColor: 'action.hover' }}>
+                        <TableCell sx={{ fontWeight: 600, whiteSpace: 'nowrap' }}>Name</TableCell>
+                        <TableCell sx={{ fontWeight: 600, whiteSpace: 'nowrap' }}>Company</TableCell>
+                        <TableCell sx={{ fontWeight: 600, whiteSpace: 'nowrap' }}>Location</TableCell>
+                        <TableCell sx={{ fontWeight: 600, whiteSpace: 'nowrap' }}>Contact Person</TableCell>
+                        <TableCell sx={{ fontWeight: 600, whiteSpace: 'nowrap' }}>Mobile</TableCell>
+                        <TableCell sx={{ fontWeight: 600, whiteSpace: 'nowrap' }}>Email</TableCell>
+                        <TableCell sx={{ fontWeight: 600, whiteSpace: 'nowrap' }}>Actions</TableCell>
                       </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </TabPanel>
+                    </TableHead>
+                    <TableBody>
+                      {filteredCustomers.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={7} align='center' sx={{ py: 4 }}>
+                            <Typography variant='body2' color='text.secondary'>
+                              No customers found
+                            </Typography>
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        filteredCustomers.map(customer => (
+                          <TableRow key={customer.id} hover>
+                            <TableCell sx={{ whiteSpace: 'nowrap' }}>{customer.name}</TableCell>
+                            <TableCell sx={{ whiteSpace: 'nowrap' }}>{customer.company}</TableCell>
+                            <TableCell sx={{ whiteSpace: 'nowrap' }}>{customer.location}</TableCell>
+                            <TableCell sx={{ whiteSpace: 'nowrap' }}>{customer.contactPerson}</TableCell>
+                            <TableCell sx={{ whiteSpace: 'nowrap' }}>{customer.mobile}</TableCell>
+                            <TableCell sx={{ whiteSpace: 'nowrap' }}>{customer.email}</TableCell>
+                            <TableCell>
+                              <Box sx={{ display: 'flex', gap: 1, flexWrap: { xs: 'wrap', sm: 'nowrap' } }}>
+                                <Button
+                                  variant='outlined'
+                                  size='small'
+                                  startIcon={<EditIcon fontSize='small' />}
+                                  onClick={() => handleEdit(customer)}
+                                  sx={{
+                                    textTransform: 'none',
+                                    borderColor: 'text.secondary',
+                                    color: 'text.primary',
+                                    '&:hover': {
+                                      borderColor: 'text.secondary',
+                                      backgroundColor: 'action.hover'
+                                    }
+                                  }}
+                                >
+                                  Edit
+                                </Button>
+                                <IconButton
+                                  size='small'
+                                  color='error'
+                                  onClick={() => handleDelete(customer.id)}
+                                  sx={{
+                                    backgroundColor: 'error.main',
+                                    color: 'white',
+                                    '&:hover': {
+                                      backgroundColor: 'error.dark'
+                                    }
+                                  }}
+                                >
+                                  <DeleteIcon fontSize='small' />
+                                </IconButton>
+                              </Box>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </Paper>
+            </TabPanel>
 
-          {/* Tab Panel: Add Customer */}
-          <TabPanel value={tabValue} index={1}>
-            <div className='row'>
-              <div className='col-12 col-md-6'>
-                <Box sx={{ mb: 4 }}>
-                  <Typography variant='h6' sx={{ mb: 2, color: 'primary.main', fontWeight: 600 }}>
-                    Customer Details
-                  </Typography>
+            {/* Tab Panel: Add Customer */}
+            <TabPanel value={tabValue} index={1}>
+              <div className='row'>
+                <div className='col-12 col-md-6'>
+                  <Box sx={{ mb: 4 }}>
+                    <Typography variant='h6' sx={{ mb: 2, color: 'primary.main', fontWeight: 600 }}>
+                      Customer Details
+                    </Typography>
 
-                  <div className='row'>
-                    <div className='col-12 col-md-12'>
-                      <TextField
-                        fullWidth
-                        label='Customer Name'
-                        required
-                        size='small'
-                        value={formData.customerName}
-                        onChange={e => handleInputChange('customerName', e.target.value)}
-                        sx={{ mb: 2 }}
-                      />
+                    <div className='row'>
+                      <div className='col-12 col-md-12'>
+                        <TextField
+                          fullWidth
+                          label='Customer Name'
+                          required
+                          size='small'
+                          value={formData.customerName}
+                          onChange={e => handleInputChange('customerName', e.target.value)}
+                          sx={{ mb: 2 }}
+                        />
+                      </div>
+                      <div className='col-12 col-md-12'>
+                        <TextField
+                          fullWidth
+                          label='Company Name'
+                          required
+                          size='small'
+                          value={formData.companyName}
+                          onChange={e => handleInputChange('companyName', e.target.value)}
+                          sx={{ mb: 2 }}
+                        />
+                      </div>
                     </div>
-                    <div className='col-12 col-md-12'>
-                      <TextField
-                        fullWidth
-                        label='Company Name'
-                        required
-                        size='small'
-                        value={formData.companyName}
-                        onChange={e => handleInputChange('companyName', e.target.value)}
-                        sx={{ mb: 2 }}
-                      />
-                    </div>
-                  </div>
-                </Box>
-              </div>
-              <div className='col-12 col-md-6'>
-                <Box sx={{ mb: 4 }}>
-                  <Typography variant='h6' sx={{ mb: 2, color: 'primary.main', fontWeight: 600 }}>
-                    Contact Information
-                  </Typography>
+                  </Box>
+                </div>
+                <div className='col-12 col-md-6'>
+                  <Box sx={{ mb: 4 }}>
+                    <Typography variant='h6' sx={{ mb: 2, color: 'primary.main', fontWeight: 600 }}>
+                      Contact Information
+                    </Typography>
 
-                  <div className='row'>
-                    <div className='col-12 col-md-6'>
-                      <TextField
-                        fullWidth
-                        label='Contact Person'
-                        size='small'
-                        value={formData.contactPerson}
-                        onChange={e => handleInputChange('contactPerson', e.target.value)}
-                        sx={{ mb: 2 }}
-                      />
+                    <div className='row'>
+                      <div className='col-12 col-md-6'>
+                        <TextField
+                          fullWidth
+                          label='Contact Person'
+                          size='small'
+                          value={formData.contactPerson}
+                          onChange={e => handleInputChange('contactPerson', e.target.value)}
+                          sx={{ mb: 2 }}
+                        />
+                      </div>
+                      <div className='col-12 col-md-6'>
+                        <TextField
+                          fullWidth
+                          label='Mobile Number'
+                          size='small'
+                          placeholder='10-digit number'
+                          value={formData.mobileNumber}
+                          onChange={e => handleInputChange('mobileNumber', e.target.value)}
+                          sx={{ mb: 2 }}
+                        />
+                      </div>
+                      <div className='col-12 col-md-6'>
+                        <TextField
+                          fullWidth
+                          label='Email'
+                          size='small'
+                          type='email'
+                          value={formData.email}
+                          onChange={e => handleInputChange('email', e.target.value)}
+                          sx={{ mb: 2 }}
+                        />
+                      </div>
                     </div>
-                    <div className='col-12 col-md-6'>
-                      <TextField
-                        fullWidth
-                        label='Mobile Number'
-                        size='small'
-                        placeholder='10-digit number'
-                        value={formData.mobileNumber}
-                        onChange={e => handleInputChange('mobileNumber', e.target.value)}
-                        sx={{ mb: 2 }}
-                      />
+                  </Box>
+                </div>
+                <div className='col-12 col-md-6'>
+                  <Box sx={{ mb: 4 }}>
+                    <Typography variant='h6' sx={{ mb: 2, color: 'primary.main', fontWeight: 600 }}>
+                      Address Details
+                    </Typography>
+                    <div className='row'>
+                      <div className='col-12 col-md-6'>
+                        <FormControl fullWidth size='small' required sx={{ mb: 2 }}>
+                          <InputLabel>Country</InputLabel>
+                          <Select
+                            value={formData.country}
+                            label='Country'
+                            onChange={e => handleInputChange('country', e.target.value)}
+                          >
+                            <MenuItem value='India'>India</MenuItem>
+                            <MenuItem value='USA'>USA</MenuItem>
+                            <MenuItem value='UK'>UK</MenuItem>
+                          </Select>
+                        </FormControl>
+                      </div>
+                      <div className='col-12 col-md-6'>
+                        <TextField
+                          fullWidth
+                          label='State'
+                          required
+                          size='small'
+                          placeholder='Enter state'
+                          value={formData.state}
+                          onChange={e => handleInputChange('state', e.target.value)}
+                          sx={{ mb: 2 }}
+                        />
+                      </div>
+                      <div className='col-12 col-md-6'>
+                        <TextField
+                          fullWidth
+                          label='City'
+                          required
+                          size='small'
+                          placeholder='Enter city'
+                          value={formData.city}
+                          onChange={e => handleInputChange('city', e.target.value)}
+                          sx={{ mb: 2 }}
+                        />
+                      </div>
+                      <div className='col-12 col-md-6'>
+                        <TextField
+                          fullWidth
+                          label='Pincode'
+                          required
+                          size='small'
+                          placeholder='Enter pincode'
+                          value={formData.pincode}
+                          onChange={e => handleInputChange('pincode', e.target.value)}
+                          sx={{ mb: 2 }}
+                        />
+                      </div>
+                      <div className='col-12 col-md-12'>
+                        <TextField
+                          fullWidth
+                          label='Address'
+                          required
+                          multiline
+                          rows={3}
+                          size='small'
+                          placeholder='Enter complete address'
+                          value={formData.address}
+                          onChange={e => handleInputChange('address', e.target.value)}
+                          sx={{ mb: 2 }}
+                        />
+                      </div>
                     </div>
-                    <div className='col-12 col-md-6'>
-                      <TextField
-                        fullWidth
-                        label='Email'
-                        size='small'
-                        type='email'
-                        value={formData.email}
-                        onChange={e => handleInputChange('email', e.target.value)}
-                        sx={{ mb: 2 }}
-                      />
-                    </div>
-                  </div>
-                </Box>
-              </div>
-              <div className='col-12 col-md-6'>
-                <Box sx={{ mb: 4 }}>
-                  <Typography variant='h6' sx={{ mb: 2, color: 'primary.main', fontWeight: 600 }}>
-                    Address Details
-                  </Typography>
-                  <div className='row'>
-                    <div className='col-12 col-md-6'>
-                      <FormControl fullWidth size='small' required sx={{ mb: 2 }}>
-                        <InputLabel>Country</InputLabel>
-                        <Select
-                          value={formData.country}
-                          label='Country'
-                          onChange={e => handleInputChange('country', e.target.value)}
-                        >
-                          <MenuItem value='India'>India</MenuItem>
-                          <MenuItem value='USA'>USA</MenuItem>
-                          <MenuItem value='UK'>UK</MenuItem>
-                        </Select>
-                      </FormControl>
-                    </div>
-                    <div className='col-12 col-md-6'>
-                      <TextField
-                        fullWidth
-                        label='State'
-                        required
-                        size='small'
-                        placeholder='Enter state'
-                        value={formData.state}
-                        onChange={e => handleInputChange('state', e.target.value)}
-                        sx={{ mb: 2 }}
-                      />
-                    </div>
-                    <div className='col-12 col-md-6'>
-                      <TextField
-                        fullWidth
-                        label='City'
-                        required
-                        size='small'
-                        placeholder='Enter city'
-                        value={formData.city}
-                        onChange={e => handleInputChange('city', e.target.value)}
-                        sx={{ mb: 2 }}
-                      />
-                    </div>
-                    <div className='col-12 col-md-6'>
-                      <TextField
-                        fullWidth
-                        label='Pincode'
-                        required
-                        size='small'
-                        placeholder='Enter pincode'
-                        value={formData.pincode}
-                        onChange={e => handleInputChange('pincode', e.target.value)}
-                        sx={{ mb: 2 }}
-                      />
-                    </div>
-                    <div className='col-12 col-md-12'>
-                      <TextField
-                        fullWidth
-                        label='Address'
-                        required
-                        multiline
-                        rows={3}
-                        size='small'
-                        placeholder='Enter complete address'
-                        value={formData.address}
-                        onChange={e => handleInputChange('address', e.target.value)}
-                        sx={{ mb: 2 }}
-                      />
-                    </div>
-                  </div>
-                </Box>
-              </div>
-              <div className='col-12 col-md-6'>
-                <Box sx={{ mb: 4 }}>
-                  <Typography variant='h6' sx={{ mb: 2, color: 'primary.main', fontWeight: 600 }}>
-                    Additional Notes
-                  </Typography>
+                  </Box>
+                </div>
+                <div className='col-12 col-md-6'>
+                  <Box sx={{ mb: 4 }}>
+                    <Typography variant='h6' sx={{ mb: 2, color: 'primary.main', fontWeight: 600 }}>
+                      Additional Notes
+                    </Typography>
 
-                  <div className='row'>
-                    <div className='col-12 col-md-12'>
-                      <TextField
-                        fullWidth
-                        label='Notes'
-                        multiline
-                        rows={4}
-                        size='small'
-                        placeholder='Enter any additional notes'
-                        value={formData.notes}
-                        onChange={e => handleInputChange('notes', e.target.value)}
-                        sx={{ mb: 2 }}
-                      />
+                    <div className='row'>
+                      <div className='col-12 col-md-12'>
+                        <TextField
+                          fullWidth
+                          label='Notes'
+                          multiline
+                          rows={4}
+                          size='small'
+                          placeholder='Enter any additional notes'
+                          value={formData.notes}
+                          onChange={e => handleInputChange('notes', e.target.value)}
+                          sx={{ mb: 2 }}
+                        />
+                      </div>
                     </div>
-                  </div>
-                </Box>
-              </div>
-              <div className='col-12 col-md-12'>
-                {/* Action Buttons */}
-                <Box
-                  sx={{
-                    display: 'flex',
-                    gap: 2,
-                    justifyContent: { xs: 'stretch', sm: 'space-between' },
-                    flexWrap: 'wrap',
-                    flexDirection: { xs: 'column', sm: 'row' },
-                    mt: 2
-                  }}
-                >
-                  <Button
-                    variant='contained'
-                    size='medium'
-                    onClick={handleAddCustomer}
-                    sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+                  </Box>
+                </div>
+                <div className='col-12 col-md-12'>
+                  {/* Action Buttons */}
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      gap: 2,
+                      justifyContent: { xs: 'stretch', sm: 'space-between' },
+                      flexWrap: 'wrap',
+                      flexDirection: { xs: 'column', sm: 'row' },
+                      mt: 2
+                    }}
                   >
-                    Add Customer
-                  </Button>
-                  <Button
-                    variant='outlined'
-                    size='medium'
-                    endIcon={<ArrowBackIcon sx={{ transform: 'rotate(180deg)' }} />}
-                    onClick={() => navigate('/devices')}
-                    sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
-                  >
-                    Next: Device Module →
-                  </Button>
-                </Box>
+                    <Button
+                      variant='contained'
+                      size='medium'
+                      onClick={handleAddCustomer}
+                      sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+                    >
+                      Add Customer
+                    </Button>
+                    <Button
+                      variant='outlined'
+                      size='medium'
+                      endIcon={<ArrowBackIcon sx={{ transform: 'rotate(180deg)' }} />}
+                      onClick={() => navigate('/devices')}
+                      sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+                    >
+                      Next: Device Module →
+                    </Button>
+                  </Box>
+                </div>
               </div>
-            </div>
 
-            <Box sx={{ width: '100%' }}></Box>
-          </TabPanel>
+              <Box sx={{ width: '100%' }}></Box>
+            </TabPanel>
+          </Box>
         </Box>
       </Box>
     </Box>

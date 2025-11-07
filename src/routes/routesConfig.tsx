@@ -10,6 +10,10 @@ import ProcedureTemplates from '@/pages/protected/procedure-templates'
 import AddTemplate from '@/pages/protected/procedure-templates/AddTemplate'
 import ViewTemplate from '@/pages/protected/procedure-templates/ViewTemplate'
 import EditTemplate from '@/pages/protected/procedure-templates/EditTemplate'
+import UserManagement from '@/pages/protected/user-management'
+import AddUser from '@/pages/protected/user-management/AddUser'
+import ViewUser from '@/pages/protected/user-management/ViewUser'
+import EditUser from '@/pages/protected/user-management/EditUser'
 // JS component import
 // @ts-expect-error - importing .jsx file in TS route config
 import CreateCertificate from '@/pages/protected/certificates/CreateCertificate.jsx'
@@ -27,7 +31,11 @@ export const publicRoutes = [
   { path: '/procedure-templates', element: <ProcedureTemplates /> },
   { path: '/procedure-templates/add', element: <AddTemplate /> },
   { path: '/procedure-templates/:id', element: <ViewTemplate /> },
-  { path: '/procedure-templates/:id/edit', element: <EditTemplate /> }
+  { path: '/procedure-templates/:id/edit', element: <EditTemplate /> },
+  { path: '/user-management', element: <UserManagement /> },
+  { path: '/user-management/add', element: <AddUser /> },
+  { path: '/user-management/:id', element: <ViewUser /> },
+  { path: '/user-management/:id/edit', element: <EditUser /> }
 ]
 
 export const protectedRoutes = []
