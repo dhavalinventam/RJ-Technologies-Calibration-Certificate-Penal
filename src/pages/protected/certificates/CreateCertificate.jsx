@@ -98,6 +98,21 @@ const CreateCertificate = () => {
     }
   ])
 
+  // Eccentricity (Step 5) data
+  const [eccentricity, setEccentricity] = useState({
+    testWeight: '50 kg',
+    positions: [
+      { position: 'Center', displayedValue: '50.000 kg', deviation: 'N/A' },
+      { position: 'Left Front', displayedValue: '50.000 kg', deviation: '0.000 kg' },
+      { position: 'Left Rear', displayedValue: '50.000 kg', deviation: '0.000 kg' },
+      { position: 'Right Rear', displayedValue: '50.000 kg', deviation: '0.000 kg' },
+      { position: 'Right Front', displayedValue: '50.000 kg', deviation: '0.000 kg' }
+    ],
+    maximumDeviation: '0.000 kg',
+    allowableDeviation: '0.002 kg',
+    withinTolerances: 'YES'
+  })
+
   // PDF Generation function
   const generatePDF = useCallback(() => {
     const doc = new jsPDF()
@@ -490,10 +505,216 @@ const CreateCertificate = () => {
       doc.line(margin, yPos - 3, pageWidth - margin, yPos - 3)
     }
 
+    // Eccentricity Section
+    yPos += 15
+    // Check if we need a new page
+    if (yPos > pageHeight - 100) {
+      doc.addPage()
+      yPos = margin
+    }
+
+    doc.setFontSize(12)
+    doc.setFont(undefined, 'bold')
+    doc.text('Eccentricity :', margin, yPos)
+    doc.setFont(undefined, 'normal')
+    yPos += 10
+
+    // Eccentricity Table Setup
+    const eccTableWidth = pageWidth - margin * 2
+    const eccCol1Width = eccTableWidth * 0.25 // Position column
+    const eccCol2Width = eccTableWidth * 0.375 // Displayed Value column
+    const eccCol3Width = eccTableWidth * 0.375 // Deviation column
+    const eccRowHeight = 7
+    const eccHeaderRowHeight = 7
+
+    // Header Row 1: "Test Weight" | "50 kg" (merged 2 cols) | (empty or "As Found" merged 2 cols)
+    const header1Y = yPos
+    doc.setFontSize(10)
+    doc.setFont(undefined, 'bold')
+
+    // Draw borders for header row 1
+    doc.setLineWidth(0.5)
+    doc.setDrawColor(0, 0, 0)
+    doc.rect(margin, header1Y - 5, eccTableWidth, eccHeaderRowHeight, 'S')
+
+    // "Test Weight" (left-aligned in first column)
+    doc.text('Test Weight', margin + 2, header1Y)
+
+    // "50 kg" (centered in merged cell spanning col2 and col3)
+    const testWeightX = margin + eccCol1Width
+    const testWeightWidth = eccCol2Width + eccCol3Width
+    const testWeightText = eccentricity.testWeight || '50 kg'
+    const testWeightTextWidth = doc.getTextWidth(testWeightText)
+    doc.text(testWeightText, testWeightX + testWeightWidth / 2 - testWeightTextWidth / 2, header1Y)
+
+    // Vertical line after "Test Weight"
+    doc.line(margin + eccCol1Width, header1Y - 5, margin + eccCol1Width, header1Y - 5 + eccHeaderRowHeight)
+
+    yPos += eccHeaderRowHeight
+
+    // Header Row 2: "Position" | "As Found" (merged 2 cols) | "Displayed Value" | "Deviation"
+    const header2Y = yPos
+    doc.setFontSize(10)
+    doc.setFont(undefined, 'bold')
+
+    // Draw borders for header row 2
+    doc.rect(margin, header2Y - 5, eccTableWidth, eccHeaderRowHeight, 'S')
+
+    // "Position" (left-aligned)
+    doc.text('Position', margin + 2, header2Y)
+
+    // "As Found" (centered in merged cell spanning col2 and col3)
+    const asFoundX = margin + eccCol1Width
+    const asFoundWidth = eccCol2Width + eccCol3Width
+    const asFoundText = 'As Found'
+    const asFoundTextWidth = doc.getTextWidth(asFoundText)
+    doc.text(asFoundText, asFoundX + asFoundWidth / 2 - asFoundTextWidth / 2, header2Y)
+
+    // Vertical line after "Position"
+    doc.line(margin + eccCol1Width, header2Y - 5, margin + eccCol1Width, header2Y - 5 + eccHeaderRowHeight)
+
+    // "Displayed Value" and "Deviation" are sub-columns under "As Found"
+    // We'll draw them in a third header row or adjust the layout
+    // Actually, based on the description, "As Found" spans both, so we don't need separate headers for Displayed Value and Deviation in row 2
+    // But we need them for clarity - let me add a row 3 or adjust
+
+    yPos += eccHeaderRowHeight
+
+    // Header Row 3: (empty) | "Displayed Value" | "Deviation"
+    const header3Y = yPos
+    doc.setFontSize(10)
+    doc.setFont(undefined, 'bold')
+
+    // Draw borders for header row 3
+    doc.rect(margin, header3Y - 5, eccTableWidth, eccHeaderRowHeight, 'S')
+
+    // Empty first column (or we can put a space)
+    // "Displayed Value" (centered in col2)
+    const displayedValueText = 'Displayed Value'
+    const displayedValueTextWidth = doc.getTextWidth(displayedValueText)
+    doc.text(displayedValueText, margin + eccCol1Width + eccCol2Width / 2 - displayedValueTextWidth / 2, header3Y)
+
+    // "Deviation" (centered in col3)
+    const deviationText = 'Deviation'
+    const deviationTextWidth = doc.getTextWidth(deviationText)
+    doc.text(deviationText, margin + eccCol1Width + eccCol2Width + eccCol3Width / 2 - deviationTextWidth / 2, header3Y)
+
+    // Vertical lines
+    doc.line(margin + eccCol1Width, header3Y - 5, margin + eccCol1Width, header3Y - 5 + eccHeaderRowHeight)
+    doc.line(
+      margin + eccCol1Width + eccCol2Width,
+      header3Y - 5,
+      margin + eccCol1Width + eccCol2Width,
+      header3Y - 5 + eccHeaderRowHeight
+    )
+
+    yPos += eccHeaderRowHeight
+    doc.setFont(undefined, 'normal')
+
+    // Data Rows
+    eccentricity.positions.forEach((pos, index) => {
+      // Check if we need a new page
+      if (yPos > pageHeight - 20) {
+        doc.addPage()
+        yPos = margin
+      }
+
+      const rowY = yPos - 3
+      doc.setFontSize(9)
+      doc.setLineWidth(0.1)
+      doc.setDrawColor(0, 0, 0)
+
+      // Position (left-aligned)
+      doc.text(pos.position || '', margin + 2, yPos)
+
+      // Displayed Value (centered)
+      const dispValueText = pos.displayedValue || ''
+      const dispValueTextWidth = doc.getTextWidth(dispValueText)
+      doc.text(dispValueText, margin + eccCol1Width + eccCol2Width / 2 - dispValueTextWidth / 2, yPos)
+
+      // Deviation (centered)
+      const devText = pos.deviation || ''
+      const devTextWidth = doc.getTextWidth(devText)
+      doc.text(devText, margin + eccCol1Width + eccCol2Width + eccCol3Width / 2 - devTextWidth / 2, yPos)
+
+      // Draw row borders
+      doc.line(margin, rowY + eccRowHeight, pageWidth - margin, rowY + eccRowHeight)
+      doc.line(margin + eccCol1Width, rowY, margin + eccCol1Width, rowY + eccRowHeight)
+      doc.line(margin + eccCol1Width + eccCol2Width, rowY, margin + eccCol1Width + eccCol2Width, rowY + eccRowHeight)
+
+      yPos += eccRowHeight
+    })
+
+    // Summary Rows
+    // Maximum Deviation (label spans Position and Displayed Value columns, value in Deviation column, right-aligned)
+    if (yPos > pageHeight - 20) {
+      doc.addPage()
+      yPos = margin
+    }
+    const maxDevY = yPos - 3
+    doc.setFontSize(9)
+    doc.text('Maximum Deviation:', margin + 2, yPos)
+    const maxDevValue = eccentricity.maximumDeviation || ''
+    const maxDevValueWidth = doc.getTextWidth(maxDevValue)
+    // Right-align the value in Deviation column
+    doc.text(maxDevValue, margin + eccCol1Width + eccCol2Width + eccCol3Width - maxDevValueWidth - 2, yPos)
+    doc.setLineWidth(0.1)
+    doc.line(margin, maxDevY + eccRowHeight, pageWidth - margin, maxDevY + eccRowHeight)
+    doc.line(margin + eccCol1Width, maxDevY, margin + eccCol1Width, maxDevY + eccRowHeight)
+    doc.line(
+      margin + eccCol1Width + eccCol2Width,
+      maxDevY,
+      margin + eccCol1Width + eccCol2Width,
+      maxDevY + eccRowHeight
+    )
+    yPos += eccRowHeight
+
+    // Allowable Deviation (label spans Position and Displayed Value columns, value in Deviation column, right-aligned)
+    if (yPos > pageHeight - 20) {
+      doc.addPage()
+      yPos = margin
+    }
+    const allowDevY = yPos - 3
+    doc.text('Allowable Deviation:', margin + 2, yPos)
+    const allowDevValue = eccentricity.allowableDeviation || ''
+    const allowDevValueWidth = doc.getTextWidth(allowDevValue)
+    // Right-align the value in Deviation column
+    doc.text(allowDevValue, margin + eccCol1Width + eccCol2Width + eccCol3Width - allowDevValueWidth - 2, yPos)
+    doc.line(margin, allowDevY + eccRowHeight, pageWidth - margin, allowDevY + eccRowHeight)
+    doc.line(margin + eccCol1Width, allowDevY, margin + eccCol1Width, allowDevY + eccRowHeight)
+    doc.line(
+      margin + eccCol1Width + eccCol2Width,
+      allowDevY,
+      margin + eccCol1Width + eccCol2Width,
+      allowDevY + eccRowHeight
+    )
+    yPos += eccRowHeight
+
+    // Within Tolerances (label spans Position and Displayed Value columns, value in Deviation column, centered)
+    if (yPos > pageHeight - 20) {
+      doc.addPage()
+      yPos = margin
+    }
+    const withinTolY = yPos - 3
+    doc.text('Within Tolerances:', margin + 2, yPos)
+    const withinTolValue = eccentricity.withinTolerances || ''
+    const withinTolValueWidth = doc.getTextWidth(withinTolValue)
+    // Center the value in Deviation column
+    doc.text(withinTolValue, margin + eccCol1Width + eccCol2Width + eccCol3Width / 2 - withinTolValueWidth / 2, yPos)
+    doc.setLineWidth(0.5)
+    doc.line(margin, withinTolY + eccRowHeight, pageWidth - margin, withinTolY + eccRowHeight)
+    doc.line(margin + eccCol1Width, withinTolY, margin + eccCol1Width, withinTolY + eccRowHeight)
+    doc.line(
+      margin + eccCol1Width + eccCol2Width,
+      withinTolY,
+      margin + eccCol1Width + eccCol2Width,
+      withinTolY + eccRowHeight
+    )
+
     // Open PDF in new window
     const fileName = `Calibration_Certificate_${certificateNo || 'Certificate'}.pdf`
     doc.output('dataurlnewwindow')
-  }, [certificateNo, customer, device, procedureTemplate, linearityRecords])
+  }, [certificateNo, customer, device, procedureTemplate, linearityRecords, eccentricity])
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', flexDirection: 'row' }}>
@@ -1033,6 +1254,113 @@ const CreateCertificate = () => {
                     </TableBody>
                   </Table>
                 </TableContainer>
+              </Box>
+            ) : activeStep === 5 ? (
+              <Box className='cc_card'>
+                <Box sx={{ mb: 2 }}>
+                  <Typography variant='h6' sx={{ fontWeight: 600, mb: 0.5, fontSize: '1.125rem' }}>
+                    Eccentricity
+                  </Typography>
+                </Box>
+
+                <div className='row'>
+                  <div className='col-12 col-md-6'>
+                    <Typography variant='body2' sx={{ mb: 0.7 }} component='label' className='cc_label'>
+                      Test Weight
+                    </Typography>
+                    <TextField
+                      value={eccentricity.testWeight}
+                      onChange={e => setEccentricity(p => ({ ...p, testWeight: e.target.value }))}
+                      fullWidth
+                      size='small'
+                      placeholder='e.g., 50 kg'
+                    />
+                  </div>
+                </div>
+
+                <Box sx={{ mt: 3 }}>
+                  <Typography variant='body2' sx={{ mb: 1, fontWeight: 500 }}>
+                    Positions
+                  </Typography>
+                  {eccentricity.positions.map((pos, index) => (
+                    <div key={index} className='row' style={{ marginBottom: '12px' }}>
+                      <div className='col-12 col-md-2 col-lg-2 col-xl-1'>
+                        <Typography variant='body2' sx={{ mb: 0.7, mt: 2 }} component='label' className='cc_label'>
+                          <b>{pos.position}</b>
+                        </Typography>
+                      </div>
+                      <div className='col-12 col-md-4'>
+                        <Typography variant='body2' sx={{ mb: 0.7 }} component='label' className='cc_label'>
+                          Displayed Value
+                        </Typography>
+                        <TextField
+                          value={pos.displayedValue}
+                          onChange={e => {
+                            const updated = [...eccentricity.positions]
+                            updated[index].displayedValue = e.target.value
+                            setEccentricity(p => ({ ...p, positions: updated }))
+                          }}
+                          fullWidth
+                          size='small'
+                          placeholder='Displayed Value'
+                        />
+                      </div>
+                      <div className='col-12 col-md-4'>
+                        <Typography variant='body2' sx={{ mb: 0.7 }} component='label' className='cc_label'>
+                          Deviation
+                        </Typography>
+                        <TextField
+                          value={pos.deviation}
+                          onChange={e => {
+                            const updated = [...eccentricity.positions]
+                            updated[index].deviation = e.target.value
+                            setEccentricity(p => ({ ...p, positions: updated }))
+                          }}
+                          fullWidth
+                          size='small'
+                          placeholder='Deviation'
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </Box>
+
+                <div className='row' style={{ marginTop: '20px' }}>
+                  <div className='col-12 col-md-4'>
+                    <Typography variant='body2' sx={{ mb: 0.7 }} component='label' className='cc_label'>
+                      Maximum Deviation
+                    </Typography>
+                    <TextField
+                      value={eccentricity.maximumDeviation}
+                      onChange={e => setEccentricity(p => ({ ...p, maximumDeviation: e.target.value }))}
+                      fullWidth
+                      size='small'
+                    />
+                  </div>
+                  <div className='col-12 col-md-4'>
+                    <Typography variant='body2' sx={{ mb: 0.7 }} component='label' className='cc_label'>
+                      Allowable Deviation
+                    </Typography>
+                    <TextField
+                      value={eccentricity.allowableDeviation}
+                      onChange={e => setEccentricity(p => ({ ...p, allowableDeviation: e.target.value }))}
+                      fullWidth
+                      size='small'
+                    />
+                  </div>
+                  <div className='col-12 col-md-4'>
+                    <Typography variant='body2' sx={{ mb: 0.7 }} component='label' className='cc_label'>
+                      Within Tolerances
+                    </Typography>
+                    <TextField
+                      value={eccentricity.withinTolerances}
+                      onChange={e => setEccentricity(p => ({ ...p, withinTolerances: e.target.value }))}
+                      fullWidth
+                      size='small'
+                      placeholder='YES/NO'
+                    />
+                  </div>
+                </div>
               </Box>
             ) : (
               <Box className='cc_card'>
