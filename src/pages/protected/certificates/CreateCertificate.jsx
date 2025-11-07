@@ -387,40 +387,44 @@ const CreateCertificate = () => {
         (pageWidth - margin * 2) * 0.2 // Within Tolerances
       ]
       const rowHeight = 8
-      let currentX = margin
+      const cellPadding = 4 // Padding inside cells
+      const borderWidth = 0.3 // Thin border (normal weight)
+      const borderColor = [150, 150, 150] // Gray color for borders
+
+      // Set consistent border style for all borders
+      doc.setLineWidth(borderWidth)
+      doc.setDrawColor(borderColor[0], borderColor[1], borderColor[2])
 
       // Draw table header
-      doc.setFontSize(10)
-      doc.setFont(undefined, 'bold')
-      doc.setFillColor(240, 240, 240)
+      doc.setFontSize(9)
+      doc.setFont(undefined, 'normal')
       const headerY = yPos - 5
-      doc.rect(currentX, headerY, pageWidth - margin * 2, rowHeight, 'F')
-      doc.text('Nominal Value', currentX + 2, yPos)
-      currentX += colWidths[0]
-      doc.text('Reading', currentX + 2, yPos)
-      currentX += colWidths[1]
-      doc.text('Error', currentX + 2, yPos)
-      currentX += colWidths[2]
-      doc.text('Allowable Error', currentX + 2, yPos)
-      currentX += colWidths[3]
-      doc.text('Within Tolerances', currentX + 2, yPos)
 
-      // Draw header border
-      doc.setLineWidth(0.5)
-      doc.setDrawColor(0, 0, 0)
+      // Draw header borders - complete rectangle with all sides
       doc.rect(margin, headerY, pageWidth - margin * 2, rowHeight, 'S')
 
+      // Header text with padding
+      let headerX = margin
+      doc.text('Nominal Value', headerX + cellPadding, yPos)
+      headerX += colWidths[0]
+      doc.text('Reading', headerX + cellPadding, yPos)
+      headerX += colWidths[1]
+      doc.text('Error', headerX + cellPadding, yPos)
+      headerX += colWidths[2]
+      doc.text('Allowable Error', headerX + cellPadding, yPos)
+      headerX += colWidths[3]
+      doc.text('Within Tolerances', headerX + cellPadding, yPos)
+
       // Draw vertical lines for header
-      currentX = margin
+      let lineX = margin
       for (let i = 0; i < colWidths.length; i++) {
-        currentX += colWidths[i]
+        lineX += colWidths[i]
         if (i < colWidths.length - 1) {
-          doc.line(currentX, headerY, currentX, headerY + rowHeight)
+          doc.line(lineX, headerY, lineX, headerY + rowHeight)
         }
       }
 
       yPos += rowHeight
-      doc.setFont(undefined, 'normal')
 
       // Draw table rows
       validRecords.forEach((record, index) => {
@@ -429,80 +433,78 @@ const CreateCertificate = () => {
           doc.addPage()
           yPos = margin
           // Redraw header on new page
-          currentX = margin
-          doc.setFontSize(10)
-          doc.setFont(undefined, 'bold')
-          doc.setFillColor(240, 240, 240)
+          doc.setFontSize(9)
+          doc.setFont(undefined, 'normal')
           const newHeaderY = yPos - 5
-          doc.rect(currentX, newHeaderY, pageWidth - margin * 2, rowHeight, 'F')
-          doc.text('Nominal Value', currentX + 2, yPos)
-          currentX += colWidths[0]
-          doc.text('Reading', currentX + 2, yPos)
-          currentX += colWidths[1]
-          doc.text('Error', currentX + 2, yPos)
-          currentX += colWidths[2]
-          doc.text('Allowable Error', currentX + 2, yPos)
-          currentX += colWidths[3]
-          doc.text('Within Tolerances', currentX + 2, yPos)
 
-          // Draw header border
-          doc.setLineWidth(0.5)
-          doc.setDrawColor(0, 0, 0)
+          // Draw header borders - complete rectangle with all sides
           doc.rect(margin, newHeaderY, pageWidth - margin * 2, rowHeight, 'S')
 
+          // Header text with padding
+          let headerX = margin
+          doc.text('Nominal Value', headerX + cellPadding, yPos)
+          headerX += colWidths[0]
+          doc.text('Reading', headerX + cellPadding, yPos)
+          headerX += colWidths[1]
+          doc.text('Error', headerX + cellPadding, yPos)
+          headerX += colWidths[2]
+          doc.text('Allowable Error', headerX + cellPadding, yPos)
+          headerX += colWidths[3]
+          doc.text('Within Tolerances', headerX + cellPadding, yPos)
+
           // Draw vertical lines for header
-          currentX = margin
+          let lineX = margin
           for (let i = 0; i < colWidths.length; i++) {
-            currentX += colWidths[i]
+            lineX += colWidths[i]
             if (i < colWidths.length - 1) {
-              doc.line(currentX, newHeaderY, currentX, newHeaderY + rowHeight)
+              doc.line(lineX, newHeaderY, lineX, newHeaderY + rowHeight)
             }
           }
 
           yPos += rowHeight
-          doc.setFont(undefined, 'normal')
         }
 
-        currentX = margin
         doc.setFontSize(9)
         const rowY = yPos - 3
+        let cellX = margin
 
-        // Draw cell content
-        doc.text(record.nominalValue || '', currentX + 2, yPos)
-        currentX += colWidths[0]
+        // Draw cell content with padding
+        doc.text(record.nominalValue || '', cellX + cellPadding, yPos)
+        cellX += colWidths[0]
 
-        doc.text(record.reading || '', currentX + 2, yPos)
-        currentX += colWidths[1]
+        doc.text(record.reading || '', cellX + cellPadding, yPos)
+        cellX += colWidths[1]
 
-        doc.text(record.error || '', currentX + 2, yPos)
-        currentX += colWidths[2]
+        doc.text(record.error || '', cellX + cellPadding, yPos)
+        cellX += colWidths[2]
 
-        doc.text(record.allowableError || '', currentX + 2, yPos)
-        currentX += colWidths[3]
+        doc.text(record.allowableError || '', cellX + cellPadding, yPos)
+        cellX += colWidths[3]
 
-        doc.text(record.withinTolerances || '', currentX + 2, yPos)
+        doc.text(record.withinTolerances || '', cellX + cellPadding, yPos)
 
-        // Draw row border (bottom)
-        doc.setDrawColor(0, 0, 0)
-        doc.setLineWidth(0.1)
+        // Draw complete row borders - all sides with consistent border
+        // Left border
+        doc.line(margin, rowY, margin, rowY + rowHeight)
+        // Right border
+        doc.line(pageWidth - margin, rowY, pageWidth - margin, rowY + rowHeight)
+        // Bottom border
         doc.line(margin, rowY + rowHeight, pageWidth - margin, rowY + rowHeight)
 
         // Draw vertical lines
-        currentX = margin
+        let lineX = margin
         for (let i = 0; i < colWidths.length; i++) {
-          currentX += colWidths[i]
+          lineX += colWidths[i]
           if (i < colWidths.length - 1) {
-            doc.line(currentX, rowY, currentX, rowY + rowHeight)
+            doc.line(lineX, rowY, lineX, rowY + rowHeight)
           }
         }
 
         yPos += rowHeight
       })
 
-      // Draw bottom border
-      doc.setLineWidth(0.5)
-      doc.setDrawColor(0, 0, 0)
-      doc.line(margin, yPos - 3, pageWidth - margin, yPos - 3)
+      // Add spacing after the table
+      yPos += 10
     }
 
     // Eccentricity Section
@@ -524,21 +526,26 @@ const CreateCertificate = () => {
     const eccCol1Width = eccTableWidth * 0.25 // Position column
     const eccCol2Width = eccTableWidth * 0.375 // Displayed Value column
     const eccCol3Width = eccTableWidth * 0.375 // Deviation column
-    const eccRowHeight = 7
-    const eccHeaderRowHeight = 7
+    const eccRowHeight = 8
+    const eccHeaderRowHeight = 8
+    const cellPadding = 4 // Padding inside cells
+    const borderWidth = 0.3 // Thin border (normal weight)
+    const borderColor = [150, 150, 150] // Gray color for borders
 
-    // Header Row 1: "Test Weight" | "50 kg" (merged 2 cols) | (empty or "As Found" merged 2 cols)
+    // Set consistent border style for all borders
+    doc.setLineWidth(borderWidth)
+    doc.setDrawColor(borderColor[0], borderColor[1], borderColor[2])
+
+    // Header Row 1: "Test Weight" | "50 kg" (merged 2 cols)
     const header1Y = yPos
-    doc.setFontSize(10)
-    doc.setFont(undefined, 'bold')
+    doc.setFontSize(9)
+    doc.setFont(undefined, 'normal')
 
-    // Draw borders for header row 1
-    doc.setLineWidth(0.5)
-    doc.setDrawColor(0, 0, 0)
+    // Draw borders for header row 1 - complete rectangle with all sides
     doc.rect(margin, header1Y - 5, eccTableWidth, eccHeaderRowHeight, 'S')
 
-    // "Test Weight" (left-aligned in first column)
-    doc.text('Test Weight', margin + 2, header1Y)
+    // "Test Weight" (left-aligned in first column with padding)
+    doc.text('Test Weight', margin + cellPadding, header1Y)
 
     // "50 kg" (centered in merged cell spanning col2 and col3)
     const testWeightX = margin + eccCol1Width
@@ -552,16 +559,16 @@ const CreateCertificate = () => {
 
     yPos += eccHeaderRowHeight
 
-    // Header Row 2: "Position" | "As Found" (merged 2 cols) | "Displayed Value" | "Deviation"
+    // Header Row 2: "Position" | "As Found" (merged 2 cols)
     const header2Y = yPos
-    doc.setFontSize(10)
-    doc.setFont(undefined, 'bold')
+    doc.setFontSize(9)
+    doc.setFont(undefined, 'normal')
 
-    // Draw borders for header row 2
+    // Draw borders for header row 2 - complete rectangle with all sides
     doc.rect(margin, header2Y - 5, eccTableWidth, eccHeaderRowHeight, 'S')
 
-    // "Position" (left-aligned)
-    doc.text('Position', margin + 2, header2Y)
+    // "Position" (left-aligned with padding)
+    doc.text('Position', margin + cellPadding, header2Y)
 
     // "As Found" (centered in merged cell spanning col2 and col3)
     const asFoundX = margin + eccCol1Width
@@ -573,22 +580,16 @@ const CreateCertificate = () => {
     // Vertical line after "Position"
     doc.line(margin + eccCol1Width, header2Y - 5, margin + eccCol1Width, header2Y - 5 + eccHeaderRowHeight)
 
-    // "Displayed Value" and "Deviation" are sub-columns under "As Found"
-    // We'll draw them in a third header row or adjust the layout
-    // Actually, based on the description, "As Found" spans both, so we don't need separate headers for Displayed Value and Deviation in row 2
-    // But we need them for clarity - let me add a row 3 or adjust
-
     yPos += eccHeaderRowHeight
 
     // Header Row 3: (empty) | "Displayed Value" | "Deviation"
     const header3Y = yPos
-    doc.setFontSize(10)
-    doc.setFont(undefined, 'bold')
+    doc.setFontSize(9)
+    doc.setFont(undefined, 'normal')
 
-    // Draw borders for header row 3
+    // Draw borders for header row 3 - complete rectangle with all sides
     doc.rect(margin, header3Y - 5, eccTableWidth, eccHeaderRowHeight, 'S')
 
-    // Empty first column (or we can put a space)
     // "Displayed Value" (centered in col2)
     const displayedValueText = 'Displayed Value'
     const displayedValueTextWidth = doc.getTextWidth(displayedValueText)
@@ -609,7 +610,6 @@ const CreateCertificate = () => {
     )
 
     yPos += eccHeaderRowHeight
-    doc.setFont(undefined, 'normal')
 
     // Data Rows
     eccentricity.positions.forEach((pos, index) => {
@@ -621,11 +621,9 @@ const CreateCertificate = () => {
 
       const rowY = yPos - 3
       doc.setFontSize(9)
-      doc.setLineWidth(0.1)
-      doc.setDrawColor(0, 0, 0)
 
-      // Position (left-aligned)
-      doc.text(pos.position || '', margin + 2, yPos)
+      // Position (left-aligned with padding)
+      doc.text(pos.position || '', margin + cellPadding, yPos)
 
       // Displayed Value (centered)
       const dispValueText = pos.displayedValue || ''
@@ -637,8 +635,14 @@ const CreateCertificate = () => {
       const devTextWidth = doc.getTextWidth(devText)
       doc.text(devText, margin + eccCol1Width + eccCol2Width + eccCol3Width / 2 - devTextWidth / 2, yPos)
 
-      // Draw row borders
+      // Draw complete row borders - all sides with consistent 1px border
+      // Left border
+      doc.line(margin, rowY, margin, rowY + eccRowHeight)
+      // Right border
+      doc.line(pageWidth - margin, rowY, pageWidth - margin, rowY + eccRowHeight)
+      // Bottom border
       doc.line(margin, rowY + eccRowHeight, pageWidth - margin, rowY + eccRowHeight)
+      // Vertical dividers
       doc.line(margin + eccCol1Width, rowY, margin + eccCol1Width, rowY + eccRowHeight)
       doc.line(margin + eccCol1Width + eccCol2Width, rowY, margin + eccCol1Width + eccCol2Width, rowY + eccRowHeight)
 
@@ -646,70 +650,68 @@ const CreateCertificate = () => {
     })
 
     // Summary Rows
-    // Maximum Deviation (label spans Position and Displayed Value columns, value in Deviation column, right-aligned)
+    // Maximum Deviation (label in first column, value centered in merged last two columns)
     if (yPos > pageHeight - 20) {
       doc.addPage()
       yPos = margin
     }
     const maxDevY = yPos - 3
     doc.setFontSize(9)
-    doc.text('Maximum Deviation:', margin + 2, yPos)
+    doc.text('Maximum Deviation:', margin + cellPadding, yPos)
     const maxDevValue = eccentricity.maximumDeviation || ''
     const maxDevValueWidth = doc.getTextWidth(maxDevValue)
-    // Right-align the value in Deviation column
-    doc.text(maxDevValue, margin + eccCol1Width + eccCol2Width + eccCol3Width - maxDevValueWidth - 2, yPos)
-    doc.setLineWidth(0.1)
-    doc.line(margin, maxDevY + eccRowHeight, pageWidth - margin, maxDevY + eccRowHeight)
-    doc.line(margin + eccCol1Width, maxDevY, margin + eccCol1Width, maxDevY + eccRowHeight)
-    doc.line(
-      margin + eccCol1Width + eccCol2Width,
-      maxDevY,
-      margin + eccCol1Width + eccCol2Width,
-      maxDevY + eccRowHeight
-    )
+    // Center the value in merged columns 2 and 3
+    const mergedColWidth = eccCol2Width + eccCol3Width
+    const mergedColStartX = margin + eccCol1Width
+    doc.text(maxDevValue, mergedColStartX + mergedColWidth / 2 - maxDevValueWidth / 2, yPos)
+    // Draw complete row borders - all sides (no vertical divider between columns 2 and 3)
+    doc.line(margin, maxDevY, margin, maxDevY + eccRowHeight) // Left border
+    doc.line(pageWidth - margin, maxDevY, pageWidth - margin, maxDevY + eccRowHeight) // Right border
+    doc.line(margin, maxDevY + eccRowHeight, pageWidth - margin, maxDevY + eccRowHeight) // Bottom border
+    doc.line(margin + eccCol1Width, maxDevY, margin + eccCol1Width, maxDevY + eccRowHeight) // Vertical divider (only between col1 and merged cols)
     yPos += eccRowHeight
 
-    // Allowable Deviation (label spans Position and Displayed Value columns, value in Deviation column, right-aligned)
+    // Allowable Deviation (label in first column, value centered in merged last two columns)
     if (yPos > pageHeight - 20) {
       doc.addPage()
       yPos = margin
     }
     const allowDevY = yPos - 3
-    doc.text('Allowable Deviation:', margin + 2, yPos)
+    doc.text('Allowable Deviation:', margin + cellPadding, yPos)
     const allowDevValue = eccentricity.allowableDeviation || ''
     const allowDevValueWidth = doc.getTextWidth(allowDevValue)
-    // Right-align the value in Deviation column
-    doc.text(allowDevValue, margin + eccCol1Width + eccCol2Width + eccCol3Width - allowDevValueWidth - 2, yPos)
-    doc.line(margin, allowDevY + eccRowHeight, pageWidth - margin, allowDevY + eccRowHeight)
-    doc.line(margin + eccCol1Width, allowDevY, margin + eccCol1Width, allowDevY + eccRowHeight)
-    doc.line(
-      margin + eccCol1Width + eccCol2Width,
-      allowDevY,
-      margin + eccCol1Width + eccCol2Width,
-      allowDevY + eccRowHeight
-    )
+    // Center the value in merged columns 2 and 3
+    const allowMergedColWidth = eccCol2Width + eccCol3Width
+    const allowMergedColStartX = margin + eccCol1Width
+    doc.text(allowDevValue, allowMergedColStartX + allowMergedColWidth / 2 - allowDevValueWidth / 2, yPos)
+    // Draw complete row borders - all sides (no vertical divider between columns 2 and 3)
+    doc.line(margin, allowDevY, margin, allowDevY + eccRowHeight) // Left border
+    doc.line(pageWidth - margin, allowDevY, pageWidth - margin, allowDevY + eccRowHeight) // Right border
+    doc.line(margin, allowDevY + eccRowHeight, pageWidth - margin, allowDevY + eccRowHeight) // Bottom border
+    doc.line(margin + eccCol1Width, allowDevY, margin + eccCol1Width, allowDevY + eccRowHeight) // Vertical divider (only between col1 and merged cols)
     yPos += eccRowHeight
 
-    // Within Tolerances (label spans Position and Displayed Value columns, value in Deviation column, centered)
+    // Within Tolerances (label in first column, value centered in merged last two columns)
     if (yPos > pageHeight - 20) {
       doc.addPage()
       yPos = margin
     }
     const withinTolY = yPos - 3
-    doc.text('Within Tolerances:', margin + 2, yPos)
+    doc.text('Within Tolerances:', margin + cellPadding, yPos)
     const withinTolValue = eccentricity.withinTolerances || ''
     const withinTolValueWidth = doc.getTextWidth(withinTolValue)
-    // Center the value in Deviation column
-    doc.text(withinTolValue, margin + eccCol1Width + eccCol2Width + eccCol3Width / 2 - withinTolValueWidth / 2, yPos)
-    doc.setLineWidth(0.5)
-    doc.line(margin, withinTolY + eccRowHeight, pageWidth - margin, withinTolY + eccRowHeight)
-    doc.line(margin + eccCol1Width, withinTolY, margin + eccCol1Width, withinTolY + eccRowHeight)
-    doc.line(
-      margin + eccCol1Width + eccCol2Width,
-      withinTolY,
-      margin + eccCol1Width + eccCol2Width,
-      withinTolY + eccRowHeight
-    )
+    // Center the value in merged columns 2 and 3
+    const withinMergedColWidth = eccCol2Width + eccCol3Width
+    const withinMergedColStartX = margin + eccCol1Width
+    doc.text(withinTolValue, withinMergedColStartX + withinMergedColWidth / 2 - withinTolValueWidth / 2, yPos)
+    // Draw final row borders - all sides (no vertical divider between columns 2 and 3)
+    doc.line(margin, withinTolY, margin, withinTolY + eccRowHeight) // Left border
+    doc.line(pageWidth - margin, withinTolY, pageWidth - margin, withinTolY + eccRowHeight) // Right border
+    doc.line(margin, withinTolY + eccRowHeight, pageWidth - margin, withinTolY + eccRowHeight) // Bottom border
+    doc.line(margin + eccCol1Width, withinTolY, margin + eccCol1Width, withinTolY + eccRowHeight) // Vertical divider (only between col1 and merged cols)
+
+    // Add spacing after the table
+    yPos += eccRowHeight + 10
 
     // Open PDF in new window
     const fileName = `Calibration_Certificate_${certificateNo || 'Certificate'}.pdf`
