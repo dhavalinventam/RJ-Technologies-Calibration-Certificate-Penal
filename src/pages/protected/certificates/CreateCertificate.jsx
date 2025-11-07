@@ -113,6 +113,15 @@ const CreateCertificate = () => {
     withinTolerances: 'YES'
   })
 
+  // Repeatability (Step 6) data
+  const [repeatability, setRepeatability] = useState({
+    testWeight: '75 kg',
+    measurements: [{ withoutTestWeight: '0.000 kg', withTestWeight: '75.000 kg', asFound: '75.000 kg' }],
+    deviation: '0.000 kg',
+    allowableError: '0.002 kg',
+    withinTolerances: 'YES'
+  })
+
   // PDF Generation function
   const generatePDF = useCallback(() => {
     const doc = new jsPDF()
@@ -713,10 +722,226 @@ const CreateCertificate = () => {
     // Add spacing after the table
     yPos += eccRowHeight + 10
 
+    // Repeatability Section
+    yPos += 15
+    // Check if we need a new page
+    if (yPos > pageHeight - 100) {
+      doc.addPage()
+      yPos = margin
+    }
+
+    doc.setFontSize(12)
+    doc.setFont(undefined, 'bold')
+    doc.text('Repeatability :', margin, yPos)
+    doc.setFont(undefined, 'normal')
+    yPos += 10
+
+    // Filter out empty records
+    const validMeasurements = repeatability.measurements.filter(
+      m => m.withoutTestWeight || m.withTestWeight || m.asFound
+    )
+
+    if (validMeasurements.length > 0) {
+      // Repeatability Table Setup
+      const repTableWidth = pageWidth - margin * 2
+      const repCol1Width = repTableWidth * 0.33 // Without Test Weight column
+      const repCol2Width = repTableWidth * 0.33 // With Test Weight column
+      const repCol3Width = repTableWidth * 0.34 // As Found column
+      const repRowHeight = 8
+      const repHeaderRowHeight = 8
+      const cellPadding = 4 // Padding inside cells
+      const borderWidth = 0.3 // Thin border (normal weight)
+      const borderColor = [150, 150, 150] // Gray color for borders
+
+      // Set consistent border style for all borders
+      doc.setLineWidth(borderWidth)
+      doc.setDrawColor(borderColor[0], borderColor[1], borderColor[2])
+
+      // Header Row 1: "Test Weight" | "75 kg" (merged cols 2-3)
+      const repHeader1Y = yPos
+      doc.setFontSize(9)
+      doc.setFont(undefined, 'normal')
+
+      // Draw borders for header row 1 - complete rectangle with all sides
+      doc.rect(margin, repHeader1Y - 5, repTableWidth, repHeaderRowHeight, 'S')
+
+      // "Test Weight" (centered in first column)
+      const testWeightLabelText = 'Test Weight'
+      const testWeightLabelWidth = doc.getTextWidth(testWeightLabelText)
+      doc.text(testWeightLabelText, margin + repCol1Width / 2 - testWeightLabelWidth / 2, repHeader1Y)
+
+      // Test weight value (centered in merged cell spanning cols 2-3)
+      const repTestWeightX = margin + repCol1Width
+      const repTestWeightWidth = repCol2Width + repCol3Width
+      const repTestWeightText = repeatability.testWeight || '75 kg'
+      const repTestWeightTextWidth = doc.getTextWidth(repTestWeightText)
+      doc.text(repTestWeightText, repTestWeightX + repTestWeightWidth / 2 - repTestWeightTextWidth / 2, repHeader1Y)
+
+      // Vertical line after "Test Weight"
+      doc.line(margin + repCol1Width, repHeader1Y - 5, margin + repCol1Width, repHeader1Y - 5 + repHeaderRowHeight)
+
+      yPos += repHeaderRowHeight
+
+      // Header Row 2: "Without Test Weight" | "With Test Weight" | "As Found"
+      const repHeader2Y = yPos
+      doc.setFontSize(9)
+      doc.setFont(undefined, 'normal')
+
+      // Draw borders for header row 2 - complete rectangle with all sides
+      doc.rect(margin, repHeader2Y - 5, repTableWidth, repHeaderRowHeight, 'S')
+
+      // Header text (centered in each column)
+      const withoutText = 'Without Test Weight'
+      const withoutTextWidth = doc.getTextWidth(withoutText)
+      doc.text(withoutText, margin + repCol1Width / 2 - withoutTextWidth / 2, repHeader2Y)
+
+      const withText = 'With Test Weight'
+      const withTextWidth = doc.getTextWidth(withText)
+      doc.text(withText, margin + repCol1Width + repCol2Width / 2 - withTextWidth / 2, repHeader2Y)
+
+      const repAsFoundText = 'As Found'
+      const repAsFoundTextWidth = doc.getTextWidth(repAsFoundText)
+      doc.text(
+        repAsFoundText,
+        margin + repCol1Width + repCol2Width + repCol3Width / 2 - repAsFoundTextWidth / 2,
+        repHeader2Y
+      )
+
+      // Vertical lines
+      doc.line(margin + repCol1Width, repHeader2Y - 5, margin + repCol1Width, repHeader2Y - 5 + repHeaderRowHeight)
+      doc.line(
+        margin + repCol1Width + repCol2Width,
+        repHeader2Y - 5,
+        margin + repCol1Width + repCol2Width,
+        repHeader2Y - 5 + repHeaderRowHeight
+      )
+
+      yPos += repHeaderRowHeight
+
+      // Data Rows: Each measurement is a row
+      validMeasurements.forEach((measurement, index) => {
+        // Check if we need a new page
+        if (yPos > pageHeight - 20) {
+          doc.addPage()
+          yPos = margin
+        }
+
+        const rowY = yPos - 3
+        doc.setFontSize(9)
+
+        // Without Test Weight (centered)
+        const withoutValue = measurement.withoutTestWeight || ''
+        const withoutValueWidth = doc.getTextWidth(withoutValue)
+        doc.text(withoutValue, margin + repCol1Width / 2 - withoutValueWidth / 2, yPos)
+
+        // With Test Weight (centered)
+        const withValue = measurement.withTestWeight || ''
+        const withValueWidth = doc.getTextWidth(withValue)
+        doc.text(withValue, margin + repCol1Width + repCol2Width / 2 - withValueWidth / 2, yPos)
+
+        // As Found (centered)
+        const asFoundValue = measurement.asFound || ''
+        const asFoundValueWidth = doc.getTextWidth(asFoundValue)
+        doc.text(asFoundValue, margin + repCol1Width + repCol2Width + repCol3Width / 2 - asFoundValueWidth / 2, yPos)
+
+        // Draw complete row borders - all sides with consistent border
+        // Left border
+        doc.line(margin, rowY, margin, rowY + repRowHeight)
+        // Right border
+        doc.line(pageWidth - margin, rowY, pageWidth - margin, rowY + repRowHeight)
+        // Bottom border
+        doc.line(margin, rowY + repRowHeight, pageWidth - margin, rowY + repRowHeight)
+        // Vertical dividers
+        doc.line(margin + repCol1Width, rowY, margin + repCol1Width, rowY + repRowHeight)
+        doc.line(margin + repCol1Width + repCol2Width, rowY, margin + repCol1Width + repCol2Width, rowY + repRowHeight)
+
+        yPos += repRowHeight
+      })
+    }
+
+    // Summary Rows (only if we have measurements)
+    if (validMeasurements.length > 0) {
+      // Reuse variables from data rows section
+      const repTableWidth = pageWidth - margin * 2
+      const repCol1Width = repTableWidth * 0.33
+      const repCol2Width = repTableWidth * 0.33
+      const repCol3Width = repTableWidth * 0.34
+      const repRowHeight = 8
+      const repMergedColWidth = repCol2Width + repCol3Width
+      const repMergedColStartX = margin + repCol1Width
+      const cellPadding = 4 // Padding inside cells
+      const borderWidth = 0.3 // Thin border (normal weight)
+      const borderColor = [150, 150, 150] // Gray color for borders
+
+      // Set consistent border style for summary rows
+      doc.setLineWidth(borderWidth)
+      doc.setDrawColor(borderColor[0], borderColor[1], borderColor[2])
+
+      // Deviation (label in first column, value centered in merged last two columns)
+      if (yPos > pageHeight - 20) {
+        doc.addPage()
+        yPos = margin
+      }
+      const repDevY = yPos - 3
+      doc.setFontSize(9)
+      doc.text('Deviation:', margin + cellPadding, yPos)
+      const repDevValue = repeatability.deviation || ''
+      const repDevValueWidth = doc.getTextWidth(repDevValue)
+      // Center the value in merged columns 2 and 3
+      doc.text(repDevValue, repMergedColStartX + repMergedColWidth / 2 - repDevValueWidth / 2, yPos)
+      // Draw complete row borders - all sides (no vertical divider between columns 2 and 3)
+      doc.line(margin, repDevY, margin, repDevY + repRowHeight) // Left border
+      doc.line(pageWidth - margin, repDevY, pageWidth - margin, repDevY + repRowHeight) // Right border
+      doc.line(margin, repDevY + repRowHeight, pageWidth - margin, repDevY + repRowHeight) // Bottom border
+      doc.line(margin + repCol1Width, repDevY, margin + repCol1Width, repDevY + repRowHeight) // Vertical divider (only between col1 and merged cols)
+      yPos += repRowHeight
+
+      // Allowable Error (label in first column, value centered in merged last two columns)
+      if (yPos > pageHeight - 20) {
+        doc.addPage()
+        yPos = margin
+      }
+      const repAllowY = yPos - 3
+      doc.text('Allowable Error:', margin + cellPadding, yPos)
+      const repAllowValue = repeatability.allowableError || ''
+      const repAllowValueWidth = doc.getTextWidth(repAllowValue)
+      // Center the value in merged columns 2 and 3
+      doc.text(repAllowValue, repMergedColStartX + repMergedColWidth / 2 - repAllowValueWidth / 2, yPos)
+      // Draw complete row borders - all sides (no vertical divider between columns 2 and 3)
+      doc.line(margin, repAllowY, margin, repAllowY + repRowHeight) // Left border
+      doc.line(pageWidth - margin, repAllowY, pageWidth - margin, repAllowY + repRowHeight) // Right border
+      doc.line(margin, repAllowY + repRowHeight, pageWidth - margin, repAllowY + repRowHeight) // Bottom border
+      doc.line(margin + repCol1Width, repAllowY, margin + repCol1Width, repAllowY + repRowHeight) // Vertical divider (only between col1 and merged cols)
+      yPos += repRowHeight
+
+      // Within Tolerances (label in first column, value centered in merged last two columns)
+      if (yPos > pageHeight - 20) {
+        doc.addPage()
+        yPos = margin
+      }
+      const repWithinY = yPos - 3
+      doc.text('Within Tolerances:', margin + cellPadding, yPos)
+      const repWithinValue = repeatability.withinTolerances || ''
+      const repWithinValueWidth = doc.getTextWidth(repWithinValue)
+      // Center the value in merged columns 2 and 3
+      doc.text(repWithinValue, repMergedColStartX + repMergedColWidth / 2 - repWithinValueWidth / 2, yPos)
+      // Draw final row borders - all sides (no vertical divider between columns 2 and 3)
+      doc.line(margin, repWithinY, margin, repWithinY + repRowHeight) // Left border
+      doc.line(pageWidth - margin, repWithinY, pageWidth - margin, repWithinY + repRowHeight) // Right border
+      doc.line(margin, repWithinY + repRowHeight, pageWidth - margin, repWithinY + repRowHeight) // Bottom border
+      doc.line(margin + repCol1Width, repWithinY, margin + repCol1Width, repWithinY + repRowHeight) // Vertical divider (only between col1 and merged cols)
+
+      // Add spacing after the table
+      yPos += repRowHeight + 10
+    } else {
+      // Add spacing even if no measurements
+      yPos += 10
+    }
+
     // Open PDF in new window
     const fileName = `Calibration_Certificate_${certificateNo || 'Certificate'}.pdf`
     doc.output('dataurlnewwindow')
-  }, [certificateNo, customer, device, procedureTemplate, linearityRecords, eccentricity])
+  }, [certificateNo, customer, device, procedureTemplate, linearityRecords, eccentricity, repeatability])
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', flexDirection: 'row' }}>
@@ -1357,6 +1582,166 @@ const CreateCertificate = () => {
                     <TextField
                       value={eccentricity.withinTolerances}
                       onChange={e => setEccentricity(p => ({ ...p, withinTolerances: e.target.value }))}
+                      fullWidth
+                      size='small'
+                      placeholder='YES/NO'
+                    />
+                  </div>
+                </div>
+              </Box>
+            ) : activeStep === 6 ? (
+              <Box className='cc_card'>
+                <Box sx={{ mb: 2 }}>
+                  <Typography variant='h6' sx={{ fontWeight: 600, mb: 0.5, fontSize: '1.125rem' }}>
+                    Repeatability
+                  </Typography>
+                </Box>
+
+                <div className='row'>
+                  <div className='col-12 col-md-6'>
+                    <Typography variant='body2' sx={{ mb: 0.7 }} component='label' className='cc_label'>
+                      Test Weight
+                    </Typography>
+                    <TextField
+                      value={repeatability.testWeight}
+                      onChange={e => setRepeatability(p => ({ ...p, testWeight: e.target.value }))}
+                      fullWidth
+                      size='small'
+                      placeholder='e.g., 75 kg'
+                    />
+                  </div>
+                </div>
+
+                <Box sx={{ mt: 3 }}>
+                  <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography variant='body2' sx={{ fontWeight: 500 }}>
+                      Measurements
+                    </Typography>
+                    <Button
+                      variant='outlined'
+                      size='small'
+                      startIcon={<AddIcon />}
+                      onClick={() => {
+                        setRepeatability(p => ({
+                          ...p,
+                          measurements: [...p.measurements, { withoutTestWeight: '', withTestWeight: '', asFound: '' }]
+                        }))
+                      }}
+                      sx={{ textTransform: 'none' }}
+                    >
+                      Add Row
+                    </Button>
+                  </Box>
+
+                  <TableContainer
+                    component={Paper}
+                    sx={{ mt: 2, boxShadow: 'none', border: '1px solid rgba(0, 0, 0, 0.12)' }}
+                  >
+                    <Table size='small'>
+                      <TableHead>
+                        <TableRow sx={{ backgroundColor: 'rgba(0, 0, 0, 0.04)' }}>
+                          <TableCell sx={{ fontWeight: 600, fontSize: '0.875rem' }}>Without Test Weight</TableCell>
+                          <TableCell sx={{ fontWeight: 600, fontSize: '0.875rem' }}>With Test Weight</TableCell>
+                          <TableCell sx={{ fontWeight: 600, fontSize: '0.875rem' }}>As Found</TableCell>
+                          <TableCell sx={{ fontWeight: 600, fontSize: '0.875rem', width: '80px' }}>Action</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {repeatability.measurements.map((measurement, index) => (
+                          <TableRow key={index}>
+                            <TableCell sx={{ padding: '8px' }}>
+                              <TextField
+                                value={measurement.withoutTestWeight}
+                                onChange={e => {
+                                  const updated = [...repeatability.measurements]
+                                  updated[index].withoutTestWeight = e.target.value
+                                  setRepeatability(p => ({ ...p, measurements: updated }))
+                                }}
+                                size='small'
+                                fullWidth
+                                placeholder='Enter value'
+                              />
+                            </TableCell>
+                            <TableCell sx={{ padding: '8px' }}>
+                              <TextField
+                                value={measurement.withTestWeight}
+                                onChange={e => {
+                                  const updated = [...repeatability.measurements]
+                                  updated[index].withTestWeight = e.target.value
+                                  setRepeatability(p => ({ ...p, measurements: updated }))
+                                }}
+                                size='small'
+                                fullWidth
+                                placeholder='Enter value'
+                              />
+                            </TableCell>
+                            <TableCell sx={{ padding: '8px' }}>
+                              <TextField
+                                value={measurement.asFound}
+                                onChange={e => {
+                                  const updated = [...repeatability.measurements]
+                                  updated[index].asFound = e.target.value
+                                  setRepeatability(p => ({ ...p, measurements: updated }))
+                                }}
+                                size='small'
+                                fullWidth
+                                placeholder='Enter value'
+                              />
+                            </TableCell>
+                            <TableCell sx={{ padding: '8px' }}>
+                              <IconButton
+                                size='small'
+                                color='error'
+                                onClick={() => {
+                                  if (repeatability.measurements.length > 1) {
+                                    setRepeatability(p => ({
+                                      ...p,
+                                      measurements: p.measurements.filter((_, i) => i !== index)
+                                    }))
+                                  }
+                                }}
+                                disabled={repeatability.measurements.length === 1}
+                              >
+                                <DeleteIcon fontSize='small' />
+                              </IconButton>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </Box>
+
+                <div className='row' style={{ marginTop: '20px' }}>
+                  <div className='col-12 col-md-4'>
+                    <Typography variant='body2' sx={{ mb: 0.7 }} component='label' className='cc_label'>
+                      Deviation
+                    </Typography>
+                    <TextField
+                      value={repeatability.deviation}
+                      onChange={e => setRepeatability(p => ({ ...p, deviation: e.target.value }))}
+                      fullWidth
+                      size='small'
+                    />
+                  </div>
+                  <div className='col-12 col-md-4'>
+                    <Typography variant='body2' sx={{ mb: 0.7 }} component='label' className='cc_label'>
+                      Allowable Error
+                    </Typography>
+                    <TextField
+                      value={repeatability.allowableError}
+                      onChange={e => setRepeatability(p => ({ ...p, allowableError: e.target.value }))}
+                      fullWidth
+                      size='small'
+                    />
+                  </div>
+                  <div className='col-12 col-md-4'>
+                    <Typography variant='body2' sx={{ mb: 0.7 }} component='label' className='cc_label'>
+                      Within Tolerances
+                    </Typography>
+                    <TextField
+                      value={repeatability.withinTolerances}
+                      onChange={e => setRepeatability(p => ({ ...p, withinTolerances: e.target.value }))}
                       fullWidth
                       size='small'
                       placeholder='YES/NO'
