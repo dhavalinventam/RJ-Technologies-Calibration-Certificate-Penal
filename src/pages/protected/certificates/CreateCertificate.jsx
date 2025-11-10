@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import {
   Box,
   Typography,
@@ -54,10 +54,50 @@ const CreateCertificate = () => {
     setSidebarOpen(!sidebarOpen)
   }, [sidebarOpen])
 
+  const handleCalibrationFieldChange = (field, value) => {
+    setCalibrationDetails(prev => ({
+      ...prev,
+      [field]: value
+    }))
+  }
+
+  const handleCalibrationSignatureUpload = event => {
+    const file = event?.target?.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = e => {
+      setCalibrationDetails(prev => ({
+        ...prev,
+        engineerSignature: e?.target?.result || ''
+      }))
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const handleCalibrationSignatureRemove = () => {
+    setCalibrationDetails(prev => ({
+      ...prev,
+      engineerSignature: ''
+    }))
+    if (calibrationSignatureInputRef.current) {
+      calibrationSignatureInputRef.current.value = ''
+    }
+  }
+
   const progress = useMemo(() => ((activeStep + 1) / steps.length) * 100, [activeStep])
 
   // Editable values (initial examples)
   const [certificateNo, setCertificateNo] = useState('RJ-2511-018')
+  const [calibrationDetails, setCalibrationDetails] = useState({
+    asFoundCalibrationDate: '',
+    asLeftCalibrationDate: '',
+    nextCalibrationDueDate: '',
+    issueDate: '',
+    engineerName: '',
+    engineerSignature: '',
+    remarks: ''
+  })
+  const calibrationSignatureInputRef = useRef(null)
 
   // Customer (Step 1) fields
   const [customer, setCustomer] = useState({
@@ -1080,7 +1120,7 @@ const CreateCertificate = () => {
 
                 {/* Bootstrap-style rows/cols (no Grid) */}
                 <div className='row'>
-                  <div className='col-12'>
+                  <div className='col-12 col-md-4'>
                     <Typography variant='body2' sx={{ mb: 0.7 }} component='label' className='cc_label'>
                       Certificate Number
                     </Typography>
@@ -1092,6 +1132,242 @@ const CreateCertificate = () => {
                     />
                   </div>
                 </div>
+
+                <Box
+                  sx={{
+                    mt: 4
+                  }}
+                >
+                  <Typography
+                    variant='subtitle1'
+                    sx={{
+                      fontWeight: 700,
+                      fontSize: '1.05rem',
+                      color: '#111827',
+                      mb: 2
+                    }}
+                  >
+                    Calibration Date
+                  </Typography>
+                  <Box sx={{ height: 1, backgroundColor: 'divider', mb: 2 }} />
+
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      flexDirection: { xs: 'column', md: 'row' },
+                      gap: { xs: 2, md: 4 },
+                      mb: 2
+                    }}
+                  >
+                    <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      <Box>
+                        <Typography variant='body2' sx={{ mb: 0.7 }} component='label' className='cc_label'>
+                          As Found Calibration Date
+                        </Typography>
+                        <TextField
+                          type='date'
+                          fullWidth
+                          size='small'
+                          value={calibrationDetails.asFoundCalibrationDate}
+                          onChange={e => handleCalibrationFieldChange('asFoundCalibrationDate', e.target.value)}
+                          InputLabelProps={{ shrink: true }}
+                          placeholder='Enter value'
+                          sx={{
+                            '& .MuiOutlinedInput-root': {
+                              borderRadius: 1.5
+                            }
+                          }}
+                        />
+                      </Box>
+                      <Box>
+                        <Typography variant='body2' sx={{ mb: 0.7 }} component='label' className='cc_label'>
+                          As Left Calibration Date
+                        </Typography>
+                        <TextField
+                          placeholder='Enter value'
+                          fullWidth
+                          size='small'
+                          value={calibrationDetails.asLeftCalibrationDate}
+                          onChange={e => handleCalibrationFieldChange('asLeftCalibrationDate', e.target.value)}
+                          sx={{
+                            '& .MuiOutlinedInput-root': {
+                              borderRadius: 1.5
+                            }
+                          }}
+                        />
+                      </Box>
+                    </Box>
+
+                    <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      <Box>
+                        <Typography variant='body2' sx={{ mb: 0.7 }} component='label' className='cc_label'>
+                          Next Cal. Due Date
+                        </Typography>
+                        <TextField
+                          type='date'
+                          fullWidth
+                          size='small'
+                          value={calibrationDetails.nextCalibrationDueDate}
+                          onChange={e => handleCalibrationFieldChange('nextCalibrationDueDate', e.target.value)}
+                          InputLabelProps={{ shrink: true }}
+                          placeholder='Enter value'
+                          sx={{
+                            '& .MuiOutlinedInput-root': {
+                              borderRadius: 1.5
+                            }
+                          }}
+                        />
+                      </Box>
+                      <Box>
+                        <Typography variant='body2' sx={{ mb: 0.7 }} component='label' className='cc_label'>
+                          Issue Date
+                        </Typography>
+                        <TextField
+                          type='date'
+                          fullWidth
+                          size='small'
+                          value={calibrationDetails.issueDate}
+                          onChange={e => handleCalibrationFieldChange('issueDate', e.target.value)}
+                          InputLabelProps={{ shrink: true }}
+                          placeholder='Enter value'
+                          sx={{
+                            '& .MuiOutlinedInput-root': {
+                              borderRadius: 1.5
+                            }
+                          }}
+                        />
+                      </Box>
+                    </Box>
+                  </Box>
+
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      flexDirection: { xs: 'column', md: 'row' },
+                      gap: { xs: 2, md: 4 },
+                      alignItems: { md: 'flex-end' }
+                    }}
+                  >
+                    <Box sx={{ flex: 1 }}>
+                      <Typography variant='body2' sx={{ mb: 0.7 }} component='label' className='cc_label'>
+                        Engineer Name
+                      </Typography>
+                      <TextField
+                        placeholder='Enter engineer name'
+                        fullWidth
+                        size='small'
+                        value={calibrationDetails.engineerName}
+                        onChange={e => handleCalibrationFieldChange('engineerName', e.target.value)}
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            borderRadius: 1.5
+                          }
+                        }}
+                      />
+                    </Box>
+
+                    <Box sx={{ flex: 1 }}>
+                      <Typography variant='body2' sx={{ mb: 0.7 }} component='label' className='cc_label'>
+                        Engineer Signature
+                      </Typography>
+                      <Box
+                        sx={{
+                          border: '1px dashed',
+                          borderColor: calibrationDetails.engineerSignature ? 'success.light' : 'divider',
+                          borderRadius: 2,
+                          p: 2,
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          backgroundColor: calibrationDetails.engineerSignature
+                            ? 'rgba(16, 185, 129, 0.08)'
+                            : 'transparent',
+                          minHeight: 120,
+                          textAlign: 'center'
+                        }}
+                      >
+                        {calibrationDetails.engineerSignature ? (
+                          <>
+                            <Box
+                              component='img'
+                              src={calibrationDetails.engineerSignature}
+                              alt='Engineer Signature'
+                              sx={{ maxHeight: 80, maxWidth: '100%', objectFit: 'contain', mb: 1 }}
+                            />
+                            <Button
+                              size='small'
+                              variant='outlined'
+                              color='error'
+                              onClick={handleCalibrationSignatureRemove}
+                              sx={{ textTransform: 'none' }}
+                            >
+                              Remove Signature
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Typography variant='body2' sx={{ mb: 1, color: 'text.secondary' }}>
+                              Upload scanned signature image
+                            </Typography>
+                            <Button
+                              size='small'
+                              variant='outlined'
+                              onClick={() => calibrationSignatureInputRef.current?.click()}
+                              sx={{ textTransform: 'none' }}
+                            >
+                              Upload Signature
+                            </Button>
+                            <input
+                              ref={calibrationSignatureInputRef}
+                              type='file'
+                              accept='image/*'
+                              hidden
+                              onChange={handleCalibrationSignatureUpload}
+                            />
+                          </>
+                        )}
+                      </Box>
+                    </Box>
+                  </Box>
+                </Box>
+
+                <Box
+                  sx={{
+                    mt: 3,
+                    borderTop: '1px solid',
+                    borderColor: 'divider',
+                    pt: 3
+                  }}
+                >
+                  <Typography
+                    variant='subtitle1'
+                    sx={{
+                      fontWeight: 700,
+                      fontSize: '1.05rem',
+                      color: '#111827',
+                      mb: 2
+                    }}
+                  >
+                    Remarks
+                  </Typography>
+                  <Typography variant='body2' color='text.secondary' sx={{ mb: 1 }}>
+                    Add any additional notes or observations related to this certificate.
+                  </Typography>
+                  <TextField
+                    placeholder='Enter remarks'
+                    multiline
+                    minRows={3}
+                    fullWidth
+                    value={calibrationDetails.remarks}
+                    onChange={e => handleCalibrationFieldChange('remarks', e.target.value)}
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: 1.5
+                      }
+                    }}
+                  />
+                </Box>
               </Box>
             ) : activeStep === 1 ? (
               <Box className='cc_card'>
