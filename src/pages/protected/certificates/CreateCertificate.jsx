@@ -58,7 +58,6 @@ const CreateCertificate = () => {
 
   // Editable values (initial examples)
   const [certificateNo, setCertificateNo] = useState('RJ-2511-018')
-  const [draftId, setDraftId] = useState('09262b61-2bc5-447d-b5de-6d4531392a74')
 
   // Customer (Step 1) fields
   const [customer, setCustomer] = useState({
@@ -1091,15 +1090,6 @@ const CreateCertificate = () => {
                       fullWidth
                       size='small'
                     />
-                  </div>
-                </div>
-
-                <div className='row'>
-                  <div className='col-12'>
-                    <Typography variant='body2' sx={{ mb: 0.7 }} component='label' className='cc_label'>
-                      Draft ID
-                    </Typography>
-                    <TextField onChange={e => setDraftId(e.target.value)} fullWidth size='small' />
                   </div>
                 </div>
               </Box>

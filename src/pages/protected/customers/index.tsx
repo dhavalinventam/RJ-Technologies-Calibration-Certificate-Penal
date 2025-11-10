@@ -216,7 +216,7 @@ const Customers = () => {
             }
           }}
         >
-          <Box sx={{ px: { xs: 2, sm: 3, md: 4 }, py: { xs: 3, sm: 4 } }}>
+          <Box>
             {/* Page Header */}
             <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
               <IconButton
@@ -369,14 +369,14 @@ const Customers = () => {
             {/* Tab Panel: Add Customer */}
             <TabPanel value={tabValue} index={1}>
               <div className='row'>
-                <div className='col-12 col-md-6'>
+                <div className='col-12 col-md-12'>
                   <Box sx={{ mb: 4 }}>
                     <Typography variant='h6' sx={{ mb: 2, color: 'primary.main', fontWeight: 600 }}>
                       Customer Details
                     </Typography>
 
                     <div className='row'>
-                      <div className='col-12 col-md-12'>
+                      <div className='col-12 col-md-4'>
                         <TextField
                           fullWidth
                           label='Customer Name'
@@ -387,7 +387,7 @@ const Customers = () => {
                           sx={{ mb: 2 }}
                         />
                       </div>
-                      <div className='col-12 col-md-12'>
+                      <div className='col-12 col-md-4'>
                         <TextField
                           fullWidth
                           label='Company Name'
@@ -398,17 +398,7 @@ const Customers = () => {
                           sx={{ mb: 2 }}
                         />
                       </div>
-                    </div>
-                  </Box>
-                </div>
-                <div className='col-12 col-md-6'>
-                  <Box sx={{ mb: 4 }}>
-                    <Typography variant='h6' sx={{ mb: 2, color: 'primary.main', fontWeight: 600 }}>
-                      Contact Information
-                    </Typography>
-
-                    <div className='row'>
-                      <div className='col-12 col-md-6'>
+                      <div className='col-12 col-md-4'>
                         <TextField
                           fullWidth
                           label='Contact Person'
@@ -418,7 +408,7 @@ const Customers = () => {
                           sx={{ mb: 2 }}
                         />
                       </div>
-                      <div className='col-12 col-md-6'>
+                      <div className='col-12 col-md-4'>
                         <TextField
                           fullWidth
                           label='Mobile Number'
@@ -429,7 +419,7 @@ const Customers = () => {
                           sx={{ mb: 2 }}
                         />
                       </div>
-                      <div className='col-12 col-md-6'>
+                      <div className='col-12 col-md-4'>
                         <TextField
                           fullWidth
                           label='Email'
@@ -440,16 +430,7 @@ const Customers = () => {
                           sx={{ mb: 2 }}
                         />
                       </div>
-                    </div>
-                  </Box>
-                </div>
-                <div className='col-12 col-md-6'>
-                  <Box sx={{ mb: 4 }}>
-                    <Typography variant='h6' sx={{ mb: 2, color: 'primary.main', fontWeight: 600 }}>
-                      Address Details
-                    </Typography>
-                    <div className='row'>
-                      <div className='col-12 col-md-6'>
+                      <div className='col-12 col-md-4'>
                         <FormControl fullWidth size='small' required sx={{ mb: 2 }}>
                           <InputLabel>Country</InputLabel>
                           <Select
@@ -463,7 +444,7 @@ const Customers = () => {
                           </Select>
                         </FormControl>
                       </div>
-                      <div className='col-12 col-md-6'>
+                      <div className='col-12 col-md-4'>
                         <TextField
                           fullWidth
                           label='State'
@@ -475,7 +456,7 @@ const Customers = () => {
                           sx={{ mb: 2 }}
                         />
                       </div>
-                      <div className='col-12 col-md-6'>
+                      <div className='col-12 col-md-4'>
                         <TextField
                           fullWidth
                           label='City'
@@ -487,7 +468,7 @@ const Customers = () => {
                           sx={{ mb: 2 }}
                         />
                       </div>
-                      <div className='col-12 col-md-6'>
+                      <div className='col-12 col-md-4'>
                         <TextField
                           fullWidth
                           label='Pincode'
@@ -499,7 +480,7 @@ const Customers = () => {
                           sx={{ mb: 2 }}
                         />
                       </div>
-                      <div className='col-12 col-md-12'>
+                      <div className='col-12 col-md-6'>
                         <TextField
                           fullWidth
                           label='Address'
@@ -513,22 +494,12 @@ const Customers = () => {
                           sx={{ mb: 2 }}
                         />
                       </div>
-                    </div>
-                  </Box>
-                </div>
-                <div className='col-12 col-md-6'>
-                  <Box sx={{ mb: 4 }}>
-                    <Typography variant='h6' sx={{ mb: 2, color: 'primary.main', fontWeight: 600 }}>
-                      Additional Notes
-                    </Typography>
-
-                    <div className='row'>
-                      <div className='col-12 col-md-12'>
+                      <div className='col-12 col-md-6'>
                         <TextField
                           fullWidth
                           label='Notes'
                           multiline
-                          rows={4}
+                          rows={3}
                           size='small'
                           placeholder='Enter any additional notes'
                           value={formData.notes}
@@ -539,37 +510,36 @@ const Customers = () => {
                     </div>
                   </Box>
                 </div>
-                <div className='col-12 col-md-12'>
-                  {/* Action Buttons */}
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      gap: 2,
-                      justifyContent: { xs: 'stretch', sm: 'space-between' },
-                      flexWrap: 'wrap',
-                      flexDirection: { xs: 'column', sm: 'row' },
-                      mt: 2
-                    }}
+
+                {/* Action Buttons */}
+                <Box
+                  sx={{
+                    display: 'flex',
+                    gap: 2,
+                    justifyContent: { xs: 'stretch', sm: 'space-between' },
+                    flexWrap: 'wrap',
+                    flexDirection: { xs: 'column', sm: 'row' },
+                    mt: 2
+                  }}
+                >
+                  <Button
+                    variant='contained'
+                    size='medium'
+                    onClick={handleAddCustomer}
+                    sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
                   >
-                    <Button
-                      variant='contained'
-                      size='medium'
-                      onClick={handleAddCustomer}
-                      sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
-                    >
-                      Add Customer
-                    </Button>
-                    <Button
-                      variant='outlined'
-                      size='medium'
-                      endIcon={<ArrowBackIcon sx={{ transform: 'rotate(180deg)' }} />}
-                      onClick={() => navigate('/devices')}
-                      sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
-                    >
-                      Next: Device Module →
-                    </Button>
-                  </Box>
-                </div>
+                    Add Customer
+                  </Button>
+                  <Button
+                    variant='outlined'
+                    size='medium'
+                    endIcon={<ArrowBackIcon sx={{ transform: 'rotate(180deg)' }} />}
+                    onClick={() => navigate('/devices')}
+                    sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+                  >
+                    Next: Device Module →
+                  </Button>
+                </Box>
               </div>
 
               <Box sx={{ width: '100%' }}></Box>

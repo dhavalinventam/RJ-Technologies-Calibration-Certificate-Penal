@@ -395,7 +395,7 @@ const Devices = () => {
             <div className='row'>
               {/* Customer Details Section */}
               <div className='col-12 col-md-12'>
-                <Box sx={{ mb: 4 }}>
+                <Box sx={{ mb: 3 }}>
                   <Typography variant='h6' sx={{ mb: 2, color: 'primary.main', fontWeight: 600 }}>
                     Customer Details
                   </Typography>
@@ -422,48 +422,12 @@ const Devices = () => {
 
               {/* Device Information Section */}
               <div className='col-12 col-md-12'>
-                <Box sx={{ mb: 4 }}>
+                <Box sx={{ mb: 3 }}>
                   <Typography variant='h6' sx={{ mb: 2, color: 'primary.main', fontWeight: 600 }}>
                     Device Information
                   </Typography>
                   <div className='row'>
-                    <div className='col-12 col-md-6'>
-                      <TextField
-                        fullWidth
-                        label='Device Name'
-                        required
-                        size='small'
-                        placeholder='e.g., Weighing Scale'
-                        value={formData.deviceName}
-                        onChange={e => handleInputChange('deviceName', e.target.value)}
-                        sx={{ mb: 2 }}
-                      />
-                    </div>
-                    <div className='col-12 col-md-6'>
-                      <TextField
-                        fullWidth
-                        label='Manufacturer'
-                        required
-                        size='small'
-                        placeholder='e.g., Mettler Toledo'
-                        value={formData.manufacturer}
-                        onChange={e => handleInputChange('manufacturer', e.target.value)}
-                        sx={{ mb: 2 }}
-                      />
-                    </div>
-                    <div className='col-12 col-md-6'>
-                      <TextField
-                        fullWidth
-                        label='Model'
-                        required
-                        size='small'
-                        placeholder='e.g., XS205'
-                        value={formData.model}
-                        onChange={e => handleInputChange('model', e.target.value)}
-                        sx={{ mb: 2 }}
-                      />
-                    </div>
-                    <div className='col-12 col-md-6'>
+                    <div className='col-12 col-md-4'>
                       <TextField
                         fullWidth
                         label='Serial Number'
@@ -475,7 +439,44 @@ const Devices = () => {
                         sx={{ mb: 2 }}
                       />
                     </div>
-                    <div className='col-12 col-md-6'>
+                    <div className='col-12 col-md-4'>
+                      <TextField
+                        fullWidth
+                        label='Device Name'
+                        required
+                        size='small'
+                        placeholder='e.g., Weighing Scale'
+                        value={formData.deviceName}
+                        onChange={e => handleInputChange('deviceName', e.target.value)}
+                        sx={{ mb: 2 }}
+                      />
+                    </div>
+                    <div className='col-12 col-md-4'>
+                      <TextField
+                        fullWidth
+                        label='Manufacturer'
+                        required
+                        size='small'
+                        placeholder='e.g., Mettler Toledo'
+                        value={formData.manufacturer}
+                        onChange={e => handleInputChange('manufacturer', e.target.value)}
+                        sx={{ mb: 2 }}
+                      />
+                    </div>
+                    <div className='col-12 col-md-4'>
+                      <TextField
+                        fullWidth
+                        label='Model'
+                        required
+                        size='small'
+                        placeholder='e.g., XS205'
+                        value={formData.model}
+                        onChange={e => handleInputChange('model', e.target.value)}
+                        sx={{ mb: 2 }}
+                      />
+                    </div>
+
+                    <div className='col-12 col-md-4'>
                       <TextField
                         fullWidth
                         label='Tag Number'
@@ -486,7 +487,7 @@ const Devices = () => {
                         sx={{ mb: 2 }}
                       />
                     </div>
-                    <div className='col-12 col-md-6'>
+                    <div className='col-12 col-md-4'>
                       <TextField
                         fullWidth
                         label='Terminal Model'
@@ -497,18 +498,7 @@ const Devices = () => {
                         sx={{ mb: 2 }}
                       />
                     </div>
-                  </div>
-                </Box>
-              </div>
-
-              {/* Specifications Section */}
-              <div className='col-12 col-md-12'>
-                <Box sx={{ mb: 4 }}>
-                  <Typography variant='h6' sx={{ mb: 2, color: 'primary.main', fontWeight: 600 }}>
-                    Specifications
-                  </Typography>
-                  <div className='row'>
-                    <div className='col-12 col-md-6'>
+                    <div className='col-12 col-md-4'>
                       <TextField
                         fullWidth
                         label='Max Capacity'
@@ -519,7 +509,7 @@ const Devices = () => {
                         sx={{ mb: 2 }}
                       />
                     </div>
-                    <div className='col-12 col-md-6'>
+                    <div className='col-12 col-md-4'>
                       <TextField
                         fullWidth
                         label='Readability'
@@ -530,7 +520,7 @@ const Devices = () => {
                         sx={{ mb: 2 }}
                       />
                     </div>
-                    <div className='col-12 col-md-6'>
+                    <div className='col-12 col-md-4'>
                       <TextField
                         fullWidth
                         label='Verification Value'
@@ -541,33 +531,7 @@ const Devices = () => {
                         sx={{ mb: 2 }}
                       />
                     </div>
-                    <div className='col-12 col-md-6'>
-                      <FormControl fullWidth size='small' sx={{ mb: 2 }}>
-                        <InputLabel>Status</InputLabel>
-                        <Select
-                          value={formData.status}
-                          label='Status'
-                          onChange={e => handleInputChange('status', e.target.value)}
-                        >
-                          <MenuItem value='Active'>Active</MenuItem>
-                          <MenuItem value='Inactive'>Inactive</MenuItem>
-                          <MenuItem value='Maintenance'>Maintenance</MenuItem>
-                          <MenuItem value='Retired'>Retired</MenuItem>
-                        </Select>
-                      </FormControl>
-                    </div>
-                  </div>
-                </Box>
-              </div>
-
-              {/* Location Section */}
-              <div className='col-12 col-md-12'>
-                <Box sx={{ mb: 4 }}>
-                  <Typography variant='h6' sx={{ mb: 2, color: 'primary.main', fontWeight: 600 }}>
-                    Location
-                  </Typography>
-                  <div className='row'>
-                    <div className='col-12 col-md-6'>
+                    <div className='col-12 col-md-4'>
                       <TextField
                         fullWidth
                         label='Location'
@@ -582,37 +546,46 @@ const Devices = () => {
                 </Box>
               </div>
 
-              {/* Action Buttons */}
+              {/* Location Section */}
               <div className='col-12 col-md-12'>
-                <Box
-                  sx={{
-                    display: 'flex',
-                    gap: 2,
-                    justifyContent: { xs: 'stretch', sm: 'space-between' },
-                    flexWrap: 'wrap',
-                    flexDirection: { xs: 'column', sm: 'row' },
-                    mt: 2
-                  }}
-                >
-                  <Button
-                    variant='contained'
-                    size='medium'
-                    onClick={handleAddDevice}
-                    sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
-                  >
-                    Add Device
-                  </Button>
-                  <Button
-                    variant='outlined'
-                    size='medium'
-                    endIcon={<ArrowBackIcon sx={{ transform: 'rotate(180deg)' }} />}
-                    onClick={() => navigate('/certificates')}
-                    sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
-                  >
-                    Next: Calibration Module →
-                  </Button>
+                <Box sx={{ mb: 3 }}>
+                  <Typography variant='h6' sx={{ mb: 2, color: 'primary.main', fontWeight: 600 }}>
+                    Linearity
+                  </Typography>
+                  <div className='row'></div>
                 </Box>
               </div>
+
+              {/* Action Buttons */}
+
+              <Box
+                sx={{
+                  display: 'flex',
+                  gap: 2,
+                  justifyContent: { xs: 'stretch', sm: 'space-between' },
+                  flexWrap: 'wrap',
+                  flexDirection: { xs: 'column', sm: 'row' },
+                  mt: 2
+                }}
+              >
+                <Button
+                  variant='contained'
+                  size='medium'
+                  onClick={handleAddDevice}
+                  sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+                >
+                  Add Device
+                </Button>
+                <Button
+                  variant='outlined'
+                  size='medium'
+                  endIcon={<ArrowBackIcon sx={{ transform: 'rotate(180deg)' }} />}
+                  onClick={() => navigate('/certificates')}
+                  sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+                >
+                  Next: Calibration Module →
+                </Button>
+              </Box>
             </div>
           </TabPanel>
         </Box>
