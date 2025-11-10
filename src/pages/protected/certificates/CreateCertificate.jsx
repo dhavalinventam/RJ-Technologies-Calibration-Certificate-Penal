@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Box,
   Typography,
@@ -50,6 +50,24 @@ const deviceNameOptions = [
   'Precision Balance PB220'
 ]
 
+const defaultProcedureTemplates = [
+  {
+    id: '1',
+    templateName: 'stadard instruction template 2',
+    templateText: 'instruction two',
+    createdAt: '14/10/2025',
+    updatedAt: '14/10/2025, 17:53:22'
+  },
+  {
+    id: '2',
+    templateName: 'Standard SOP V1.1',
+    templateText:
+      'The device referenced in this document has been metrologically tested in accordance with RJ Technologies Work Instruction. This device was tested in accordance...',
+    createdAt: '14/10/2025',
+    updatedAt: '14/10/2025, 17:53:22'
+  }
+]
+
 const CreateCertificate = () => {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
@@ -69,6 +87,27 @@ const CreateCertificate = () => {
   const [certificateNo, setCertificateNo] = useState('RJ-2511-018')
   const [selectedDeviceName, setSelectedDeviceName] = useState(null)
   const [deviceNameInputValue, setDeviceNameInputValue] = useState('')
+  const [procedureTemplateOptions, setProcedureTemplateOptions] = useState(defaultProcedureTemplates)
+  const [selectedTemplateName, setSelectedTemplateName] = useState(null)
+  const [templateNameInputValue, setTemplateNameInputValue] = useState('')
+  useEffect(() => {
+    try {
+      const storedTemplates = localStorage.getItem('procedureTemplates')
+      if (storedTemplates) {
+        const parsed = JSON.parse(storedTemplates)
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setProcedureTemplateOptions(parsed)
+        } else {
+          setProcedureTemplateOptions(defaultProcedureTemplates)
+        }
+      } else {
+        setProcedureTemplateOptions(defaultProcedureTemplates)
+      }
+    } catch (error) {
+      console.error('Failed to load procedure templates:', error)
+      setProcedureTemplateOptions(defaultProcedureTemplates)
+    }
+  }, [])
   const [calibrationDetails, setCalibrationDetails] = useState({
     asFoundCalibrationDate: '',
     asLeftCalibrationDate: '',
@@ -1638,6 +1677,45 @@ const CreateCertificate = () => {
                     Procedure Template
                   </Typography>
                 </Box>
+
+                <div className='row'>
+                  <div className='col-12 col-md-6'>
+                    <Typography variant='body2' sx={{ mb: 0.7 }} component='label' className='cc_label'>
+                      Template Name
+                    </Typography>
+                    <Autocomplete
+                      options={procedureTemplateOptions}
+                      value={selectedTemplateName}
+                      onChange={(_, newValue) => {
+                        setSelectedTemplateName(newValue)
+                        if (newValue) {
+                          setProcedureTemplate(newValue.templateText || '')
+                          setTemplateNameInputValue(newValue.templateName || '')
+                        } else if (!newValue) {
+                          setProcedureTemplate('')
+                          setTemplateNameInputValue('')
+                        }
+                      }}
+                      inputValue={templateNameInputValue}
+                      onInputChange={(_, newInputValue) => setTemplateNameInputValue(newInputValue)}
+                      getOptionLabel={option => option?.templateName || ''}
+                      isOptionEqualToValue={(option, value) => option?.id === value?.id}
+                      renderInput={params => (
+                        <TextField
+                          {...params}
+                          placeholder='Search template...'
+                          size='small'
+                          InputProps={{
+                            ...params.InputProps,
+                            sx: {
+                              borderRadius: 1.5
+                            }
+                          }}
+                        />
+                      )}
+                    />
+                  </div>
+                </div>
 
                 <div className='row'>
                   <div className='col-12'>
