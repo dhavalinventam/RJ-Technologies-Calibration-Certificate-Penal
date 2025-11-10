@@ -14,7 +14,8 @@ import {
   TableHead,
   TableRow,
   Paper,
-  IconButton
+  IconButton,
+  Autocomplete
 } from '@mui/material'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf'
@@ -41,6 +42,14 @@ const steps = [
   'Preview & Generate'
 ]
 
+const deviceNameOptions = [
+  'Analytical Balance XS205',
+  'Bench Scale B300',
+  'Moisture Analyzer MA160',
+  'Platform Scale PS1T',
+  'Precision Balance PB220'
+]
+
 const CreateCertificate = () => {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
@@ -54,40 +63,12 @@ const CreateCertificate = () => {
     setSidebarOpen(!sidebarOpen)
   }, [sidebarOpen])
 
-  const handleCalibrationFieldChange = (field, value) => {
-    setCalibrationDetails(prev => ({
-      ...prev,
-      [field]: value
-    }))
-  }
-
-  const handleCalibrationSignatureUpload = event => {
-    const file = event?.target?.files?.[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = e => {
-      setCalibrationDetails(prev => ({
-        ...prev,
-        engineerSignature: e?.target?.result || ''
-      }))
-    }
-    reader.readAsDataURL(file)
-  }
-
-  const handleCalibrationSignatureRemove = () => {
-    setCalibrationDetails(prev => ({
-      ...prev,
-      engineerSignature: ''
-    }))
-    if (calibrationSignatureInputRef.current) {
-      calibrationSignatureInputRef.current.value = ''
-    }
-  }
-
   const progress = useMemo(() => ((activeStep + 1) / steps.length) * 100, [activeStep])
 
   // Editable values (initial examples)
   const [certificateNo, setCertificateNo] = useState('RJ-2511-018')
+  const [selectedDeviceName, setSelectedDeviceName] = useState(null)
+  const [deviceNameInputValue, setDeviceNameInputValue] = useState('')
   const [calibrationDetails, setCalibrationDetails] = useState({
     asFoundCalibrationDate: '',
     asLeftCalibrationDate: '',
@@ -160,6 +141,36 @@ const CreateCertificate = () => {
     allowableError: '0.002 kg',
     withinTolerances: 'YES'
   })
+
+  const handleCalibrationFieldChange = (field, value) => {
+    setCalibrationDetails(prev => ({
+      ...prev,
+      [field]: value
+    }))
+  }
+
+  const handleCalibrationSignatureUpload = event => {
+    const file = event?.target?.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = e => {
+      setCalibrationDetails(prev => ({
+        ...prev,
+        engineerSignature: e?.target?.result || ''
+      }))
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const handleCalibrationSignatureRemove = () => {
+    setCalibrationDetails(prev => ({
+      ...prev,
+      engineerSignature: ''
+    }))
+    if (calibrationSignatureInputRef.current) {
+      calibrationSignatureInputRef.current.value = ''
+    }
+  }
 
   // PDF Generation function
   const generatePDF = useCallback(() => {
@@ -1120,7 +1131,7 @@ const CreateCertificate = () => {
 
                 {/* Bootstrap-style rows/cols (no Grid) */}
                 <div className='row'>
-                  <div className='col-12 col-md-4'>
+                  <div className='col-12 col-md-6'>
                     <Typography variant='body2' sx={{ mb: 0.7 }} component='label' className='cc_label'>
                       Certificate Number
                     </Typography>
@@ -1129,6 +1140,34 @@ const CreateCertificate = () => {
                       onChange={e => setCertificateNo(e.target.value)}
                       fullWidth
                       size='small'
+                    />
+                  </div>
+                </div>
+
+                <div className='row'>
+                  <div className='col-12 col-md-6'>
+                    <Typography variant='body2' sx={{ mb: 0.7 }} component='label' className='cc_label'>
+                      Device Name
+                    </Typography>
+                    <Autocomplete
+                      options={deviceNameOptions}
+                      value={selectedDeviceName}
+                      onChange={(_, newValue) => setSelectedDeviceName(newValue)}
+                      inputValue={deviceNameInputValue}
+                      onInputChange={(_, newInputValue) => setDeviceNameInputValue(newInputValue)}
+                      renderInput={params => (
+                        <TextField
+                          {...params}
+                          placeholder='Search device...'
+                          size='small'
+                          InputProps={{
+                            ...params.InputProps,
+                            sx: {
+                              borderRadius: 1.5
+                            }
+                          }}
+                        />
+                      )}
                     />
                   </div>
                 </div>
