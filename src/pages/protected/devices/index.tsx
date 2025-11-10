@@ -35,6 +35,14 @@ const ECCENTRICITY_POSITIONS = [
   { key: 'rightRear', label: 'Right Rear' },
   { key: 'rightFront', label: 'Right Front' }
 ] as const
+
+const UNCERTAINTY_TABLE_ONE_COLUMNS = ['xi', '0 kg', '20 kg', '50 kg', '70 kg'] as const
+const UNCERTAINTY_TABLE_TWO_COLUMNS = ['xi', '100 kg', '120 kg', '150 kg', 'N/A'] as const
+
+type UncertaintyData = {
+  tableOne: Record<(typeof UNCERTAINTY_TABLE_ONE_COLUMNS)[number], string>
+  tableTwo: Record<(typeof UNCERTAINTY_TABLE_TWO_COLUMNS)[number], string>
+}
 import { useNavigate } from 'react-router-dom'
 import Sidebar from '@/layout/Sidebar'
 import Header from '@/layout/Header'
@@ -152,6 +160,22 @@ const Devices = () => {
     withinTolerance: ''
   })
   const [repeatabilityRowsToAdd, setRepeatabilityRowsToAdd] = useState('1')
+  const [uncertaintyData, setUncertaintyData] = useState<UncertaintyData>({
+    tableOne: {
+      xi: '',
+      '0 kg': '',
+      '20 kg': '',
+      '50 kg': '',
+      '70 kg': ''
+    },
+    tableTwo: {
+      xi: '',
+      '100 kg': '',
+      '120 kg': '',
+      '150 kg': '',
+      'N/A': ''
+    }
+  })
 
   const handleToggleSidebar = useCallback(() => {
     setSidebarOpen(!sidebarOpen)
@@ -245,6 +269,224 @@ const Devices = () => {
       measurements: prev.measurements.filter((_, rowIndex) => rowIndex !== index)
     }))
   }
+
+  const handleUncertaintyChange = <T extends keyof UncertaintyData>(
+    table: T,
+    column: keyof UncertaintyData[T],
+    value: string
+  ) => {
+    setUncertaintyData(prev => ({
+      ...prev,
+      [table]: {
+        ...prev[table],
+        [column]: value
+      }
+    }))
+  }
+
+  const renderUncertaintyTableOne = () => (
+    <Box sx={{ mb: 1 }}>
+      <Box sx={{ overflowX: 'auto' }}>
+        <Box
+          component='table'
+          sx={{
+            width: '100%',
+            borderCollapse: 'separate',
+            borderSpacing: 0,
+            minWidth: 720
+          }}
+        >
+          <Box component='thead'>
+            <Box component='tr'>
+              <Box
+                component='th'
+                sx={{
+                  backgroundColor: '#F9FAFB',
+                  color: '#111827',
+                  fontWeight: 600,
+                  fontSize: '0.9rem',
+                  padding: '12px 16px',
+                  textAlign: 'left',
+                  borderBottom: '1px solid',
+                  borderColor: 'divider',
+                  minWidth: 160
+                }}
+              >
+                Loads Applied
+              </Box>
+              {UNCERTAINTY_TABLE_ONE_COLUMNS.map(column => (
+                <Box
+                  component='th'
+                  key={column}
+                  sx={{
+                    backgroundColor: '#F9FAFB',
+                    color: '#111827',
+                    fontWeight: 600,
+                    fontSize: '0.9rem',
+                    padding: '12px 16px',
+                    textAlign: 'center',
+                    borderBottom: '1px solid',
+                    borderColor: 'divider',
+                    minWidth: 140
+                  }}
+                >
+                  {column}
+                </Box>
+              ))}
+            </Box>
+          </Box>
+          <Box component='tbody'>
+            <Box component='tr'>
+              <Box
+                component='td'
+                sx={{
+                  padding: '16px',
+                  fontWeight: 600,
+                  color: '#111827',
+                  borderBottom: '1px solid',
+                  borderColor: 'divider',
+                  backgroundColor: 'background.paper'
+                }}
+              >
+                Combined Uncertainty
+              </Box>
+              {UNCERTAINTY_TABLE_ONE_COLUMNS.map(column => {
+                const key = column as keyof UncertaintyData['tableOne']
+                return (
+                  <Box
+                    component='td'
+                    key={column}
+                    sx={{
+                      padding: '12px 16px',
+                      borderBottom: '1px solid',
+                      borderColor: 'divider',
+                      backgroundColor: 'background.paper'
+                    }}
+                  >
+                    <TextField
+                      size='small'
+                      fullWidth
+                      placeholder='Enter value'
+                      value={uncertaintyData.tableOne[key]}
+                      onChange={e => handleUncertaintyChange('tableOne', key, e.target.value)}
+                      inputProps={{ style: { textAlign: 'center' } }}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: 1.5
+                        }
+                      }}
+                    />
+                  </Box>
+                )
+              })}
+            </Box>
+          </Box>
+        </Box>
+      </Box>
+    </Box>
+  )
+
+  const renderUncertaintyTableTwo = () => (
+    <Box>
+      <Box sx={{ overflowX: 'auto' }}>
+        <Box
+          component='table'
+          sx={{
+            width: '100%',
+            borderCollapse: 'separate',
+            borderSpacing: 0,
+            minWidth: 720
+          }}
+        >
+          <Box component='thead'>
+            <Box component='tr'>
+              <Box
+                component='th'
+                sx={{
+                  backgroundColor: '#F9FAFB',
+                  color: '#111827',
+                  fontWeight: 600,
+                  fontSize: '0.9rem',
+                  padding: '12px 16px',
+                  textAlign: 'left',
+                  borderBottom: '1px solid',
+                  borderColor: 'divider',
+                  minWidth: 160
+                }}
+              >
+                Loads Applied
+              </Box>
+              {UNCERTAINTY_TABLE_TWO_COLUMNS.map(column => (
+                <Box
+                  component='th'
+                  key={column}
+                  sx={{
+                    backgroundColor: '#F9FAFB',
+                    color: '#111827',
+                    fontWeight: 600,
+                    fontSize: '0.9rem',
+                    padding: '12px 16px',
+                    textAlign: 'center',
+                    borderBottom: '1px solid',
+                    borderColor: 'divider',
+                    minWidth: 140
+                  }}
+                >
+                  {column}
+                </Box>
+              ))}
+            </Box>
+          </Box>
+          <Box component='tbody'>
+            <Box component='tr'>
+              <Box
+                component='td'
+                sx={{
+                  padding: '16px',
+                  fontWeight: 600,
+                  color: '#111827',
+                  borderBottom: '1px solid',
+                  borderColor: 'divider',
+                  backgroundColor: 'background.paper'
+                }}
+              >
+                Combined Uncertainty
+              </Box>
+              {UNCERTAINTY_TABLE_TWO_COLUMNS.map(column => {
+                const key = column as keyof UncertaintyData['tableTwo']
+                return (
+                  <Box
+                    component='td'
+                    key={column}
+                    sx={{
+                      padding: '12px 16px',
+                      borderBottom: '1px solid',
+                      borderColor: 'divider',
+                      backgroundColor: 'background.paper'
+                    }}
+                  >
+                    <TextField
+                      size='small'
+                      fullWidth
+                      placeholder='Enter value'
+                      value={uncertaintyData.tableTwo[key]}
+                      onChange={e => handleUncertaintyChange('tableTwo', key, e.target.value)}
+                      inputProps={{ style: { textAlign: 'center' } }}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: 1.5
+                        }
+                      }}
+                    />
+                  </Box>
+                )
+              })}
+            </Box>
+          </Box>
+        </Box>
+      </Box>
+    </Box>
+  )
 
   const handleAddDevice = () => {
     // Add device logic here
@@ -1161,6 +1403,31 @@ const Devices = () => {
                         />
                       </div>
                     </div>
+                  </Box>
+                </Box>
+              </div>
+
+              {/* Uncertainty Section */}
+              <div className='col-12 col-md-12'>
+                <Box sx={{ mb: 3 }}>
+                  <Typography variant='h6' sx={{ color: 'primary.main', fontWeight: 600, mb: 2 }}>
+                    Uncertainty
+                  </Typography>
+                  <Box
+                    sx={{
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      borderRadius: 2,
+                      boxShadow: '0 10px 30px -12px rgba(15, 23, 42, 0.25)',
+                      backgroundColor: 'background.paper',
+                      p: { xs: 2, sm: 3 },
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 3
+                    }}
+                  >
+                    {renderUncertaintyTableOne()}
+                    {renderUncertaintyTableTwo()}
                   </Box>
                 </Box>
               </div>
