@@ -37,7 +37,7 @@ const steps = [
   'Repeatability',
   'Uncertainty',
   'Reference Weights',
-  'Engineer & Signature',
+  // 'Engineer & Signature',
   'Preview & Generate'
 ]
 

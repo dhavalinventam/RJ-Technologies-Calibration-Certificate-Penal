@@ -76,12 +76,48 @@ const Customers = () => {
   const [customers, setCustomers] = useState<Customer[]>([
     {
       id: '1',
-      name: 'amnel',
-      company: 'amnel pharmacutical pvt ltd',
-      location: 'admedabad, gujarat',
-      contactPerson: 'urmil patel',
+      name: 'Amnel',
+      company: 'Amnel Pharmaceutical Pvt Ltd',
+      location: 'Ahmedabad, Gujarat',
+      contactPerson: 'Urmil Patel',
       mobile: '9876543210',
-      email: 'rjtechnologies99@gmail.com'
+      email: 'urmil.patel@amnel.com'
+    },
+    {
+      id: '2',
+      name: 'Globex Labs',
+      company: 'Globex Laboratory Solutions',
+      location: 'Vadodara, Gujarat',
+      contactPerson: 'Rekha Sharma',
+      mobile: '9825034567',
+      email: 'rekha.sharma@globexlabs.in'
+    },
+    {
+      id: '3',
+      name: 'Vertex Pharma',
+      company: 'Vertex Pharmaceuticals LLP',
+      location: 'Mumbai, Maharashtra',
+      contactPerson: 'Rohan Desai',
+      mobile: '9898076543',
+      email: 'rohan.desai@vertexpharma.com'
+    },
+    {
+      id: '4',
+      name: 'Everest Biotech',
+      company: 'Everest Biotech Pvt Ltd',
+      location: 'Surat, Gujarat',
+      contactPerson: 'Nisha Shah',
+      mobile: '9012304567',
+      email: 'nisha.shah@everestbio.com'
+    },
+    {
+      id: '5',
+      name: 'Zenith Industries',
+      company: 'Zenith Industrial Solutions',
+      location: 'Pune, Maharashtra',
+      contactPerson: 'Ajay Kulkarni',
+      mobile: '9123456780',
+      email: 'ajay.kulkarni@zenithind.in'
     }
   ])
 

@@ -96,7 +96,83 @@ const Devices = () => {
   const [searchTerm, setSearchTerm] = useState('')
 
   // Sample device data - replace with actual data from API
-  const [devices, setDevices] = useState<Device[]>([])
+  const [devices, setDevices] = useState<Device[]>([
+    {
+      id: '1',
+      deviceName: 'Analytical Balance XS205',
+      manufacturer: 'Mettler Toledo',
+      model: 'XS205',
+      serialNumber: 'MT-XS205-001',
+      tagNumber: 'MT-01',
+      terminalModel: 'MT-TP20',
+      maxCapacity: '220 g',
+      readability: '0.01 mg',
+      verificationValue: '0.05 mg',
+      status: 'Active',
+      location: 'Main Lab',
+      customer: 'Amnel Pharmaceutical Pvt Ltd'
+    },
+    {
+      id: '2',
+      deviceName: 'Bench Scale B300',
+      manufacturer: 'Avery Weigh-Tronix',
+      model: 'B300',
+      serialNumber: 'AWT-B300-112',
+      tagNumber: 'AV-11',
+      terminalModel: 'XT-200',
+      maxCapacity: '300 kg',
+      readability: '0.02 kg',
+      verificationValue: '0.05 kg',
+      status: 'Active',
+      location: 'Packaging Unit',
+      customer: 'Globex Laboratory Solutions'
+    },
+    {
+      id: '3',
+      deviceName: 'Moisture Analyzer MA160',
+      manufacturer: 'Sartorius',
+      model: 'MA160',
+      serialNumber: 'SAR-MA160-209',
+      tagNumber: 'SAR-07',
+      terminalModel: 'S-Touch',
+      maxCapacity: '160 g',
+      readability: '0.001 g',
+      verificationValue: '0.003 g',
+      status: 'In Calibration',
+      location: 'Quality Lab',
+      customer: 'Vertex Pharmaceuticals LLP'
+    },
+    {
+      id: '4',
+      deviceName: 'Platform Scale PS1T',
+      manufacturer: 'Essae-Teraoka',
+      model: 'PS1T',
+      serialNumber: 'ET-PS1T-350',
+      tagNumber: 'ET-05',
+      terminalModel: 'ETX-15',
+      maxCapacity: '1000 kg',
+      readability: '0.1 kg',
+      verificationValue: '0.2 kg',
+      status: 'Inactive',
+      location: 'Warehouse',
+      customer: 'Everest Biotech Pvt Ltd'
+    },
+    {
+      id: '5',
+      deviceName: 'Precision Balance PB220',
+      manufacturer: 'Shimadzu',
+      model: 'PB220',
+      serialNumber: 'SHI-PB220-118',
+      tagNumber: 'SH-18',
+      terminalModel: 'STX-21',
+      maxCapacity: '220 g',
+      readability: '0.1 mg',
+      verificationValue: '0.2 mg',
+      status: 'Active',
+      location: 'R&D Lab',
+      customer: 'Zenith Industrial Solutions'
+    }
+  ])
 
   // Sample customers for dropdown
   const [customers] = useState([{ id: '1', name: 'amnel', company: 'amnel pharmacutical pvt ltd' }])

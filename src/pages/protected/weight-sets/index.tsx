@@ -48,12 +48,48 @@ const WeightSets = () => {
   const [weightSets, setWeightSets] = useState<WeightSet[]>([
     {
       id: '1',
-      weightSetNo: 'Colgate std. Weights – 20 kg',
+      weightSetNo: 'Colgate Std. Weights – 20 kg',
       certificateNumber: 'KC/M/0097/25-27',
       class: 'M1',
       dateOfIssue: '12.08.2025',
       calibrationDueDate: '11.08.2027',
       createdAt: '14.10.2025 18:39'
+    },
+    {
+      id: '2',
+      weightSetNo: 'Amnel Pharma Weights – 5 kg',
+      certificateNumber: 'RJ/M/0145/25-27',
+      class: 'F2',
+      dateOfIssue: '03.09.2025',
+      calibrationDueDate: '02.09.2026',
+      createdAt: '05.09.2025 09:15'
+    },
+    {
+      id: '3',
+      weightSetNo: 'Vertex Lab Weights – 10 kg',
+      certificateNumber: 'RJ/M/0225/24-26',
+      class: 'M2',
+      dateOfIssue: '18.11.2024',
+      calibrationDueDate: '17.11.2026',
+      createdAt: '19.11.2024 16:42'
+    },
+    {
+      id: '4',
+      weightSetNo: 'Everest Biotech Weights – 50 kg',
+      certificateNumber: 'RJ/M/0310/25-27',
+      class: 'M1',
+      dateOfIssue: '22.01.2025',
+      calibrationDueDate: '21.01.2027',
+      createdAt: '24.01.2025 11:20'
+    },
+    {
+      id: '5',
+      weightSetNo: 'Zenith Industries Weights – 2 kg',
+      certificateNumber: 'RJ/M/0412/25-26',
+      class: 'F1',
+      dateOfIssue: '05.02.2025',
+      calibrationDueDate: '04.02.2026',
+      createdAt: '06.02.2025 14:08'
     }
   ])
 
