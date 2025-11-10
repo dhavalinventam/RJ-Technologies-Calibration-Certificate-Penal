@@ -26,6 +26,15 @@ import SearchIcon from '@mui/icons-material/Search'
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
+import AddIcon from '@mui/icons-material/Add'
+
+const ECCENTRICITY_POSITIONS = [
+  { key: 'center', label: 'Center' },
+  { key: 'leftFront', label: 'Left Front' },
+  { key: 'leftRear', label: 'Left Rear' },
+  { key: 'rightRear', label: 'Right Rear' },
+  { key: 'rightFront', label: 'Right Front' }
+] as const
 import { useNavigate } from 'react-router-dom'
 import Sidebar from '@/layout/Sidebar'
 import Header from '@/layout/Header'
@@ -99,6 +108,50 @@ const Devices = () => {
     status: 'Active',
     location: ''
   })
+  const emptyLinearityRow = {
+    nominalValue: '',
+    reading: '',
+    error: '',
+    allowableError: '',
+    withinTolerance: ''
+  }
+
+  const [linearityRows, setLinearityRows] = useState([
+    {
+      nominalValue: '',
+      reading: '',
+      error: '',
+      allowableError: '',
+      withinTolerance: ''
+    }
+  ])
+  const [linearityRowsToAdd, setLinearityRowsToAdd] = useState('1')
+  const [eccentricityData, setEccentricityData] = useState({
+    testWeight: '',
+    positions: {
+      center: { displayedValue: '', deviation: '' },
+      leftFront: { displayedValue: '', deviation: '' },
+      leftRear: { displayedValue: '', deviation: '' },
+      rightRear: { displayedValue: '', deviation: '' },
+      rightFront: { displayedValue: '', deviation: '' }
+    },
+    maximumDeviation: '',
+    allowableDeviation: '',
+    withinTolerance: ''
+  })
+  const emptyRepeatabilityRow = {
+    withoutTestWeight: '',
+    withTestWeight: '',
+    asFound: ''
+  }
+  const [repeatabilityData, setRepeatabilityData] = useState({
+    testWeight: '',
+    measurements: [emptyRepeatabilityRow],
+    deviation: '',
+    allowableError: '',
+    withinTolerance: ''
+  })
+  const [repeatabilityRowsToAdd, setRepeatabilityRowsToAdd] = useState('1')
 
   const handleToggleSidebar = useCallback(() => {
     setSidebarOpen(!sidebarOpen)
@@ -112,6 +165,84 @@ const Devices = () => {
     setFormData(prev => ({
       ...prev,
       [field]: value
+    }))
+  }
+
+  const handleLinearityChange = (index: number, field: string, value: string) => {
+    setLinearityRows(prev => prev.map((row, rowIndex) => (rowIndex === index ? { ...row, [field]: value } : row)))
+  }
+
+  const handleAddLinearityRows = () => {
+    const parsed = parseInt(linearityRowsToAdd, 10)
+    const count = Number.isFinite(parsed) && parsed > 0 ? parsed : 1
+    const newRows = Array.from({ length: count }, () => ({ ...emptyLinearityRow }))
+    setLinearityRows(prev => [...prev, ...newRows])
+    setLinearityRowsToAdd('1')
+  }
+
+  const handleRemoveLinearityRow = (index: number) => {
+    setLinearityRows(prev => prev.filter((_, rowIndex) => rowIndex !== index))
+  }
+
+  const handleEccentricityChange = (
+    field: 'testWeight' | 'maximumDeviation' | 'allowableDeviation' | 'withinTolerance',
+    value: string
+  ) => {
+    setEccentricityData(prev => ({
+      ...prev,
+      [field]: value
+    }))
+  }
+
+  const handleEccentricityPositionChange = (
+    position: keyof typeof eccentricityData.positions,
+    field: 'displayedValue' | 'deviation',
+    value: string
+  ) => {
+    setEccentricityData(prev => ({
+      ...prev,
+      positions: {
+        ...prev.positions,
+        [position]: {
+          ...prev.positions[position],
+          [field]: value
+        }
+      }
+    }))
+  }
+
+  const handleRepeatabilityChange = (
+    field: 'testWeight' | 'deviation' | 'allowableError' | 'withinTolerance',
+    value: string
+  ) => {
+    setRepeatabilityData(prev => ({
+      ...prev,
+      [field]: value
+    }))
+  }
+
+  const handleRepeatabilityRowChange = (index: number, field: keyof typeof emptyRepeatabilityRow, value: string) => {
+    setRepeatabilityData(prev => ({
+      ...prev,
+      measurements: prev.measurements.map((row, rowIndex) => (rowIndex === index ? { ...row, [field]: value } : row))
+    }))
+  }
+
+  const handleAddRepeatabilityRows = () => {
+    const parsed = parseInt(repeatabilityRowsToAdd, 10)
+    const count = Number.isFinite(parsed) && parsed > 0 ? parsed : 1
+    const newRows = Array.from({ length: count }, () => ({ ...emptyRepeatabilityRow }))
+    setRepeatabilityData(prev => ({
+      ...prev,
+      measurements: [...prev.measurements, ...newRows]
+    }))
+    setRepeatabilityRowsToAdd('1')
+  }
+
+  const handleRemoveRepeatabilityRow = (index: number) => {
+    setRepeatabilityData(prev => ({
+      ...prev,
+      measurements: prev.measurements.filter((_, rowIndex) => rowIndex !== index)
     }))
   }
 
@@ -400,7 +531,7 @@ const Devices = () => {
                     Customer Details
                   </Typography>
                   <div className='row'>
-                    <div className='col-12 col-md-6'>
+                    <div className='col-12 col-md-4'>
                       <FormControl fullWidth size='small' required sx={{ mb: 2 }}>
                         <InputLabel>Customer</InputLabel>
                         <Select
@@ -546,18 +677,495 @@ const Devices = () => {
                 </Box>
               </div>
 
-              {/* Location Section */}
+              {/* Linearity Section */}
               <div className='col-12 col-md-12'>
                 <Box sx={{ mb: 3 }}>
-                  <Typography variant='h6' sx={{ mb: 2, color: 'primary.main', fontWeight: 600 }}>
-                    Linearity
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      mb: 2,
+                      flexWrap: 'wrap',
+                      gap: 2
+                    }}
+                  >
+                    <Typography variant='h6' sx={{ color: 'primary.main', fontWeight: 600 }}>
+                      Linearity
+                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
+                      <TextField
+                        size='small'
+                        type='number'
+                        inputProps={{ min: 1 }}
+                        value={linearityRowsToAdd}
+                        onChange={e => setLinearityRowsToAdd(e.target.value)}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault()
+                            handleAddLinearityRows()
+                          }
+                        }}
+                        sx={{ width: 120 }}
+                        placeholder='Rows'
+                      />
+                      <Button
+                        variant='outlined'
+                        startIcon={<AddIcon fontSize='small' />}
+                        onClick={handleAddLinearityRows}
+                        size='small'
+                        sx={{ textTransform: 'none' }}
+                      >
+                        Add Row
+                      </Button>
+                    </Box>
+                  </Box>
+
+                  <Box
+                    sx={{
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      borderRadius: 1,
+                      overflow: 'hidden',
+                      backgroundColor: 'background.paper'
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 2,
+                        px: 2,
+                        py: 1.5,
+                        backgroundColor: 'action.hover',
+                        fontWeight: 600,
+                        minHeight: 48
+                      }}
+                    >
+                      <Typography sx={{ flex: 1.2, fontWeight: 600, fontSize: '0.9rem' }}>Nominal Value</Typography>
+                      <Typography sx={{ flex: 1.2, fontWeight: 600, fontSize: '0.9rem' }}>Reading</Typography>
+                      <Typography sx={{ flex: 1.1, fontWeight: 600, fontSize: '0.9rem' }}>Error</Typography>
+                      <Typography sx={{ flex: 1.2, fontWeight: 600, fontSize: '0.9rem' }}>Allowable Error</Typography>
+                      <Typography sx={{ flex: 1, fontWeight: 600, fontSize: '0.9rem' }}>Within Tolerances</Typography>
+                      <Typography sx={{ width: 60, fontWeight: 600, fontSize: '0.9rem', textAlign: 'center' }}>
+                        Action
+                      </Typography>
+                    </Box>
+
+                    {linearityRows.length === 0 ? (
+                      <Box sx={{ px: 2, py: 3 }}>
+                        <Typography variant='body2' color='text.secondary'>
+                          No linearity data added yet.
+                        </Typography>
+                      </Box>
+                    ) : (
+                      linearityRows.map((row, index) => (
+                        <Box
+                          key={index}
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 2,
+                            px: 2,
+                            py: 1.5,
+                            borderTop: '1px solid',
+                            borderColor: 'divider',
+                            flexWrap: 'wrap'
+                          }}
+                        >
+                          <TextField
+                            placeholder='Enter value'
+                            size='small'
+                            fullWidth
+                            value={row.nominalValue}
+                            onChange={e => handleLinearityChange(index, 'nominalValue', e.target.value)}
+                            sx={{ flex: 1.2, minWidth: { xs: '100%', sm: 150 } }}
+                          />
+                          <TextField
+                            placeholder='Enter reading'
+                            size='small'
+                            fullWidth
+                            value={row.reading}
+                            onChange={e => handleLinearityChange(index, 'reading', e.target.value)}
+                            sx={{ flex: 1.2, minWidth: { xs: '100%', sm: 150 } }}
+                          />
+                          <TextField
+                            placeholder='Enter error'
+                            size='small'
+                            fullWidth
+                            value={row.error}
+                            onChange={e => handleLinearityChange(index, 'error', e.target.value)}
+                            sx={{ flex: 1.1, minWidth: { xs: '100%', sm: 130 } }}
+                          />
+                          <TextField
+                            placeholder='Enter allowable error'
+                            size='small'
+                            fullWidth
+                            value={row.allowableError}
+                            onChange={e => handleLinearityChange(index, 'allowableError', e.target.value)}
+                            sx={{ flex: 1.2, minWidth: { xs: '100%', sm: 150 } }}
+                          />
+                          <TextField
+                            placeholder='Yes/No'
+                            size='small'
+                            fullWidth
+                            value={row.withinTolerance}
+                            onChange={e => handleLinearityChange(index, 'withinTolerance', e.target.value)}
+                            sx={{ flex: 1, minWidth: { xs: '100%', sm: 120 } }}
+                          />
+                          <IconButton
+                            onClick={() => handleRemoveLinearityRow(index)}
+                            sx={{
+                              width: 40,
+                              height: 40,
+                              color: 'error.main',
+                              flexShrink: 0
+                            }}
+                            aria-label='Remove linearity row'
+                          >
+                            <DeleteIcon fontSize='small' />
+                          </IconButton>
+                        </Box>
+                      ))
+                    )}
+                  </Box>
+                </Box>
+              </div>
+
+              {/* Eccentricity Section */}
+              <div className='col-12 col-md-12'>
+                <Box sx={{ mb: 3 }}>
+                  <Typography variant='h6' sx={{ color: 'primary.main', fontWeight: 600, mb: 2 }}>
+                    Eccentricity
                   </Typography>
-                  <div className='row'></div>
+
+                  <Box
+                    sx={{
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      borderRadius: 1,
+                      backgroundColor: 'background.paper',
+                      p: { xs: 2, sm: 3 }
+                    }}
+                  >
+                    <Box sx={{ mb: 3 }}>
+                      <Typography variant='subtitle2' sx={{ mb: 1, fontWeight: 600 }}>
+                        Test Weight
+                      </Typography>
+                      <TextField
+                        placeholder='Enter test weight'
+                        size='small'
+                        fullWidth
+                        value={eccentricityData.testWeight}
+                        onChange={e => handleEccentricityChange('testWeight', e.target.value)}
+                      />
+                    </Box>
+
+                    <Typography variant='subtitle1' sx={{ fontWeight: 600, mb: 1.5 }}>
+                      Positions
+                    </Typography>
+
+                    <Box
+                      sx={{
+                        display: { xs: 'none', sm: 'flex' },
+                        gap: 3,
+                        mb: 1,
+                        fontSize: '0.875rem',
+                        fontWeight: 600,
+                        color: 'text.secondary'
+                      }}
+                    >
+                      <Typography sx={{ width: 140, flexShrink: 0 }}>&nbsp;</Typography>
+                      <Typography sx={{ flex: 1 }}>Displayed Value</Typography>
+                      <Typography sx={{ flex: 1 }}>Deviation</Typography>
+                    </Box>
+
+                    {ECCENTRICITY_POSITIONS.map(position => (
+                      <Box
+                        key={position.key}
+                        sx={{
+                          display: 'flex',
+                          gap: 3,
+                          alignItems: 'center',
+                          flexWrap: { xs: 'wrap', sm: 'nowrap' },
+                          mb: 2
+                        }}
+                      >
+                        <Typography
+                          sx={{
+                            width: { xs: '100%', sm: 140 },
+                            flexShrink: 0,
+                            fontWeight: 600,
+                            color: 'text.primary'
+                          }}
+                        >
+                          {position.label}
+                        </Typography>
+                        <TextField
+                          placeholder='Displayed value'
+                          size='small'
+                          value={eccentricityData.positions[position.key].displayedValue}
+                          onChange={e =>
+                            handleEccentricityPositionChange(position.key, 'displayedValue', e.target.value)
+                          }
+                          sx={{ flex: 1, minWidth: { xs: '100%', sm: 200 }, mb: { xs: 1, sm: 0 } }}
+                        />
+                        <TextField
+                          placeholder='Deviation'
+                          size='small'
+                          value={eccentricityData.positions[position.key].deviation}
+                          onChange={e => handleEccentricityPositionChange(position.key, 'deviation', e.target.value)}
+                          sx={{ flex: 1, minWidth: { xs: '100%', sm: 200 } }}
+                        />
+                      </Box>
+                    ))}
+
+                    <div className='row'>
+                      <div className='col-12 col-md-4'>
+                        <Typography variant='subtitle2' sx={{ mb: 1, fontWeight: 600 }}>
+                          Maximum Deviation
+                        </Typography>
+                        <TextField
+                          placeholder='Enter maximum deviation'
+                          size='small'
+                          fullWidth
+                          value={eccentricityData.maximumDeviation}
+                          onChange={e => handleEccentricityChange('maximumDeviation', e.target.value)}
+                        />
+                      </div>
+                      <div className='col-12 col-md-4'>
+                        <Typography variant='subtitle2' sx={{ mb: 1, fontWeight: 600 }}>
+                          Allowable Deviation
+                        </Typography>
+                        <TextField
+                          placeholder='Enter allowable deviation'
+                          size='small'
+                          fullWidth
+                          value={eccentricityData.allowableDeviation}
+                          onChange={e => handleEccentricityChange('allowableDeviation', e.target.value)}
+                        />
+                      </div>
+                      <div className='col-12 col-md-4'>
+                        <Typography variant='subtitle2' sx={{ mb: 1, fontWeight: 600 }}>
+                          Within Tolerances
+                        </Typography>
+                        <TextField
+                          placeholder='Enter result'
+                          size='small'
+                          fullWidth
+                          value={eccentricityData.withinTolerance}
+                          onChange={e => handleEccentricityChange('withinTolerance', e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </Box>
+                </Box>
+              </div>
+
+              {/* Repeatability Section */}
+              <div className='col-12 col-md-12'>
+                <Box sx={{ mb: 3 }}>
+                  <Typography variant='h6' sx={{ color: 'primary.main', fontWeight: 600, mb: 2 }}>
+                    Repeatability
+                  </Typography>
+                  <Box
+                    sx={{
+                      border: '1px solid',
+                      borderColor: 'divider',
+                      borderRadius: 1,
+                      backgroundColor: 'background.paper',
+                      p: { xs: 2, sm: 3 }
+                    }}
+                  >
+                    <Box sx={{ mb: 3 }}>
+                      <Typography variant='subtitle2' sx={{ mb: 1, fontWeight: 600 }}>
+                        Test Weight
+                      </Typography>
+                      <TextField
+                        placeholder='Enter test weight'
+                        size='small'
+                        fullWidth
+                        value={repeatabilityData.testWeight}
+                        onChange={e => handleRepeatabilityChange('testWeight', e.target.value)}
+                      />
+                    </Box>
+
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        mb: 1.5,
+                        flexWrap: 'wrap',
+                        gap: 2
+                      }}
+                    >
+                      <Typography variant='subtitle1' sx={{ fontWeight: 600 }}>
+                        Measurements
+                      </Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
+                        <TextField
+                          size='small'
+                          type='number'
+                          inputProps={{ min: 1 }}
+                          value={repeatabilityRowsToAdd}
+                          onChange={e => setRepeatabilityRowsToAdd(e.target.value)}
+                          onKeyDown={e => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault()
+                              handleAddRepeatabilityRows()
+                            }
+                          }}
+                          sx={{ width: 120 }}
+                          placeholder='Rows'
+                        />
+                        <Button
+                          variant='outlined'
+                          startIcon={<AddIcon fontSize='small' />}
+                          size='small'
+                          sx={{ textTransform: 'none' }}
+                          onClick={handleAddRepeatabilityRows}
+                        >
+                          Add Row
+                        </Button>
+                      </Box>
+                    </Box>
+
+                    <Box
+                      sx={{
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        borderRadius: 1,
+                        overflow: 'hidden'
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 2,
+                          px: 2,
+                          py: 1.5,
+                          backgroundColor: 'action.hover',
+                          fontWeight: 600,
+                          minHeight: 48
+                        }}
+                      >
+                        <Typography sx={{ flex: 1, fontWeight: 600, fontSize: '0.9rem' }}>
+                          Without Test Weight
+                        </Typography>
+                        <Typography sx={{ flex: 1, fontWeight: 600, fontSize: '0.9rem' }}>With Test Weight</Typography>
+                        <Typography sx={{ flex: 1, fontWeight: 600, fontSize: '0.9rem' }}>As Found</Typography>
+                        <Typography sx={{ width: 60, textAlign: 'center', fontWeight: 600, fontSize: '0.9rem' }}>
+                          Action
+                        </Typography>
+                      </Box>
+
+                      {repeatabilityData.measurements.length === 0 ? (
+                        <Box sx={{ px: 2, py: 3 }}>
+                          <Typography variant='body2' color='text.secondary'>
+                            No measurements added yet.
+                          </Typography>
+                        </Box>
+                      ) : (
+                        repeatabilityData.measurements.map((row, index) => (
+                          <Box
+                            key={index}
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 2,
+                              px: 2,
+                              py: 1.5,
+                              borderTop: '1px solid',
+                              borderColor: 'divider',
+                              flexWrap: 'wrap'
+                            }}
+                          >
+                            <TextField
+                              placeholder='Enter value'
+                              size='small'
+                              fullWidth
+                              value={row.withoutTestWeight}
+                              onChange={e => handleRepeatabilityRowChange(index, 'withoutTestWeight', e.target.value)}
+                              sx={{ flex: 1, minWidth: { xs: '100%', sm: 160 } }}
+                            />
+                            <TextField
+                              placeholder='Enter value'
+                              size='small'
+                              fullWidth
+                              value={row.withTestWeight}
+                              onChange={e => handleRepeatabilityRowChange(index, 'withTestWeight', e.target.value)}
+                              sx={{ flex: 1, minWidth: { xs: '100%', sm: 160 } }}
+                            />
+                            <TextField
+                              placeholder='Enter value'
+                              size='small'
+                              fullWidth
+                              value={row.asFound}
+                              onChange={e => handleRepeatabilityRowChange(index, 'asFound', e.target.value)}
+                              sx={{ flex: 1, minWidth: { xs: '100%', sm: 160 } }}
+                            />
+                            <IconButton
+                              onClick={() => handleRemoveRepeatabilityRow(index)}
+                              sx={{
+                                width: 40,
+                                height: 40,
+                                color: 'error.main',
+                                flexShrink: 0
+                              }}
+                              aria-label='Remove repeatability row'
+                            >
+                              <DeleteIcon fontSize='small' />
+                            </IconButton>
+                          </Box>
+                        ))
+                      )}
+                    </Box>
+
+                    <div className='row' style={{ marginTop: 16 }}>
+                      <div className='col-12 col-md-4'>
+                        <Typography variant='subtitle2' sx={{ mb: 1, fontWeight: 600 }}>
+                          Deviation
+                        </Typography>
+                        <TextField
+                          placeholder='Enter deviation'
+                          size='small'
+                          fullWidth
+                          value={repeatabilityData.deviation}
+                          onChange={e => handleRepeatabilityChange('deviation', e.target.value)}
+                        />
+                      </div>
+                      <div className='col-12 col-md-4'>
+                        <Typography variant='subtitle2' sx={{ mb: 1, fontWeight: 600 }}>
+                          Allowable Error
+                        </Typography>
+                        <TextField
+                          placeholder='Enter allowable error'
+                          size='small'
+                          fullWidth
+                          value={repeatabilityData.allowableError}
+                          onChange={e => handleRepeatabilityChange('allowableError', e.target.value)}
+                        />
+                      </div>
+                      <div className='col-12 col-md-4'>
+                        <Typography variant='subtitle2' sx={{ mb: 1, fontWeight: 600 }}>
+                          Within Tolerances
+                        </Typography>
+                        <TextField
+                          placeholder='Enter result'
+                          size='small'
+                          fullWidth
+                          value={repeatabilityData.withinTolerance}
+                          onChange={e => handleRepeatabilityChange('withinTolerance', e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </Box>
                 </Box>
               </div>
 
               {/* Action Buttons */}
-
               <Box
                 sx={{
                   display: 'flex',
