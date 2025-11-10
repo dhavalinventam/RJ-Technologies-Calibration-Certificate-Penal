@@ -42,6 +42,64 @@ const steps = [
   'Preview & Generate'
 ]
 
+const defaultCustomerOptions = [
+  {
+    id: '1',
+    customerName: 'Amnel',
+    company: 'Amnel Pharmaceutical Pvt Ltd',
+    address: '301, Shahjanand Plaza, Bhattha, Paldi',
+    city: 'Ahmedabad',
+    state: 'Gujarat',
+    zip: '380007',
+    contactPerson: 'Urmil Patel',
+    mobile: '9876543210'
+  },
+  {
+    id: '2',
+    customerName: 'Globex Labs',
+    company: 'Globex Laboratory Solutions',
+    address: 'Plot 12, GIDC Estate, Makarpura',
+    city: 'Vadodara',
+    state: 'Gujarat',
+    zip: '390010',
+    contactPerson: 'Rekha Sharma',
+    mobile: '9825034567'
+  },
+  {
+    id: '3',
+    customerName: 'Vertex Pharma',
+    company: 'Vertex Pharmaceuticals LLP',
+    address: 'Unit 5, MIDC Industrial Area',
+    city: 'Mumbai',
+    state: 'Maharashtra',
+    zip: '400104',
+    contactPerson: 'Rohan Desai',
+    mobile: '9898076543'
+  },
+  {
+    id: '4',
+    customerName: 'Everest Biotech',
+    company: 'Everest Biotech Pvt Ltd',
+    address: 'Science Park, Vesu',
+    city: 'Surat',
+    state: 'Gujarat',
+    zip: '395007',
+    contactPerson: 'Nisha Shah',
+    mobile: '9012304567'
+  },
+  {
+    id: '5',
+    customerName: 'Zenith Industries',
+    company: 'Zenith Industrial Solutions',
+    address: 'Phase II, Hinjewadi IT Park',
+    city: 'Pune',
+    state: 'Maharashtra',
+    zip: '411057',
+    contactPerson: 'Ajay Kulkarni',
+    mobile: '9123456780'
+  }
+]
+
 const deviceNameOptions = [
   'Analytical Balance XS205',
   'Bench Scale B300',
@@ -87,6 +145,9 @@ const CreateCertificate = () => {
   const [certificateNo, setCertificateNo] = useState('RJ-2511-018')
   const [selectedDeviceName, setSelectedDeviceName] = useState(null)
   const [deviceNameInputValue, setDeviceNameInputValue] = useState('')
+  const [customerOptions, setCustomerOptions] = useState(defaultCustomerOptions)
+  const [selectedCustomer, setSelectedCustomer] = useState(null)
+  const [customerNameInputValue, setCustomerNameInputValue] = useState('')
   const [procedureTemplateOptions, setProcedureTemplateOptions] = useState(defaultProcedureTemplates)
   const [selectedTemplateName, setSelectedTemplateName] = useState(null)
   const [templateNameInputValue, setTemplateNameInputValue] = useState('')
@@ -106,6 +167,25 @@ const CreateCertificate = () => {
     } catch (error) {
       console.error('Failed to load procedure templates:', error)
       setProcedureTemplateOptions(defaultProcedureTemplates)
+    }
+  }, [])
+
+  useEffect(() => {
+    try {
+      const storedCustomers = localStorage.getItem('customers')
+      if (storedCustomers) {
+        const parsed = JSON.parse(storedCustomers)
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setCustomerOptions(parsed)
+        } else {
+          setCustomerOptions(defaultCustomerOptions)
+        }
+      } else {
+        setCustomerOptions(defaultCustomerOptions)
+      }
+    } catch (error) {
+      console.error('Failed to load customers:', error)
+      setCustomerOptions(defaultCustomerOptions)
     }
   }, [])
   const [calibrationDetails, setCalibrationDetails] = useState({
@@ -1454,6 +1534,61 @@ const CreateCertificate = () => {
                     Customer
                   </Typography>
                 </Box>
+
+                <div className='row'>
+                  <div className='col-12 col-md-6'>
+                    <Typography variant='body2' sx={{ mb: 0.7 }} component='label' className='cc_label'>
+                      Customer Name
+                    </Typography>
+                    <Autocomplete
+                      options={customerOptions}
+                      value={selectedCustomer}
+                      onChange={(_, newValue) => {
+                        setSelectedCustomer(newValue)
+                        if (newValue) {
+                          setCustomer({
+                            company: newValue.company || '',
+                            address: newValue.address || '',
+                            city: newValue.city || '',
+                            state: newValue.state || '',
+                            zip: newValue.zip || newValue.pincode || '',
+                            contact: newValue.contactPerson || '',
+                            mobile: newValue.mobile || ''
+                          })
+                          setCustomerNameInputValue(newValue.customerName || '')
+                        } else {
+                          setCustomer({
+                            company: '',
+                            address: '',
+                            city: '',
+                            state: '',
+                            zip: '',
+                            contact: '',
+                            mobile: ''
+                          })
+                          setCustomerNameInputValue('')
+                        }
+                      }}
+                      inputValue={customerNameInputValue}
+                      onInputChange={(_, newInputValue) => setCustomerNameInputValue(newInputValue)}
+                      getOptionLabel={option => option?.customerName || ''}
+                      isOptionEqualToValue={(option, value) => option?.id === value?.id}
+                      renderInput={params => (
+                        <TextField
+                          {...params}
+                          placeholder='Search customer...'
+                          size='small'
+                          InputProps={{
+                            ...params.InputProps,
+                            sx: {
+                              borderRadius: 1.5
+                            }
+                          }}
+                        />
+                      )}
+                    />
+                  </div>
+                </div>
 
                 {/* Bootstrap-style rows/cols (no Grid) */}
                 <div className='row'>
