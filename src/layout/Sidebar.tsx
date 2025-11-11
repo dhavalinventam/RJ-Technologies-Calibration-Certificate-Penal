@@ -80,10 +80,10 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onToggle }) => {
                     fontWeight: 400
                   },
                   '&.Mui-selected': {
-                    backgroundColor: theme.palette.primary.main,
+                    backgroundColor: '#2563EB',
                     color: theme.palette.primary.contrastText,
                     '&:hover': {
-                      backgroundColor: theme.palette.primary.dark
+                      backgroundColor: '#1D4ED8'
                     },
                     '& .MuiListItemIcon-root': {
                       color: theme.palette.primary.contrastText
@@ -93,17 +93,17 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onToggle }) => {
                     }
                   },
                   '&.MuiButtonBase-root.Mui-active': {
-                    backgroundColor: theme.palette.primary.main,
+                    backgroundColor: '#2563EB',
                     color: theme.palette.primary.contrastText,
 
                     '&:hover': {
-                      backgroundColor: theme.palette.primary.dark
+                      backgroundColor: '#1D4ED8'
                     },
                     '& .MuiListItemIcon-root': {
                       color: theme.palette.primary.contrastText
                     },
                     '& .MuiListItemText-primary': {
-                      color: theme.palette.primary.contrastText
+                      // color: theme.palette.primary.contrastText
                     }
                   },
                   '&:hover': {

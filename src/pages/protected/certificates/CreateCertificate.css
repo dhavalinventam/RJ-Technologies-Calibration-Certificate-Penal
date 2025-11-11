@@ -50,16 +50,16 @@
 }
 
 .cc_step_chip:hover:not(.active) {
-  background: rgba(0, 0, 0, 0.06);
-  border-color: rgba(0, 0, 0, 0.1);
+  background: rgba(37, 99, 235, 0.08);
+  border-color: rgba(37, 99, 235, 0.12);
   transform: translateY(-1px);
 }
 
 .cc_step_chip.active {
-  background: #1976d2;
+  background: #2563eb;
   color: #fff;
-  border-color: #1976d2;
-  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.3);
+  border-color: rgba(37, 99, 235, 0.9);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
   transform: translateY(-1px);
 }
 
@@ -77,20 +77,20 @@
 }
 
 .cc_card {
-  background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06);
-  padding: 28px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+  padding: 24px;
   margin-bottom: 24px;
-  border: 1px solid rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(148, 163, 184, 0.25);
   transition: box-shadow 0.2s ease-in-out;
 }
 
 [data-theme='dark'] .cc_card,
 .dark .cc_card {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.1);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(148, 163, 184, 0.35);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.35);
 }
 
 .cc_footer_actions {
@@ -98,9 +98,9 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-top: 32px;
-  margin-bottom: 24px;
-  padding-top: 24px;
+  margin-top: 10px;
+  margin-bottom: 0px;
+  padding-top: 20px;
   border-top: 1px solid rgba(0, 0, 0, 0.08);
 }
 

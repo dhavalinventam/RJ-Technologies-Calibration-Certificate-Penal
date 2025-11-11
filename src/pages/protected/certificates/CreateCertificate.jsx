@@ -15,7 +15,8 @@ import {
   TableRow,
   Paper,
   IconButton,
-  Autocomplete
+  Autocomplete,
+  InputAdornment
 } from '@mui/material'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf'
@@ -27,6 +28,60 @@ import { useTheme as useThemeContext } from '@/context/ThemeContext'
 import './CreateCertificate.css'
 import { useNavigate } from 'react-router-dom'
 import jsPDF from 'jspdf'
+import SearchIcon from '@mui/icons-material/Search'
+
+const PRIMARY_COLOR = '#2563EB'
+const PAGE_BACKGROUND = '#F8FAFC'
+const TITLE_COLOR = '#111827'
+const SUBTEXT_COLOR = '#6B7280'
+const CARD_RADIUS = 3
+const CARD_BORDER = '1px solid rgba(148, 163, 184, 0.25)'
+const CARD_SHADOW = '0 1px 3px rgba(15, 23, 42, 0.08)'
+
+const cardBaseStyles = {
+  p: { xs: 2.5, md: 3 },
+  borderRadius: CARD_RADIUS,
+  border: CARD_BORDER,
+  boxShadow: CARD_SHADOW,
+  backgroundColor: '#FFFFFF'
+}
+
+const inputStyles = {
+  '& .MuiOutlinedInput-root': {
+    borderRadius: '12px',
+    backgroundColor: '#FFFFFF',
+    transition: 'box-shadow 0.2s ease, border-color 0.2s ease',
+    '& fieldset': { borderColor: 'rgba(148, 163, 184, 0.4)' },
+    '&:hover fieldset': { borderColor: PRIMARY_COLOR },
+    '&.Mui-focused fieldset': { borderColor: PRIMARY_COLOR }
+  },
+  '& .MuiOutlinedInput-root.Mui-focused': {
+    boxShadow: '0 0 0 2px #93C5FD'
+  },
+  '& .MuiOutlinedInput-input': {
+    py: 1.1
+  }
+}
+
+const secondaryButtonStyles = {
+  textTransform: 'none',
+  borderRadius: '999px',
+  px: 3,
+  py: 1.15,
+  borderColor: 'rgba(148, 163, 184, 0.6)',
+  color: SUBTEXT_COLOR,
+  '&:hover': { borderColor: SUBTEXT_COLOR, backgroundColor: '#F3F4F6' }
+}
+
+const primaryButtonStyles = {
+  textTransform: 'none',
+  borderRadius: '999px',
+  px: 3,
+  py: 1.15,
+  backgroundColor: PRIMARY_COLOR,
+  boxShadow: '0 8px 16px rgba(37, 99, 235, 0.18)',
+  '&:hover': { backgroundColor: '#1D4ED8' }
+}
 
 const steps = [
   'Certificate Number',
@@ -134,6 +189,7 @@ const CreateCertificate = () => {
   const navigate = useNavigate()
 
   const [activeStep, setActiveStep] = useState(0)
+  const [searchQuery, setSearchQuery] = useState('')
 
   const handleToggleSidebar = useCallback(() => {
     setSidebarOpen(!sidebarOpen)
@@ -1155,86 +1211,84 @@ const CreateCertificate = () => {
             zIndex: '1',
             minHeight: 'calc(100vh - 64px)',
             overflow: 'auto',
-            backgroundColor: theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.02)' : 'rgba(0, 0, 0, 0.01)'
+            '&::-webkit-scrollbar': {
+              width: '6px'
+            },
+            '&::-webkit-scrollbar-track': {
+              background: 'transparent'
+            },
+            '&::-webkit-scrollbar-thumb': {
+              background: theme.palette.mode === 'dark' ? '#555' : '#ccc',
+              borderRadius: '3px'
+            },
+            '&::-webkit-scrollbar-thumb:hover': {
+              background: theme.palette.mode === 'dark' ? '#777' : '#999'
+            },
+            // p: { xs: 2, md: 3 },
+            fontFamily: 'Inter, "Open Sans", sans-serif',
+            backgroundColor: PAGE_BACKGROUND
           }}
         >
-          <Box>
-            {/* Top header */}
-            <Box
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <Paper
               sx={{
-                mb: 3,
+                ...cardBaseStyles,
                 display: 'flex',
-                alignItems: 'flex-start',
+                alignItems: 'center',
                 justifyContent: 'space-between',
-                gap: 2,
-                flexWrap: 'wrap'
+                flexWrap: 'wrap',
+                gap: 2
               }}
             >
               <Box>
                 <Typography
-                  variant='h4'
+                  variant='h5'
                   component='h1'
-                  sx={{ fontWeight: 700, mb: 0.5, fontSize: { xs: '1.5rem', sm: '1.5rem', md: '1.75rem' } }}
+                  sx={{ fontWeight: 700, color: TITLE_COLOR, fontSize: { xs: '1.2rem', md: '1.5rem' }, mb: 0.5 }}
                 >
                   Create Calibration Certificate
                 </Typography>
-                <Typography variant='body2' color='text.secondary' sx={{ fontSize: '0.875rem' }}>
+                <Typography variant='body2' sx={{ color: SUBTEXT_COLOR }}>
                   Step {activeStep + 1} of {steps.length}: {steps[activeStep]}
                 </Typography>
               </Box>
-
-              <Button
-                color='inherit'
-                variant='outlined'
-                sx={{
-                  fontWeight: 500,
-                  textTransform: 'none',
-                  borderRadius: 2,
-                  px: 2.5,
-                  py: 1,
-                  borderColor: 'divider',
-                  '&:hover': {
-                    borderColor: 'text.secondary',
-                    backgroundColor: 'action.hover'
-                  }
-                }}
-                onClick={() => navigate('/certificates')}
-              >
+              <Button variant='outlined' onClick={() => navigate('/certificates')} sx={{ ...secondaryButtonStyles }}>
                 Cancel
               </Button>
-            </Box>
+            </Paper>
 
-            {/* Progress bar */}
-            <Box sx={{ mb: 3 }}>
-              <LinearProgress
-                variant='determinate'
-                value={progress}
-                sx={{
-                  height: 6,
-                  borderRadius: 999,
-                  backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)',
-                  '& .MuiLinearProgress-bar': {
-                    borderRadius: 999
-                  }
-                }}
-              />
-            </Box>
-
-            {/* Stepper */}
-            <Box className='cc_stepper_container' sx={{ mb: 4 }}>
-              <Box className='cc_steps_scroller'>
-                {steps.map((label, index) => (
-                  <Box
-                    key={label}
-                    className={`cc_step_chip ${index === activeStep ? 'active' : ''}`}
-                    onClick={() => setActiveStep(index)}
-                    sx={{ cursor: 'pointer', transition: 'all 0.2s ease-in-out' }}
-                  >
-                    <span className='cc_step_label'>{label}</span>
-                  </Box>
-                ))}
+            <Paper sx={{ ...cardBaseStyles, display: 'flex', flexDirection: 'column', gap: 3 }}>
+              <Box>
+                <LinearProgress
+                  variant='determinate'
+                  value={progress}
+                  sx={{
+                    height: 6,
+                    borderRadius: 999,
+                    backgroundColor: 'rgba(148, 163, 184, 0.2)',
+                    '& .MuiLinearProgress-bar': {
+                      borderRadius: 999,
+                      backgroundColor: PRIMARY_COLOR
+                    }
+                  }}
+                />
               </Box>
-            </Box>
+
+              <Box className='cc_stepper_container' sx={{ mb: 0 }}>
+                <Box className='cc_steps_scroller'>
+                  {steps.map((label, index) => (
+                    <Box
+                      key={label}
+                      className={`cc_step_chip ${index === activeStep ? 'active' : ''}`}
+                      onClick={() => setActiveStep(index)}
+                      sx={{ cursor: 'pointer', transition: 'all 0.2s ease-in-out' }}
+                    >
+                      <span className='cc_step_label'>{label}</span>
+                    </Box>
+                  ))}
+                </Box>
+              </Box>
+            </Paper>
 
             {/* Step content */}
             {activeStep === 0 ? (
