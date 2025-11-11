@@ -263,7 +263,7 @@ const ProcedureTemplates = () => {
                 <Typography
                   variant='h5'
                   component='h1'
-                  sx={{ fontWeight: 700, color: TITLE_COLOR, fontSize: { xs: '1.5rem', md: '1.8rem' }, mb: 0.5 }}
+                  sx={{ fontWeight: 700, color: TITLE_COLOR, fontSize: { xs: '1.2rem', md: '1.5rem' }, mb: 0.5 }}
                 >
                   Procedure Templates
                 </Typography>

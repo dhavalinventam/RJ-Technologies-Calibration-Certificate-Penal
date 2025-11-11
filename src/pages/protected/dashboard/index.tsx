@@ -1,16 +1,30 @@
 import React, { useCallback, useState } from 'react'
-import { Box, Typography, Button, Card, CardContent, useTheme, useMediaQuery } from '@mui/material'
-import {
-  PeopleOutlined,
-  BuildOutlined,
-  VerifiedOutlined,
-  CalendarTodayOutlined,
-  DescriptionOutlined
-} from '@mui/icons-material'
+import { Box, Typography, Button, useTheme, useMediaQuery, Paper } from '@mui/material'
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
+import PeopleOutlined from '@mui/icons-material/PeopleOutlined'
+import BuildOutlined from '@mui/icons-material/BuildOutlined'
+import VerifiedOutlined from '@mui/icons-material/VerifiedOutlined'
+import CalendarTodayOutlined from '@mui/icons-material/CalendarTodayOutlined'
 import { useNavigate } from 'react-router-dom'
 import Sidebar from '@/layout/Sidebar'
 import Header from '@/layout/Header'
 import { useTheme as useThemeContext } from '@/context/ThemeContext'
+
+const PRIMARY_COLOR = '#2563EB'
+const PAGE_BACKGROUND = '#F8FAFC'
+const TITLE_COLOR = '#111827'
+const SUBTEXT_COLOR = '#6B7280'
+const CARD_RADIUS = '12px'
+const CARD_BORDER = '1px solid rgba(148, 163, 184, 0.25)'
+const CARD_SHADOW = '0 1px 3px rgba(15, 23, 42, 0.08)'
+
+const cardBaseStyles = {
+  p: { xs: 2.5, md: 3 },
+  borderRadius: CARD_RADIUS,
+  border: CARD_BORDER,
+  boxShadow: CARD_SHADOW,
+  backgroundColor: '#FFFFFF'
+}
 
 const Dashboard = () => {
   const theme = useTheme()
@@ -23,72 +37,58 @@ const Dashboard = () => {
     setSidebarOpen(!sidebarOpen)
   }, [sidebarOpen])
 
-  // Summary cards data
   const summaryCards = [
     {
       title: 'Total Customers',
       value: 1,
-      icon: PeopleOutlined,
-      iconColor: '#1976d2'
+      icon: <PeopleOutlined sx={{ fontSize: 32, color: PRIMARY_COLOR }} />
     },
     {
       title: 'Total Devices',
       value: 0,
-      icon: BuildOutlined,
-      iconColor: '#1976d2'
+      icon: <BuildOutlined sx={{ fontSize: 32, color: PRIMARY_COLOR }} />
     },
     {
       title: 'Total Certificates',
       value: 0,
-      icon: VerifiedOutlined,
-      iconColor: '#1976d2'
+      icon: <VerifiedOutlined sx={{ fontSize: 32, color: PRIMARY_COLOR }} />
     },
     {
       title: 'Due in 30 Days',
       value: 0,
-      icon: CalendarTodayOutlined,
-      iconColor: '#ff9800'
+      icon: <CalendarTodayOutlined sx={{ fontSize: 32, color: '#F97316' }} />
     }
   ]
 
-  // Action cards data
-  const actionCards = [
+  const quickActions = [
     {
-      title: 'Manage Customers',
-      description: 'View and manage customer information',
-      icon: PeopleOutlined,
-      iconColor: '#1976d2',
+      name: 'Manage Customers',
+      description: 'View and manage customer information.',
       path: '/customers'
     },
     {
-      title: 'Manage Devices',
-      description: 'Track instruments and equipment',
-      icon: BuildOutlined,
-      iconColor: '#1976d2',
+      name: 'Manage Devices',
+      description: 'Track instruments and calibration data.',
       path: '/devices'
     },
     {
-      title: 'View Certificates',
-      description: 'Browse and search certificates',
-      icon: VerifiedOutlined,
-      iconColor: '#1976d2',
-      path: '/certificates'
+      name: 'Create Certificate',
+      description: 'Generate a new calibration certificate.',
+      path: '/certificates/create'
     },
     {
-      title: 'Procedure Templates',
-      description: 'Manage procedure instruction templates',
-      icon: DescriptionOutlined,
-      iconColor: '#1976d2',
+      name: 'Procedure Templates',
+      description: 'Maintain reusable procedure instructions.',
       path: '/procedure-templates'
     }
   ]
 
+  const filteredActions = quickActions
+
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', flexDirection: 'row' }}>
-      {/* Sidebar */}
+    <Box sx={{ display: 'flex', minHeight: '100vh', flexDirection: 'row', backgroundColor: PAGE_BACKGROUND }}>
       <Sidebar open={sidebarOpen} onToggle={handleToggleSidebar} />
 
-      {/* Main Content Area */}
       <Box
         component='main'
         sx={{
@@ -96,7 +96,7 @@ const Dashboard = () => {
           display: 'flex',
           flexDirection: 'column',
           minHeight: '100vh',
-          backgroundColor: 'background.default',
+          backgroundColor: PAGE_BACKGROUND,
           width: '100%',
           overflow: 'hidden',
           transition: theme.transitions.create('margin-left', {
@@ -113,7 +113,6 @@ const Dashboard = () => {
           }
         }}
       >
-        {/* Header */}
         <Header
           onToggleSidebar={handleToggleSidebar}
           onToggleTheme={toggleTheme}
@@ -121,7 +120,6 @@ const Dashboard = () => {
           sidebarOpen={sidebarOpen}
         />
 
-        {/* Content */}
         <Box
           className='contain_main_div'
           sx={{
@@ -142,202 +140,166 @@ const Dashboard = () => {
             },
             '&::-webkit-scrollbar-thumb:hover': {
               background: theme.palette.mode === 'dark' ? '#777' : '#999'
-            }
+            },
+
+            fontFamily: 'Inter, "Open Sans", sans-serif'
           }}
         >
-          {/* Header Section */}
-          <Box
-            sx={{
-              display: 'flex',
-              flexDirection: { xs: 'column', sm: 'row' },
-              justifyContent: 'space-between',
-              alignItems: { xs: 'flex-start', sm: 'center' },
-              mb: 4,
-              gap: 2
-            }}
-          >
-            <Box>
-              <Typography
-                variant='h4'
-                component='h1'
-                sx={{
-                  fontWeight: 700,
-                  fontSize: { xs: '1.5rem', sm: '1.75rem', md: '2rem' },
-                  color: '#1976d2',
-                  mb: 0.5
-                }}
-              >
-                RJ Technologies
-              </Typography>
-              <Typography
-                variant='body1'
-                sx={{
-                  color: 'text.secondary',
-                  fontSize: { xs: '0.875rem', sm: '1rem' }
-                }}
-              >
-                Calibration Certificate Management
-              </Typography>
-            </Box>
-            <Button variant='contained' size='medium' onClick={() => navigate('/certificates/create')}>
-              Create New Certificate
-            </Button>
-          </Box>
-
-          {/* Summary Cards Row */}
-          <Box
-            sx={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: 2,
-              mb: 4
-            }}
-          >
-            {summaryCards.map((card, index) => {
-              const IconComponent = card.icon
-              return (
-                <Card
-                  key={index}
-                  sx={{
-                    flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 8px)', md: '1 1 calc(25% - 12px)' },
-                    minWidth: { xs: '100%', sm: '200px' },
-                    backgroundColor:
-                      theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.8)',
-                    borderRadius: 2,
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-                    transition: 'transform 0.2s, box-shadow 0.2s',
-                    '&:hover': {
-                      transform: 'translateY(-2px)',
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.12)'
-                    }
-                  }}
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <Paper
+              sx={{
+                ...cardBaseStyles,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: 2
+              }}
+            >
+              <Box>
+                <Typography
+                  variant='h5'
+                  component='h1'
+                  sx={{ fontWeight: 700, color: TITLE_COLOR, fontSize: { xs: '1.2rem', md: '1.5rem' }, mb: 0.5 }}
                 >
-                  <CardContent
+                  Calibration Dashboard
+                </Typography>
+                <Typography variant='body2' sx={{ color: SUBTEXT_COLOR }}>
+                  Overview of calibration activity and quick actions
+                </Typography>
+              </Box>
+              <Button
+                variant='contained'
+                endIcon={<ArrowForwardIcon />}
+                onClick={() => navigate('/certificates/create')}
+                sx={{
+                  textTransform: 'none',
+                  borderRadius: '999px',
+                  px: 3,
+                  py: 1.15,
+                  backgroundColor: PRIMARY_COLOR,
+                  boxShadow: '0 8px 16px rgba(37, 99, 235, 0.18)',
+                  '&:hover': { backgroundColor: '#1D4ED8' }
+                }}
+              >
+                Create Certificate
+              </Button>
+            </Paper>
+
+            <Paper sx={{ ...cardBaseStyles }}>
+              <Typography variant='h6' sx={{ fontWeight: 700, color: TITLE_COLOR, mb: 1 }}>
+                Summary
+              </Typography>
+              <Typography variant='body2' sx={{ color: SUBTEXT_COLOR, mb: 3 }}>
+                Key metrics across customers, devices, and certificates.
+              </Typography>
+              <Box
+                sx={{
+                  display: 'grid',
+                  gap: 2,
+                  gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }
+                }}
+              >
+                {summaryCards.map(card => (
+                  <Paper
+                    key={card.title}
                     sx={{
-                      padding: { xs: 2, sm: 2.5 },
-                      position: 'relative',
-                      '&:last-child': { pb: { xs: 2, sm: 2.5 } }
+                      borderRadius: 3,
+                      border: CARD_BORDER,
+                      boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)',
+                      p: 2.5,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 1
                     }}
                   >
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'flex-start',
-                        mb: 1
-                      }}
-                    >
-                      <Typography
-                        variant='body2'
-                        sx={{
-                          color: 'text.secondary',
-                          fontSize: '0.875rem',
-                          fontWeight: 500
-                        }}
-                      >
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Typography variant='subtitle2' sx={{ color: SUBTEXT_COLOR, fontWeight: 500 }}>
                         {card.title}
                       </Typography>
-                      <IconComponent
-                        sx={{
-                          fontSize: { xs: 24, sm: 28 },
-                          color: card.iconColor
-                        }}
-                      />
+                      {card.icon}
                     </Box>
-                    <Typography
-                      variant='h4'
-                      sx={{
-                        fontWeight: 700,
-                        color: 'text.primary',
-                        fontSize: { xs: '1.75rem', sm: '2rem' },
-                        mt: 1
-                      }}
-                    >
+                    <Typography variant='h5' sx={{ fontWeight: 700, color: TITLE_COLOR }}>
                       {card.value}
                     </Typography>
-                  </CardContent>
-                </Card>
-              )
-            })}
-          </Box>
+                  </Paper>
+                ))}
+              </Box>
+            </Paper>
 
-          {/* Action Cards Row */}
-          <Box
-            sx={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: 2
-            }}
-          >
-            {actionCards.map((card, index) => {
-              const IconComponent = card.icon
-              return (
-                <Card
-                  key={index}
-                  onClick={() => navigate(card.path)}
+            <Paper sx={{ ...cardBaseStyles, overflow: 'hidden' }}>
+              <Typography variant='h6' sx={{ fontWeight: 700, color: TITLE_COLOR, mb: 1 }}>
+                Quick Actions
+              </Typography>
+              <Typography variant='body2' sx={{ color: SUBTEXT_COLOR, mb: 2 }}>
+                Jump directly into common workflows across the platform.
+              </Typography>
+              {filteredActions.length === 0 ? (
+                <Box
                   sx={{
-                    flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 8px)', md: '1 1 calc(25% - 12px)' },
-                    minWidth: { xs: '100%', sm: '200px' },
-                    backgroundColor:
-                      theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.8)',
-                    borderRadius: 2,
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-                    cursor: 'pointer',
-                    transition: 'transform 0.2s, box-shadow 0.2s',
-                    '&:hover': {
-                      transform: 'translateY(-2px)',
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.12)'
-                    }
+                    border: CARD_BORDER,
+                    borderRadius: 3,
+                    boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)',
+                    p: 3,
+                    textAlign: 'center',
+                    color: SUBTEXT_COLOR
                   }}
                 >
-                  <CardContent
-                    sx={{
-                      padding: { xs: 2.5, sm: 3 },
-                      '&:last-child': { pb: { xs: 2.5, sm: 3 } }
-                    }}
-                  >
-                    <Box
+                  No actions match your search.
+                </Box>
+              ) : (
+                <Box
+                  sx={{
+                    display: 'grid',
+                    gap: 2,
+                    gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' }
+                  }}
+                >
+                  {filteredActions.map(action => (
+                    <Paper
+                      key={action.name}
                       sx={{
+                        borderRadius: 3,
+                        border: CARD_BORDER,
+                        boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)',
+                        p: 2.5,
                         display: 'flex',
-                        alignItems: 'flex-start',
-                        gap: 2,
-                        mb: 1.5
+                        flexDirection: 'column',
+                        gap: 1.5,
+                        backgroundColor: '#FFFFFF'
                       }}
                     >
-                      <IconComponent
-                        sx={{
-                          fontSize: { xs: 32, sm: 36 },
-                          color: card.iconColor,
-                          flexShrink: 0
-                        }}
-                      />
-                      <Box sx={{ flex: 1 }}>
-                        <Typography
-                          variant='h6'
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 1 }}>
+                        <Box>
+                          <Typography variant='subtitle1' sx={{ fontWeight: 600, color: TITLE_COLOR }}>
+                            {action.name}
+                          </Typography>
+                          <Typography variant='body2' sx={{ color: SUBTEXT_COLOR, mt: 0.5 }}>
+                            {action.description}
+                          </Typography>
+                        </Box>
+                        <Button
+                          size='small'
+                          variant='outlined'
+                          endIcon={<ArrowForwardIcon fontSize='small' />}
+                          onClick={() => navigate(action.path)}
                           sx={{
-                            fontWeight: 600,
-                            color: '#1976d2',
-                            fontSize: { xs: '1rem', sm: '1.125rem' },
-                            mb: 0.5
+                            textTransform: 'none',
+                            borderRadius: '999px',
+                            borderColor: PRIMARY_COLOR,
+                            color: PRIMARY_COLOR,
+                            whiteSpace: 'nowrap',
+                            '&:hover': { borderColor: '#1D4ED8', backgroundColor: 'rgba(37, 99, 235, 0.08)' }
                           }}
                         >
-                          {card.title}
-                        </Typography>
-                        <Typography
-                          variant='body2'
-                          sx={{
-                            color: 'text.secondary',
-                            fontSize: '0.875rem'
-                          }}
-                        >
-                          {card.description}
-                        </Typography>
+                          Go
+                        </Button>
                       </Box>
-                    </Box>
-                  </CardContent>
-                </Card>
-              )
-            })}
+                    </Paper>
+                  ))}
+                </Box>
+              )}
+            </Paper>
           </Box>
         </Box>
       </Box>
