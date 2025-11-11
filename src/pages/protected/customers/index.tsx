@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react'
+import React, { useCallback, useState, useEffect } from 'react'
 import {
   Box,
   Typography,
@@ -27,10 +27,12 @@ import SearchIcon from '@mui/icons-material/Search'
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
+import VisibilityIcon from '@mui/icons-material/Visibility'
 import { useNavigate } from 'react-router-dom'
 import Sidebar from '@/layout/Sidebar'
 import Header from '@/layout/Header'
 import { useTheme as useThemeContext } from '@/context/ThemeContext'
+import { Customer, loadCustomers, saveCustomers } from './customerData'
 
 interface TabPanelProps {
   children?: React.ReactNode
@@ -52,16 +54,6 @@ function TabPanel(props: TabPanelProps) {
       {value === index && <Box sx={{ pt: 0 }}>{children}</Box>}
     </div>
   )
-}
-
-interface Customer {
-  id: string
-  name: string
-  company: string
-  location: string
-  contactPerson: string
-  mobile: string
-  email: string
 }
 
 const PRIMARY_COLOR = '#2563EB'
@@ -142,53 +134,11 @@ const Customers = () => {
   const [searchTerm, setSearchTerm] = useState('')
 
   // Sample customer data - replace with actual data from API
-  const [customers, setCustomers] = useState<Customer[]>([
-    {
-      id: '1',
-      name: 'Amnel',
-      company: 'Amnel Pharmaceutical Pvt Ltd',
-      location: 'Ahmedabad, Gujarat',
-      contactPerson: 'Urmil Patel',
-      mobile: '9876543210',
-      email: 'urmil.patel@amnel.com'
-    },
-    {
-      id: '2',
-      name: 'Globex Labs',
-      company: 'Globex Laboratory Solutions',
-      location: 'Vadodara, Gujarat',
-      contactPerson: 'Rekha Sharma',
-      mobile: '9825034567',
-      email: 'rekha.sharma@globexlabs.in'
-    },
-    {
-      id: '3',
-      name: 'Vertex Pharma',
-      company: 'Vertex Pharmaceuticals LLP',
-      location: 'Mumbai, Maharashtra',
-      contactPerson: 'Rohan Desai',
-      mobile: '9898076543',
-      email: 'rohan.desai@vertexpharma.com'
-    },
-    {
-      id: '4',
-      name: 'Everest Biotech',
-      company: 'Everest Biotech Pvt Ltd',
-      location: 'Surat, Gujarat',
-      contactPerson: 'Nisha Shah',
-      mobile: '9012304567',
-      email: 'nisha.shah@everestbio.com'
-    },
-    {
-      id: '5',
-      name: 'Zenith Industries',
-      company: 'Zenith Industrial Solutions',
-      location: 'Pune, Maharashtra',
-      contactPerson: 'Ajay Kulkarni',
-      mobile: '9123456780',
-      email: 'ajay.kulkarni@zenithind.in'
-    }
-  ])
+  const [customers, setCustomers] = useState<Customer[]>(() => loadCustomers())
+
+  useEffect(() => {
+    saveCustomers(customers)
+  }, [customers])
 
   // Form state for Add Customer
   const [formData, setFormData] = useState({
@@ -221,9 +171,28 @@ const Customers = () => {
   }
 
   const handleAddCustomer = () => {
-    // Add customer logic here
-    console.log('Adding customer:', formData)
-    // Reset form
+    if (!formData.customerName.trim() || !formData.companyName.trim()) {
+      alert('Please provide at least a customer name and company name.')
+      return
+    }
+
+    const newCustomer: Customer = {
+      id: `customer-${Date.now()}`,
+      name: formData.customerName.trim(),
+      company: formData.companyName.trim(),
+      location:
+        formData.city && formData.state
+          ? `${formData.city.trim()}, ${formData.state.trim()}`
+          : formData.city || formData.state
+            ? `${formData.city} ${formData.state}`.trim()
+            : '—',
+      contactPerson: formData.contactPerson.trim() || '—',
+      mobile: formData.mobileNumber.trim() || '—',
+      email: formData.email.trim() || '—'
+    }
+
+    setCustomers(prev => [newCustomer, ...prev])
+
     setFormData({
       customerName: '',
       companyName: '',
@@ -237,17 +206,18 @@ const Customers = () => {
       email: '',
       notes: ''
     })
-    // Switch to List Customers tab
     setTabValue(0)
   }
 
   const handleEdit = (customer: Customer) => {
-    // Edit customer logic here
-    console.log('Editing customer:', customer)
+    navigate(`/customers/${customer.id}/edit`)
+  }
+
+  const handleView = (customer: Customer) => {
+    navigate(`/customers/${customer.id}`)
   }
 
   const handleDelete = (customerId: string) => {
-    // Delete customer logic here
     setCustomers(prev => prev.filter(c => c.id !== customerId))
   }
 
@@ -446,6 +416,19 @@ const Customers = () => {
                             <TableCell sx={{ ...tableCellStyles }}>{customer.email}</TableCell>
                             <TableCell>
                               <Box sx={{ display: 'flex', gap: 1 }}>
+                                <Tooltip title='View' arrow>
+                                  <IconButton
+                                    size='small'
+                                    onClick={() => handleView(customer)}
+                                    sx={{
+                                      color: PRIMARY_COLOR,
+                                      backgroundColor: 'rgba(37, 99, 235, 0.08)',
+                                      '&:hover': { backgroundColor: 'rgba(37, 99, 235, 0.16)' }
+                                    }}
+                                  >
+                                    <VisibilityIcon fontSize='small' />
+                                  </IconButton>
+                                </Tooltip>
                                 <Tooltip title='Edit' arrow>
                                   <IconButton
                                     size='small'
