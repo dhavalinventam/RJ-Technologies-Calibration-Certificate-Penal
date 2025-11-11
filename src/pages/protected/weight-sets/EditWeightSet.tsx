@@ -1,5 +1,5 @@
 import React, { useCallback, useState, useEffect } from 'react'
-import { Box, Typography, TextField, Button, useTheme, useMediaQuery, IconButton } from '@mui/material'
+import { Box, Typography, TextField, Button, useTheme, useMediaQuery, IconButton, Paper, Grid } from '@mui/material'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import { DatePicker } from '@mui/x-date-pickers/DatePicker'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
@@ -165,123 +165,131 @@ const EditWeightSet = () => {
           }}
         >
           {/* Page Header */}
-          <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
-            <IconButton
-              onClick={() => navigate('/weight-sets')}
+          <Box
+            sx={{
+              mb: 3,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: 2
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <IconButton
+                onClick={() => navigate('/weight-sets')}
+                sx={{
+                  color: 'text.primary',
+                  '&:hover': {
+                    backgroundColor: 'action.hover'
+                  }
+                }}
+              >
+                <ArrowBackIcon />
+              </IconButton>
+              <Box>
+                <Typography variant='h5' component='h1' sx={{ fontWeight: 700 }}>
+                  Edit Weight Set
+                </Typography>
+                <Typography variant='body2' color='text.secondary'>
+                  Modify weight set details and schedule
+                </Typography>
+              </Box>
+            </Box>
+            <Box
               sx={{
-                color: 'text.primary',
-                '&:hover': {
-                  backgroundColor: 'action.hover'
-                }
+                display: 'flex',
+                gap: 1.5,
+                flexDirection: { xs: 'column', sm: 'row' },
+                alignItems: { xs: 'stretch', sm: 'center' }
               }}
             >
-              <ArrowBackIcon />
-            </IconButton>
-            <Box>
-              <Typography variant='h5' component='h1' sx={{ fontWeight: 700 }}>
-                Edit Weight Set
-              </Typography>
-              <Typography variant='body2' color='text.secondary'>
-                Update weight set details
-              </Typography>
+              <Button variant='outlined' onClick={handleCancel} sx={{ textTransform: 'none', minWidth: { sm: 120 } }}>
+                Cancel
+              </Button>
+              <Button variant='contained' onClick={handleSave} sx={{ textTransform: 'none', minWidth: { sm: 140 } }}>
+                Save Changes
+              </Button>
             </Box>
           </Box>
 
           {/* Form */}
-          <LocalizationProvider dateAdapter={AdapterMoment}>
-            <div className='row'>
-              <div className='col-12 col-md-6'>
-                <TextField
-                  fullWidth
-                  label='Weight Set No.'
-                  size='small'
-                  placeholder='e.g., Colgate std. Weights - 20 kg'
-                  value={formData.weightSetNo}
-                  onChange={e => handleInputChange('weightSetNo', e.target.value)}
-                  sx={{ mb: 2 }}
-                />
-              </div>
-              <div className='col-12 col-md-6'>
-                <TextField
-                  fullWidth
-                  label='Certificate Number'
-                  size='small'
-                  placeholder='e.g., KC/M/0097/25-27'
-                  value={formData.certificateNumber}
-                  onChange={e => handleInputChange('certificateNumber', e.target.value)}
-                  sx={{ mb: 2 }}
-                />
-              </div>
-              <div className='col-12 col-md-6'>
-                <TextField
-                  fullWidth
-                  label='Class'
-                  size='small'
-                  placeholder='e.g., M1'
-                  value={formData.class}
-                  onChange={e => handleInputChange('class', e.target.value)}
-                  sx={{ mb: 2 }}
-                />
-              </div>
-              <div className='col-12 col-md-6'>
-                <DatePicker
-                  label='Date of Issue'
-                  value={formData.dateOfIssue}
-                  onChange={date => handleInputChange('dateOfIssue', date)}
-                  slotProps={{
-                    textField: {
-                      size: 'small',
-                      fullWidth: true,
-                      placeholder: 'Pick a date',
-                      sx: { mb: 2 }
-                    }
-                  }}
-                />
-              </div>
-              <div className='col-12 col-md-6'>
-                <DatePicker
-                  label='Calibration Due Date'
-                  value={formData.calibrationDueDate}
-                  onChange={date => handleInputChange('calibrationDueDate', date)}
-                  slotProps={{
-                    textField: {
-                      size: 'small',
-                      fullWidth: true,
-                      placeholder: 'Pick a date',
-                      sx: { mb: 2 }
-                    }
-                  }}
-                />
-              </div>
-            </div>
-          </LocalizationProvider>
-
-          {/* Action Buttons */}
-          <Box
+          <Paper
             sx={{
-              display: 'flex',
-              gap: 2,
-              mt: 3,
-              flexWrap: 'wrap'
+              p: { xs: 2, md: 3 },
+              borderRadius: 2,
+              border: '1px solid',
+              borderColor: 'divider',
+              boxShadow: 'none'
             }}
           >
-            <Button
-              variant='contained'
-              size='medium'
-              onClick={handleSave}
-              sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
-            >
-              Save
-            </Button>
-            <Button
-              variant='outlined'
-              size='medium'
-              onClick={handleCancel}
-              sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
-            >
-              Cancel
-            </Button>
-          </Box>
+            <Typography variant='h6' sx={{ fontWeight: 600, mb: 3 }}>
+              Weight Set Information
+            </Typography>
+
+            <LocalizationProvider dateAdapter={AdapterMoment}>
+              <Grid container spacing={2.5}>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    label='Weight Set No.'
+                    size='small'
+                    placeholder='e.g., Colgate std. Weights - 20 kg'
+                    value={formData.weightSetNo}
+                    onChange={e => handleInputChange('weightSetNo', e.target.value)}
+                  />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    label='Certificate Number'
+                    size='small'
+                    placeholder='e.g., KC/M/0097/25-27'
+                    value={formData.certificateNumber}
+                    onChange={e => handleInputChange('certificateNumber', e.target.value)}
+                  />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    label='Class'
+                    size='small'
+                    placeholder='e.g., M1'
+                    value={formData.class}
+                    onChange={e => handleInputChange('class', e.target.value)}
+                  />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <DatePicker
+                    label='Date of Issue'
+                    value={formData.dateOfIssue}
+                    onChange={date => handleInputChange('dateOfIssue', date)}
+                    slotProps={{
+                      textField: {
+                        size: 'small',
+                        fullWidth: true,
+                        placeholder: 'Pick a date'
+                      }
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <DatePicker
+                    label='Calibration Due Date'
+                    value={formData.calibrationDueDate}
+                    onChange={date => handleInputChange('calibrationDueDate', date)}
+                    slotProps={{
+                      textField: {
+                        size: 'small',
+                        fullWidth: true,
+                        placeholder: 'Pick a date'
+                      }
+                    }}
+                  />
+                </Grid>
+              </Grid>
+            </LocalizationProvider>
+          </Paper>
         </Box>
       </Box>
     </Box>

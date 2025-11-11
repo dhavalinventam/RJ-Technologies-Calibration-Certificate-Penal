@@ -15,7 +15,6 @@ import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
 import VisibilityIcon from '@mui/icons-material/Visibility'
 import AddIcon from '@mui/icons-material/Add'
-import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import { useNavigate, useLocation } from 'react-router-dom'
 import Sidebar from '@/layout/Sidebar'
 import Header from '@/layout/Header'
@@ -191,121 +190,64 @@ const ProcedureTemplates = () => {
           }}
         >
           {/* Page Header */}
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, mb: 4 }}>
-            <Button
-              startIcon={<ArrowBackIcon />}
-              onClick={() => navigate('/dashboard')}
-              sx={{
-                alignSelf: 'flex-start',
-                textTransform: 'none',
-                color: 'text.primary',
-                borderRadius: 2,
-                px: 1.5,
-                py: 0.75,
-                backgroundColor: theme.palette.mode === 'dark' ? 'background.paper' : '#ffffff',
-                boxShadow: theme.palette.mode === 'dark' ? 'none' : '0 6px 18px rgba(15, 23, 42, 0.08)',
-                '&:hover': {
-                  backgroundColor: theme.palette.mode === 'dark' ? 'action.hover' : '#f0f4ff'
-                }
-              }}
-            >
-              Back to Dashboard
-            </Button>
+          <Box
+            sx={{
+              mb: 3,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: 2
+            }}
+          >
+            <Box>
+              <Typography variant='h5' component='h1' sx={{ fontWeight: 700 }}>
+                Procedure Templates
+              </Typography>
+              <Typography variant='body2' color='text.secondary'>
+                Manage reusable procedure instructions
+              </Typography>
+            </Box>
             <Box
               sx={{
+                width: { xs: '100%', sm: 'auto' },
                 display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                flexWrap: 'wrap',
-                gap: 2.5,
-                backgroundColor: theme.palette.mode === 'dark' ? 'rgba(15, 23, 42, 0.65)' : '#ffffff',
-                borderRadius: 3,
-                border: '1px solid',
-                borderColor: theme.palette.mode === 'dark' ? 'rgba(148, 163, 184, 0.25)' : 'rgba(226, 232, 240, 0.8)',
-                boxShadow:
-                  theme.palette.mode === 'dark'
-                    ? '0 12px 24px rgba(15, 23, 42, 0.55)'
-                    : '0 18px 36px rgba(15, 23, 42, 0.12)',
-                px: { xs: 2, md: 3 },
-                py: { xs: 2, md: 2.5 }
+                flexDirection: { xs: 'column', sm: 'row' },
+                alignItems: { xs: 'stretch', sm: 'center' },
+                gap: { xs: 1, sm: 2 }
               }}
             >
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
-                <Typography
-                  variant='h5'
-                  component='h1'
-                  sx={{
-                    fontWeight: 700,
-                    fontSize: { xs: '1.45rem', md: '1.75rem' },
-                    color: 'text.primary',
-                    letterSpacing: '-0.01em'
-                  }}
-                >
-                  Procedure Instruction Templates
-                </Typography>
-                <Typography
-                  variant='body1'
-                  sx={{
-                    color: 'text.secondary',
-                    fontSize: { xs: '0.95rem', md: '1rem' }
-                  }}
-                >
-                  Manage reusable procedure instructions with quick search and effortless actions.
-                </Typography>
-              </Box>
-              <Box
+              <TextField
+                fullWidth
+                placeholder='Search templates...'
+                size='small'
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position='start'>
+                      <SearchIcon fontSize='small' />
+                    </InputAdornment>
+                  )
+                }}
+                sx={{ minWidth: { sm: 240 } }}
+              />
+              <Button
+                variant='contained'
+                startIcon={<AddIcon />}
+                onClick={handleAdd}
                 sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 1.25,
-                  flexWrap: 'wrap',
-                  width: { xs: '100%', md: 'auto' }
+                  textTransform: 'none',
+                  minHeight: 40,
+                  borderRadius: 2,
+                  px: { xs: 2.5, sm: 4 },
+                  letterSpacing: 0.2,
+                  fontWeight: 600,
+                  whiteSpace: 'nowrap'
                 }}
               >
-                <TextField
-                  fullWidth
-                  placeholder='Search templates'
-                  size='small'
-                  value={searchTerm}
-                  onChange={e => setSearchTerm(e.target.value)}
-                  sx={{
-                    flex: 1,
-                    minWidth: { xs: '100%', sm: '240px' },
-                    backgroundColor: theme.palette.mode === 'dark' ? 'rgba(15, 23, 42, 0.9)' : 'background.paper',
-                    borderRadius: 2,
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: 2
-                    }
-                  }}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position='start'>
-                        <SearchIcon fontSize='small' color='action' />
-                      </InputAdornment>
-                    )
-                  }}
-                />
-                <Button
-                  variant='contained'
-                  startIcon={<AddIcon />}
-                  onClick={handleAdd}
-                  sx={{
-                    textTransform: 'none',
-                    fontWeight: 600,
-                    borderRadius: 2,
-                    minHeight: 42,
-                    minWidth: { xs: '100%', sm: 180 },
-                    px: { sm: 3 },
-                    boxShadow: '0 12px 24px rgba(33, 150, 243, 0.22)',
-                    background:
-                      theme.palette.mode === 'dark'
-                        ? 'linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%)'
-                        : 'linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%)'
-                  }}
-                >
-                  Add New Template
-                </Button>
-              </Box>
+                Add Template
+              </Button>
             </Box>
           </Box>
 

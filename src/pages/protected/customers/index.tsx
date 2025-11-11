@@ -255,17 +255,6 @@ const Customers = () => {
           <Box>
             {/* Page Header */}
             <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
-              <IconButton
-                onClick={() => navigate(-1)}
-                sx={{
-                  color: 'text.primary',
-                  '&:hover': {
-                    backgroundColor: 'action.hover'
-                  }
-                }}
-              >
-                <ArrowBackIcon />
-              </IconButton>
               <Box>
                 <Typography variant='h5' component='h1' sx={{ fontWeight: 700 }}>
                   Customer Management
