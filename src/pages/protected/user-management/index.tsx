@@ -15,19 +15,14 @@ import {
   TableRow,
   Paper,
   IconButton,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  MenuItem,
-  Divider
+  Tooltip
 } from '@mui/material'
 import SearchIcon from '@mui/icons-material/Search'
 import VisibilityIcon from '@mui/icons-material/Visibility'
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
 import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import Sidebar from '@/layout/Sidebar'
 import Header from '@/layout/Header'
 import { useTheme as useThemeContext } from '@/context/ThemeContext'
@@ -42,20 +37,6 @@ interface UserRecord {
 }
 
 const STORAGE_KEY = 'userManagementUsers'
-
-type UserFormState = {
-  name: string
-  email: string
-  role: string
-  status: 'Active' | 'Inactive'
-}
-
-const emptyFormState: UserFormState = {
-  name: '',
-  email: '',
-  role: '',
-  status: 'Active'
-}
 
 const defaultUsers: UserRecord[] = [
   {
@@ -100,6 +81,64 @@ const defaultUsers: UserRecord[] = [
   }
 ]
 
+const PRIMARY_COLOR = '#2563EB'
+const PAGE_BACKGROUND = '#F8FAFC'
+const TITLE_COLOR = '#111827'
+const SUBTEXT_COLOR = '#6B7280'
+const TABLE_TEXT_COLOR = '#1F2937'
+const CARD_RADIUS = '12px'
+const CARD_BORDER = '1px solid rgba(148, 163, 184, 0.25)'
+const CARD_SHADOW = '0 1px 3px rgba(15, 23, 42, 0.08)'
+
+const cardBaseStyles = {
+  p: { xs: 2.5, md: 3 },
+  borderRadius: CARD_RADIUS,
+  border: CARD_BORDER,
+  boxShadow: CARD_SHADOW,
+  backgroundColor: '#FFFFFF'
+}
+
+const inputStyles = {
+  '& .MuiOutlinedInput-root': {
+    borderRadius: '12px',
+    backgroundColor: '#FFFFFF',
+    transition: 'box-shadow 0.2s ease, border-color 0.2s ease',
+    '& fieldset': { borderColor: 'rgba(148, 163, 184, 0.4)' },
+    '&:hover fieldset': { borderColor: PRIMARY_COLOR },
+    '&.Mui-focused fieldset': { borderColor: PRIMARY_COLOR }
+  },
+  '& .MuiOutlinedInput-root.Mui-focused': {
+    boxShadow: '0 0 0 2px #93C5FD'
+  },
+  '& .MuiOutlinedInput-input': {
+    py: 1.1
+  }
+}
+
+const primaryButtonStyles = {
+  textTransform: 'none',
+  borderRadius: '999px',
+  px: 3,
+  py: 1.15,
+  backgroundColor: PRIMARY_COLOR,
+  boxShadow: '0 8px 16px rgba(37, 99, 235, 0.18)',
+  '&:hover': { backgroundColor: '#1D4ED8' }
+}
+
+const tableHeaderCellStyles = {
+  fontWeight: 600,
+  color: TABLE_TEXT_COLOR,
+  fontSize: '0.9rem',
+  py: 1.5,
+  whiteSpace: 'nowrap'
+}
+
+const tableCellStyles = {
+  color: TABLE_TEXT_COLOR,
+  fontSize: '0.9rem',
+  whiteSpace: 'nowrap'
+}
+
 const loadUsers = (): UserRecord[] => {
   const stored = localStorage.getItem(STORAGE_KEY)
   if (stored) {
@@ -122,15 +161,10 @@ const UserManagement = () => {
   const [sidebarOpen, setSidebarOpen] = useState(!isMobile)
   const { mode, toggleTheme } = useThemeContext()
   const location = useLocation()
+  const navigate = useNavigate()
   const [searchTerm, setSearchTerm] = useState('')
 
   const [users, setUsers] = useState<UserRecord[]>(loadUsers())
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
-  const [addForm, setAddForm] = useState<UserFormState>(emptyFormState)
-  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [selectedUser, setSelectedUser] = useState<UserRecord | null>(null)
-  const [editForm, setEditForm] = useState<UserFormState>(emptyFormState)
 
   // Reload when navigating back from other pages
   React.useEffect(() => {
@@ -141,44 +175,16 @@ const UserManagement = () => {
     setSidebarOpen(!sidebarOpen)
   }, [sidebarOpen])
 
-  const handleOpenAddDialog = () => {
-    setAddForm(emptyFormState)
-    setIsAddDialogOpen(true)
+  const handleAddUser = () => {
+    navigate('/user-management/add')
   }
 
-  const handleCloseAddDialog = () => {
-    setIsAddDialogOpen(false)
+  const handleViewUser = (user: UserRecord) => {
+    navigate(`/user-management/${user.id}`)
   }
 
-  const handleAddFormChange = (field: keyof UserFormState, value: string) => {
-    setAddForm(prev => ({
-      ...prev,
-      [field]: field === 'status' ? (value as UserFormState['status']) : value
-    }))
-  }
-
-  const handleSaveNewUser = () => {
-    if (!addForm.name.trim() || !addForm.email.trim() || !addForm.role.trim()) {
-      alert('Please fill in all required fields.')
-      return
-    }
-
-    const now = new Date()
-    const createdAt = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`
-
-    const newUser: UserRecord = {
-      id: Date.now().toString(),
-      name: addForm.name.trim(),
-      email: addForm.email.trim(),
-      role: addForm.role.trim(),
-      status: addForm.status,
-      createdAt
-    }
-
-    const updatedUsers = [...users, newUser]
-    setUsers(updatedUsers)
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedUsers))
-    setIsAddDialogOpen(false)
+  const handleEditUser = (user: UserRecord) => {
+    navigate(`/user-management/${user.id}/edit`)
   }
 
   const handleDelete = (id: string) => {
@@ -188,61 +194,6 @@ const UserManagement = () => {
     const updated = users.filter(user => user.id !== id)
     setUsers(updated)
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated))
-  }
-
-  const handleOpenViewDialog = (user: UserRecord) => {
-    setSelectedUser(user)
-    setIsViewDialogOpen(true)
-  }
-
-  const handleCloseViewDialog = () => {
-    setIsViewDialogOpen(false)
-  }
-
-  const handleOpenEditDialog = (user: UserRecord) => {
-    setSelectedUser(user)
-    setEditForm({
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      status: user.status
-    })
-    setIsEditDialogOpen(true)
-  }
-
-  const handleCloseEditDialog = () => {
-    setIsEditDialogOpen(false)
-  }
-
-  const handleEditFormChange = (field: keyof UserFormState, value: string) => {
-    setEditForm(prev => ({
-      ...prev,
-      [field]: field === 'status' ? (value as UserFormState['status']) : value
-    }))
-  }
-
-  const handleSaveEditedUser = () => {
-    if (!selectedUser) return
-    if (!editForm.name.trim() || !editForm.email.trim() || !editForm.role.trim()) {
-      alert('Please fill in all required fields.')
-      return
-    }
-
-    const updatedUsers = users.map(user =>
-      user.id === selectedUser.id
-        ? {
-            ...user,
-            name: editForm.name.trim(),
-            email: editForm.email.trim(),
-            role: editForm.role.trim(),
-            status: editForm.status
-          }
-        : user
-    )
-
-    setUsers(updatedUsers)
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedUsers))
-    setIsEditDialogOpen(false)
   }
 
   const filteredUsers = users.filter(user => {
@@ -256,7 +207,7 @@ const UserManagement = () => {
   })
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', flexDirection: 'row' }}>
+    <Box sx={{ display: 'flex', minHeight: '100vh', flexDirection: 'row', backgroundColor: PAGE_BACKGROUND }}>
       <Sidebar open={sidebarOpen} onToggle={handleToggleSidebar} />
 
       <Box
@@ -266,7 +217,7 @@ const UserManagement = () => {
           display: 'flex',
           flexDirection: 'column',
           minHeight: '100vh',
-          backgroundColor: 'background.default',
+          backgroundColor: PAGE_BACKGROUND,
           width: '100%',
           overflow: 'hidden',
           transition: theme.transitions.create('margin-left', {
@@ -297,158 +248,169 @@ const UserManagement = () => {
             position: 'relative',
             zIndex: 1,
             minHeight: 'calc(100vh - 64px)',
-            overflow: 'auto'
+            overflow: 'auto',
+            '&::-webkit-scrollbar': {
+              width: '6px'
+            },
+            '&::-webkit-scrollbar-track': {
+              background: 'transparent'
+            },
+            '&::-webkit-scrollbar-thumb': {
+              background: theme.palette.mode === 'dark' ? '#555' : '#ccc',
+              borderRadius: '3px'
+            },
+            '&::-webkit-scrollbar-thumb:hover': {
+              background: theme.palette.mode === 'dark' ? '#777' : '#999'
+            },
+            // p: { xs: 2, md: 3 },
+            fontFamily: 'Inter, "Open Sans", sans-serif'
           }}
         >
-          <Box>
-            <Box
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <Paper
               sx={{
-                mb: 3,
+                ...cardBaseStyles,
                 display: 'flex',
-                justifyContent: 'space-between',
                 alignItems: 'center',
+                justifyContent: 'space-between',
                 flexWrap: 'wrap',
                 gap: 2
               }}
             >
               <Box>
-                <Typography variant='h5' component='h1' sx={{ fontWeight: 700 }}>
+                <Typography
+                  variant='h5'
+                  component='h1'
+                  sx={{ fontWeight: 700, color: TITLE_COLOR, fontSize: { xs: '1.5rem', md: '1.8rem' }, mb: 0.5 }}
+                >
                   User Management
                 </Typography>
-                <Typography variant='body2' color='text.secondary'>
+                <Typography variant='body2' sx={{ color: SUBTEXT_COLOR }}>
                   Manage platform users and access levels
                 </Typography>
               </Box>
               <Button
                 variant='contained'
                 startIcon={<PersonAddAltIcon />}
-                onClick={handleOpenAddDialog}
-                sx={{ textTransform: 'none', fontWeight: 600 }}
+                onClick={handleAddUser}
+                sx={{ ...primaryButtonStyles, width: { xs: '100%', sm: 'auto' } }}
               >
                 Add User
               </Button>
-            </Box>
+            </Paper>
 
-            <Paper
-              sx={{
-                borderRadius: 2,
-                boxShadow: '0px 4px 20px rgba(15, 23, 42, 0.08)',
-                overflow: 'hidden'
-              }}
-            >
-              <Box sx={{ p: { xs: 2, sm: 3 } }}>
-                <Typography variant='h6' sx={{ fontWeight: 600, mb: 2 }}>
-                  All Users
-                </Typography>
-                <TextField
-                  fullWidth
-                  placeholder='Search users...'
-                  size='small'
-                  value={searchTerm}
-                  onChange={e => setSearchTerm(e.target.value)}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position='start'>
-                        <SearchIcon fontSize='small' />
-                      </InputAdornment>
-                    )
-                  }}
-                />
-              </Box>
+            <Paper sx={{ ...cardBaseStyles, mb: 0, p: { xs: 2, md: 2.5 } }}>
+              <TextField
+                fullWidth
+                placeholder='Search by name, email, role, or status...'
+                size='small'
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position='start'>
+                      <SearchIcon sx={{ color: '#9CA3AF' }} />
+                    </InputAdornment>
+                  )
+                }}
+                sx={{ ...inputStyles }}
+              />
+            </Paper>
 
-              <TableContainer component={Box} sx={{ maxHeight: 520 }}>
-                <Table stickyHeader size='small'>
+            <Paper sx={{ ...cardBaseStyles, p: 0, overflow: 'hidden' }}>
+              <TableContainer sx={{ overflowX: 'auto' }}>
+                <Table sx={{ minWidth: 960 }}>
                   <TableHead>
-                    <TableRow>
-                      <TableCell sx={{ fontWeight: 600 }}>Name</TableCell>
-                      <TableCell sx={{ fontWeight: 600 }}>Email</TableCell>
-                      <TableCell sx={{ fontWeight: 600 }}>Role</TableCell>
-                      <TableCell sx={{ fontWeight: 600 }}>Status</TableCell>
-                      <TableCell sx={{ fontWeight: 600 }}>Created</TableCell>
-                      <TableCell sx={{ fontWeight: 600 }} align='right'>
-                        Actions
-                      </TableCell>
+                    <TableRow sx={{ backgroundColor: '#F3F4F6' }}>
+                      {['Name', 'Email', 'Role', 'Status', 'Created', 'Actions'].map(header => (
+                        <TableCell key={header} sx={{ ...tableHeaderCellStyles }}>
+                          {header}
+                        </TableCell>
+                      ))}
                     </TableRow>
                   </TableHead>
                   <TableBody>
                     {filteredUsers.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={6} align='center' sx={{ py: 4 }}>
-                          <Typography variant='body2' color='text.secondary'>
-                            No users found
-                          </Typography>
+                        <TableCell colSpan={6} align='center' sx={{ py: 4, color: SUBTEXT_COLOR }}>
+                          No users found
                         </TableCell>
                       </TableRow>
                     ) : (
-                      filteredUsers.map(user => (
-                        <TableRow key={user.id} hover>
-                          <TableCell>{user.name}</TableCell>
-                          <TableCell>{user.email}</TableCell>
-                          <TableCell>{user.role}</TableCell>
-                          <TableCell>
+                      filteredUsers.map((user, index) => (
+                        <TableRow
+                          key={user.id}
+                          hover
+                          sx={{
+                            backgroundColor: index % 2 === 0 ? '#FFFFFF' : '#F9FAFB',
+                            transition: 'background-color 0.2s ease',
+                            '&:hover': { backgroundColor: '#EFF6FF' }
+                          }}
+                        >
+                          <TableCell sx={{ ...tableCellStyles, fontWeight: 600 }}>{user.name}</TableCell>
+                          <TableCell sx={{ ...tableCellStyles }}>{user.email}</TableCell>
+                          <TableCell sx={{ ...tableCellStyles }}>{user.role}</TableCell>
+                          <TableCell sx={{ ...tableCellStyles }}>
                             <Box
                               component='span'
                               sx={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
                                 px: 1.5,
                                 py: 0.5,
                                 borderRadius: '999px',
-                                fontSize: '0.75rem',
+                                fontSize: '0.8rem',
                                 fontWeight: 600,
-                                color: user.status === 'Active' ? 'success.main' : 'error.main',
+                                color: user.status === 'Active' ? '#047857' : '#B91C1C',
                                 backgroundColor:
-                                  user.status === 'Active' ? 'rgba(34, 197, 94, 0.12)' : 'rgba(239, 68, 68, 0.12)'
+                                  user.status === 'Active' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(248, 113, 113, 0.18)'
                               }}
                             >
                               {user.status}
                             </Box>
                           </TableCell>
-                          <TableCell>{user.createdAt}</TableCell>
-                          <TableCell align='right'>
-                            <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-                              <IconButton
-                                size='small'
-                                onClick={() => handleOpenViewDialog(user)}
-                                sx={{
-                                  border: '1px solid',
-                                  borderColor: 'divider',
-                                  backgroundColor: 'background.paper',
-                                  color: 'text.primary',
-                                  '&:hover': {
-                                    backgroundColor: 'action.hover'
-                                  }
-                                }}
-                              >
-                                <VisibilityIcon fontSize='small' />
-                              </IconButton>
-                              <IconButton
-                                size='small'
-                                onClick={() => handleOpenEditDialog(user)}
-                                sx={{
-                                  border: '1px solid',
-                                  borderColor: 'divider',
-                                  backgroundColor: 'background.paper',
-                                  color: 'text.primary',
-                                  '&:hover': {
-                                    backgroundColor: 'action.hover'
-                                  }
-                                }}
-                              >
-                                <EditIcon fontSize='small' />
-                              </IconButton>
-                              <IconButton
-                                size='small'
-                                color='error'
-                                onClick={() => handleDelete(user.id)}
-                                sx={{
-                                  backgroundColor: 'error.main',
-                                  color: 'white',
-                                  '&:hover': {
-                                    backgroundColor: 'error.dark'
-                                  }
-                                }}
-                              >
-                                <DeleteIcon fontSize='small' />
-                              </IconButton>
+                          <TableCell sx={{ ...tableCellStyles }}>{user.createdAt}</TableCell>
+                          <TableCell sx={{ ...tableCellStyles }}>
+                            <Box sx={{ display: 'flex', gap: 1 }}>
+                              <Tooltip title='View' arrow>
+                                <IconButton
+                                  size='small'
+                                  onClick={() => handleViewUser(user)}
+                                  sx={{
+                                    color: PRIMARY_COLOR,
+                                    backgroundColor: 'rgba(37, 99, 235, 0.08)',
+                                    '&:hover': { backgroundColor: 'rgba(37, 99, 235, 0.16)' }
+                                  }}
+                                >
+                                  <VisibilityIcon fontSize='small' />
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title='Edit' arrow>
+                                <IconButton
+                                  size='small'
+                                  onClick={() => handleEditUser(user)}
+                                  sx={{
+                                    color: '#4B5563',
+                                    backgroundColor: '#F3F4F6',
+                                    '&:hover': { backgroundColor: '#E5E7EB' }
+                                  }}
+                                >
+                                  <EditIcon fontSize='small' />
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title='Delete' arrow>
+                                <IconButton
+                                  size='small'
+                                  color='error'
+                                  onClick={() => handleDelete(user.id)}
+                                  sx={{
+                                    backgroundColor: 'rgba(239, 68, 68, 0.08)',
+                                    '&:hover': { backgroundColor: 'rgba(239, 68, 68, 0.16)' }
+                                  }}
+                                >
+                                  <DeleteIcon fontSize='small' />
+                                </IconButton>
+                              </Tooltip>
                             </Box>
                           </TableCell>
                         </TableRow>
@@ -459,182 +421,6 @@ const UserManagement = () => {
               </TableContainer>
             </Paper>
           </Box>
-          <Dialog open={isAddDialogOpen} onClose={handleCloseAddDialog} fullWidth maxWidth='sm'>
-            <DialogTitle>Add User</DialogTitle>
-            <DialogContent dividers>
-              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2, mt: 1 }}>
-                <TextField
-                  label='Full Name'
-                  required
-                  size='small'
-                  value={addForm.name}
-                  onChange={e => handleAddFormChange('name', e.target.value)}
-                  sx={{ gridColumn: { xs: 'span 1', sm: 'span 1' } }}
-                />
-                <TextField
-                  label='Email'
-                  required
-                  type='email'
-                  size='small'
-                  value={addForm.email}
-                  onChange={e => handleAddFormChange('email', e.target.value)}
-                  sx={{ gridColumn: { xs: 'span 1', sm: 'span 1' } }}
-                />
-                <TextField
-                  label='Role'
-                  required
-                  select
-                  size='small'
-                  value={addForm.role}
-                  onChange={e => handleAddFormChange('role', e.target.value)}
-                  sx={{ gridColumn: { xs: 'span 1', sm: 'span 1' } }}
-                >
-                  <MenuItem value=''>Select role</MenuItem>
-                  <MenuItem value='Administrator'>Administrator</MenuItem>
-                  <MenuItem value='Manager'>Manager</MenuItem>
-                  <MenuItem value='Technician'>Technician</MenuItem>
-                  <MenuItem value='Quality Analyst'>Quality Analyst</MenuItem>
-                  <MenuItem value='Support'>Support</MenuItem>
-                </TextField>
-                <TextField
-                  label='Status'
-                  select
-                  size='small'
-                  value={addForm.status}
-                  onChange={e => handleAddFormChange('status', e.target.value)}
-                  sx={{ gridColumn: { xs: 'span 1', sm: 'span 1' } }}
-                >
-                  <MenuItem value='Active'>Active</MenuItem>
-                  <MenuItem value='Inactive'>Inactive</MenuItem>
-                </TextField>
-              </Box>
-            </DialogContent>
-            <DialogActions sx={{ px: 3, py: 2 }}>
-              <Button onClick={handleCloseAddDialog} sx={{ textTransform: 'none' }}>
-                Cancel
-              </Button>
-              <Button variant='contained' onClick={handleSaveNewUser} sx={{ textTransform: 'none' }}>
-                Save User
-              </Button>
-            </DialogActions>
-          </Dialog>
-          <Dialog open={isViewDialogOpen} onClose={handleCloseViewDialog} fullWidth maxWidth='sm'>
-            <DialogTitle>User Details</DialogTitle>
-            <DialogContent dividers>
-              {selectedUser && (
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  <Box>
-                    <Typography variant='body2' color='text.secondary'>
-                      Full Name
-                    </Typography>
-                    <Typography variant='body1' sx={{ fontWeight: 600 }}>
-                      {selectedUser.name}
-                    </Typography>
-                  </Box>
-                  <Divider />
-                  <Box>
-                    <Typography variant='body2' color='text.secondary'>
-                      Email
-                    </Typography>
-                    <Typography variant='body1'>{selectedUser.email}</Typography>
-                  </Box>
-                  <Divider />
-                  <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                    <Box>
-                      <Typography variant='body2' color='text.secondary'>
-                        Role
-                      </Typography>
-                      <Typography variant='body1'>{selectedUser.role}</Typography>
-                    </Box>
-                    <Box>
-                      <Typography variant='body2' color='text.secondary'>
-                        Status
-                      </Typography>
-                      <Typography
-                        variant='body1'
-                        sx={{
-                          fontWeight: 600,
-                          color: selectedUser.status === 'Active' ? 'success.main' : 'error.main'
-                        }}
-                      >
-                        {selectedUser.status}
-                      </Typography>
-                    </Box>
-                  </Box>
-                  <Divider />
-                  <Box>
-                    <Typography variant='body2' color='text.secondary'>
-                      Created
-                    </Typography>
-                    <Typography variant='body1'>{selectedUser.createdAt}</Typography>
-                  </Box>
-                </Box>
-              )}
-            </DialogContent>
-            <DialogActions sx={{ px: 3, py: 2 }}>
-              <Button onClick={handleCloseViewDialog} sx={{ textTransform: 'none' }}>
-                Close
-              </Button>
-            </DialogActions>
-          </Dialog>
-          <Dialog open={isEditDialogOpen} onClose={handleCloseEditDialog} fullWidth maxWidth='sm'>
-            <DialogTitle>Edit User</DialogTitle>
-            <DialogContent dividers>
-              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2, mt: 1 }}>
-                <TextField
-                  label='Full Name'
-                  required
-                  size='small'
-                  value={editForm.name}
-                  onChange={e => handleEditFormChange('name', e.target.value)}
-                  sx={{ gridColumn: { xs: 'span 1', sm: 'span 1' } }}
-                />
-                <TextField
-                  label='Email'
-                  required
-                  type='email'
-                  size='small'
-                  value={editForm.email}
-                  onChange={e => handleEditFormChange('email', e.target.value)}
-                  sx={{ gridColumn: { xs: 'span 1', sm: 'span 1' } }}
-                />
-                <TextField
-                  label='Role'
-                  required
-                  select
-                  size='small'
-                  value={editForm.role}
-                  onChange={e => handleEditFormChange('role', e.target.value)}
-                  sx={{ gridColumn: { xs: 'span 1', sm: 'span 1' } }}
-                >
-                  <MenuItem value='Administrator'>Administrator</MenuItem>
-                  <MenuItem value='Manager'>Manager</MenuItem>
-                  <MenuItem value='Technician'>Technician</MenuItem>
-                  <MenuItem value='Quality Analyst'>Quality Analyst</MenuItem>
-                  <MenuItem value='Support'>Support</MenuItem>
-                </TextField>
-                <TextField
-                  label='Status'
-                  select
-                  size='small'
-                  value={editForm.status}
-                  onChange={e => handleEditFormChange('status', e.target.value)}
-                  sx={{ gridColumn: { xs: 'span 1', sm: 'span 1' } }}
-                >
-                  <MenuItem value='Active'>Active</MenuItem>
-                  <MenuItem value='Inactive'>Inactive</MenuItem>
-                </TextField>
-              </Box>
-            </DialogContent>
-            <DialogActions sx={{ px: 3, py: 2 }}>
-              <Button onClick={handleCloseEditDialog} sx={{ textTransform: 'none' }}>
-                Cancel
-              </Button>
-              <Button variant='contained' onClick={handleSaveEditedUser} sx={{ textTransform: 'none' }}>
-                Save Changes
-              </Button>
-            </DialogActions>
-          </Dialog>
         </Box>
       </Box>
     </Box>

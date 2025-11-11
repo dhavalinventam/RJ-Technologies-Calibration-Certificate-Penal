@@ -324,7 +324,8 @@ function ResponsiveStyledTable({
         borderRadius: 2,
         border: CARD_BORDER,
         boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)',
-        overflowX: 'auto'
+        overflowX: 'auto',
+        mt: 2
       }}
     >
       <Table size='small' sx={{ minWidth: 720 }}>
@@ -1194,7 +1195,8 @@ const Devices = () => {
                     display: 'grid',
                     gap: 2,
                     gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' },
-                    mb: 3
+                    mb: 3,
+                    mt: 2
                   }}
                 >
                   {[
@@ -1294,7 +1296,8 @@ const Devices = () => {
                     display: 'grid',
                     gap: 2,
                     gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' },
-                    mb: 2
+                    mb: 2,
+                    mt: 2
                   }}
                 >
                   {[
