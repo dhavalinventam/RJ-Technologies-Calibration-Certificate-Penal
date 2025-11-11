@@ -20,12 +20,13 @@ import {
   MenuItem,
   Select,
   FormControl,
-  InputLabel
+  InputLabel,
+  Tooltip
 } from '@mui/material'
 import SearchIcon from '@mui/icons-material/Search'
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
-import ArrowBackIcon from '@mui/icons-material/ArrowBack'
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import { useNavigate } from 'react-router-dom'
 import Sidebar from '@/layout/Sidebar'
 import Header from '@/layout/Header'
@@ -48,7 +49,7 @@ function TabPanel(props: TabPanelProps) {
       aria-labelledby={`customer-tab-${index}`}
       {...other}
     >
-      {value === index && <Box sx={{ pt: 3 }}>{children}</Box>}
+      {value === index && <Box sx={{ pt: 0 }}>{children}</Box>}
     </div>
   )
 }
@@ -61,6 +62,74 @@ interface Customer {
   contactPerson: string
   mobile: string
   email: string
+}
+
+const PRIMARY_COLOR = '#2563EB'
+const PAGE_BACKGROUND = '#F8FAFC'
+const TITLE_COLOR = '#111827'
+const SUBTEXT_COLOR = '#6B7280'
+const TABLE_TEXT_COLOR = '#1F2937'
+const CARD_RADIUS = '12px'
+const CARD_BORDER = '1px solid rgba(148, 163, 184, 0.25)'
+const CARD_SHADOW = '0 1px 3px rgba(15, 23, 42, 0.08)'
+
+const cardBaseStyles = {
+  p: { xs: 2.5, md: 3 },
+  borderRadius: CARD_RADIUS,
+  border: CARD_BORDER,
+  boxShadow: CARD_SHADOW,
+  backgroundColor: '#FFFFFF'
+}
+
+const inputStyles = {
+  '& .MuiOutlinedInput-root': {
+    borderRadius: '12px',
+    backgroundColor: '#FFFFFF',
+    transition: 'box-shadow 0.2s ease, border-color 0.2s ease',
+    '& fieldset': { borderColor: 'rgba(148, 163, 184, 0.4)' },
+    '&:hover fieldset': { borderColor: PRIMARY_COLOR },
+    '&.Mui-focused fieldset': { borderColor: PRIMARY_COLOR }
+  },
+  '& .MuiOutlinedInput-root.Mui-focused': {
+    boxShadow: '0 0 0 2px #93C5FD'
+  },
+  '& .MuiOutlinedInput-input': {
+    py: 1.1
+  }
+}
+
+const primaryButtonStyles = {
+  textTransform: 'none',
+  borderRadius: '999px',
+  px: 3,
+  py: 1.15,
+  backgroundColor: PRIMARY_COLOR,
+  boxShadow: '0 8px 16px rgba(37, 99, 235, 0.18)',
+  '&:hover': { backgroundColor: '#1D4ED8' }
+}
+
+const secondaryButtonStyles = {
+  textTransform: 'none',
+  borderRadius: '999px',
+  px: 3,
+  py: 1.15,
+  borderColor: 'rgba(148, 163, 184, 0.6)',
+  color: SUBTEXT_COLOR,
+  '&:hover': { borderColor: SUBTEXT_COLOR, backgroundColor: '#F3F4F6' }
+}
+
+const tableHeaderCellStyles = {
+  fontWeight: 600,
+  color: TABLE_TEXT_COLOR,
+  fontSize: '0.9rem',
+  py: 1.5,
+  whiteSpace: 'nowrap'
+}
+
+const tableCellStyles = {
+  color: TABLE_TEXT_COLOR,
+  fontSize: '0.9rem',
+  whiteSpace: 'nowrap'
 }
 
 const Customers = () => {
@@ -191,7 +260,7 @@ const Customers = () => {
   )
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', flexDirection: 'row' }}>
+    <Box sx={{ display: 'flex', minHeight: '100vh', flexDirection: 'row', backgroundColor: PAGE_BACKGROUND }}>
       {/* Sidebar */}
       <Sidebar open={sidebarOpen} onToggle={handleToggleSidebar} />
 
@@ -203,7 +272,7 @@ const Customers = () => {
           display: 'flex',
           flexDirection: 'column',
           minHeight: '100vh',
-          backgroundColor: 'background.default',
+          backgroundColor: PAGE_BACKGROUND,
           width: '100%',
           overflow: 'hidden',
           transition: theme.transitions.create('margin-left', {
@@ -249,137 +318,160 @@ const Customers = () => {
             },
             '&::-webkit-scrollbar-thumb:hover': {
               background: theme.palette.mode === 'dark' ? '#777' : '#999'
-            }
+            },
+            // p: { xs: 2, md: 3 },
+            fontFamily: 'Inter, "Open Sans", sans-serif'
           }}
         >
-          <Box>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
             {/* Page Header */}
-            <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Paper
+              sx={{
+                ...cardBaseStyles,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: 2
+              }}
+            >
               <Box>
-                <Typography variant='h5' component='h1' sx={{ fontWeight: 700 }}>
+                <Typography
+                  variant='h5'
+                  component='h1'
+                  sx={{ fontWeight: 700, color: TITLE_COLOR, fontSize: { xs: '1.5rem', md: '1.8rem' }, mb: 0.5 }}
+                >
                   Customer Management
                 </Typography>
-                <Typography variant='body2' color='text.secondary'>
+                <Typography variant='body2' sx={{ color: SUBTEXT_COLOR }}>
                   Manage customer records for calibration certificates
                 </Typography>
               </Box>
-            </Box>
+            </Paper>
 
             {/* Tabs */}
-            <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3, overflowX: 'auto' }}>
+            <Box>
               <Tabs
                 value={tabValue}
                 onChange={handleTabChange}
                 aria-label='customer management tabs'
-                textColor='inherit'
+                variant='scrollable'
+                allowScrollButtonsMobile
+                TabIndicatorProps={{ style: { display: 'none' } }}
                 sx={{
                   minWidth: { xs: 300, sm: 'auto' },
-                  '& .MuiTabs-indicator': {
-                    height: 3,
-                    backgroundColor: 'primary.main'
+                  // mb: 3,
+                  '& .MuiTabs-scrollButtons.Mui-disabled': {
+                    opacity: 0.35
                   },
                   '& .MuiTab-root': {
-                    fontWeight: 500
+                    textTransform: 'none',
+                    minHeight: 48,
+                    fontWeight: 600,
+                    borderRadius: '999px',
+                    px: { xs: 2.5, md: 3.5 },
+                    mr: 1,
+                    color: SUBTEXT_COLOR,
+                    transition: 'all 0.2s ease',
+                    '&:hover': {
+                      backgroundColor: 'rgba(37, 99, 235, 0.08)'
+                    }
+                  },
+                  '& .MuiTab-root.Mui-selected': {
+                    color: PRIMARY_COLOR,
+                    backgroundColor: 'rgba(37, 99, 235, 0.12)'
                   }
                 }}
               >
-                <Tab label='List Customers' sx={{ textTransform: 'none', minHeight: 48, px: { xs: 2, sm: 3 } }} />
-                <Tab label='Add Customer' sx={{ textTransform: 'none', minHeight: 48, px: { xs: 2, sm: 3 } }} />
+                <Tab label='List Customers' />
+                <Tab label='Add Customer' />
               </Tabs>
             </Box>
 
             {/* Tab Panel: List Customers */}
             <TabPanel value={tabValue} index={0}>
-              <Paper
-                sx={{
-                  borderRadius: 2,
-                  boxShadow: '0px 4px 20px rgba(15, 23, 42, 0.08)',
-                  overflow: 'hidden'
-                }}
-              >
-                <Box sx={{ p: { xs: 2, sm: 3 } }}>
-                  <TextField
-                    fullWidth
-                    placeholder='Search by name, company, city, or contact person...'
-                    size='small'
-                    value={searchTerm}
-                    onChange={e => setSearchTerm(e.target.value)}
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position='start'>
-                          <SearchIcon fontSize='small' />
-                        </InputAdornment>
-                      )
-                    }}
-                    sx={{ maxWidth: 640, width: '100%' }}
-                  />
-                </Box>
+              <Paper sx={{ ...cardBaseStyles, mb: 3, p: { xs: 2, md: 2.5 } }}>
+                <TextField
+                  fullWidth
+                  placeholder='Search by name, company, city, or contact person...'
+                  size='small'
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position='start'>
+                        <SearchIcon sx={{ color: '#9CA3AF' }} />
+                      </InputAdornment>
+                    )
+                  }}
+                  sx={{ ...inputStyles }}
+                />
+              </Paper>
 
-                {/* Customer Table */}
-                <TableContainer sx={{ maxHeight: 480 }}>
-                  <Table stickyHeader sx={{ minWidth: 800 }}>
+              <Paper sx={{ ...cardBaseStyles, p: 0, overflow: 'hidden' }}>
+                <TableContainer sx={{ overflowX: 'auto' }}>
+                  <Table sx={{ minWidth: 960 }}>
                     <TableHead>
-                      <TableRow sx={{ backgroundColor: 'action.hover' }}>
-                        <TableCell sx={{ fontWeight: 600, whiteSpace: 'nowrap' }}>Name</TableCell>
-                        <TableCell sx={{ fontWeight: 600, whiteSpace: 'nowrap' }}>Company</TableCell>
-                        <TableCell sx={{ fontWeight: 600, whiteSpace: 'nowrap' }}>Location</TableCell>
-                        <TableCell sx={{ fontWeight: 600, whiteSpace: 'nowrap' }}>Contact Person</TableCell>
-                        <TableCell sx={{ fontWeight: 600, whiteSpace: 'nowrap' }}>Mobile</TableCell>
-                        <TableCell sx={{ fontWeight: 600, whiteSpace: 'nowrap' }}>Email</TableCell>
-                        <TableCell sx={{ fontWeight: 600, whiteSpace: 'nowrap' }}>Actions</TableCell>
+                      <TableRow sx={{ backgroundColor: '#F3F4F6' }}>
+                        {['Name', 'Company', 'Location', 'Contact Person', 'Mobile', 'Email', 'Actions'].map(header => (
+                          <TableCell key={header} sx={{ ...tableHeaderCellStyles }}>
+                            {header}
+                          </TableCell>
+                        ))}
                       </TableRow>
                     </TableHead>
                     <TableBody>
                       {filteredCustomers.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={7} align='center' sx={{ py: 4 }}>
-                            <Typography variant='body2' color='text.secondary'>
-                              No customers found
-                            </Typography>
+                          <TableCell colSpan={7} align='center' sx={{ py: 4, color: SUBTEXT_COLOR }}>
+                            No customers found
                           </TableCell>
                         </TableRow>
                       ) : (
-                        filteredCustomers.map(customer => (
-                          <TableRow key={customer.id} hover>
-                            <TableCell sx={{ whiteSpace: 'nowrap' }}>{customer.name}</TableCell>
-                            <TableCell sx={{ whiteSpace: 'nowrap' }}>{customer.company}</TableCell>
-                            <TableCell sx={{ whiteSpace: 'nowrap' }}>{customer.location}</TableCell>
-                            <TableCell sx={{ whiteSpace: 'nowrap' }}>{customer.contactPerson}</TableCell>
-                            <TableCell sx={{ whiteSpace: 'nowrap' }}>{customer.mobile}</TableCell>
-                            <TableCell sx={{ whiteSpace: 'nowrap' }}>{customer.email}</TableCell>
+                        filteredCustomers.map((customer, index) => (
+                          <TableRow
+                            key={customer.id}
+                            hover
+                            sx={{
+                              backgroundColor: index % 2 === 0 ? '#FFFFFF' : '#F9FAFB',
+                              transition: 'background-color 0.2s ease',
+                              '&:hover': { backgroundColor: '#EFF6FF' }
+                            }}
+                          >
+                            <TableCell sx={{ ...tableCellStyles, fontWeight: 600 }}>{customer.name}</TableCell>
+                            <TableCell sx={{ ...tableCellStyles }}>{customer.company}</TableCell>
+                            <TableCell sx={{ ...tableCellStyles }}>{customer.location}</TableCell>
+                            <TableCell sx={{ ...tableCellStyles }}>{customer.contactPerson}</TableCell>
+                            <TableCell sx={{ ...tableCellStyles }}>{customer.mobile}</TableCell>
+                            <TableCell sx={{ ...tableCellStyles }}>{customer.email}</TableCell>
                             <TableCell>
-                              <Box sx={{ display: 'flex', gap: 1, flexWrap: { xs: 'wrap', sm: 'nowrap' } }}>
-                                <Button
-                                  variant='outlined'
-                                  size='small'
-                                  startIcon={<EditIcon fontSize='small' />}
-                                  onClick={() => handleEdit(customer)}
-                                  sx={{
-                                    textTransform: 'none',
-                                    borderColor: 'text.secondary',
-                                    color: 'text.primary',
-                                    '&:hover': {
-                                      borderColor: 'text.secondary',
-                                      backgroundColor: 'action.hover'
-                                    }
-                                  }}
-                                >
-                                  Edit
-                                </Button>
-                                <IconButton
-                                  size='small'
-                                  color='error'
-                                  onClick={() => handleDelete(customer.id)}
-                                  sx={{
-                                    backgroundColor: 'error.main',
-                                    color: 'white',
-                                    '&:hover': {
-                                      backgroundColor: 'error.dark'
-                                    }
-                                  }}
-                                >
-                                  <DeleteIcon fontSize='small' />
-                                </IconButton>
+                              <Box sx={{ display: 'flex', gap: 1 }}>
+                                <Tooltip title='Edit' arrow>
+                                  <IconButton
+                                    size='small'
+                                    onClick={() => handleEdit(customer)}
+                                    sx={{
+                                      color: '#4B5563',
+                                      backgroundColor: '#F3F4F6',
+                                      '&:hover': { backgroundColor: '#E5E7EB' }
+                                    }}
+                                  >
+                                    <EditIcon fontSize='small' />
+                                  </IconButton>
+                                </Tooltip>
+                                <Tooltip title='Delete' arrow>
+                                  <IconButton
+                                    size='small'
+                                    color='error'
+                                    onClick={() => handleDelete(customer.id)}
+                                    sx={{
+                                      backgroundColor: 'rgba(239, 68, 68, 0.08)',
+                                      '&:hover': { backgroundColor: 'rgba(239, 68, 68, 0.16)' }
+                                    }}
+                                  >
+                                    <DeleteIcon fontSize='small' />
+                                  </IconButton>
+                                </Tooltip>
                               </Box>
                             </TableCell>
                           </TableRow>
@@ -393,150 +485,132 @@ const Customers = () => {
 
             {/* Tab Panel: Add Customer */}
             <TabPanel value={tabValue} index={1}>
-              <div className='row'>
-                <div className='col-12 col-md-12'>
-                  <Box sx={{ mb: 4 }}>
-                    <Typography variant='h6' sx={{ mb: 2, color: 'primary.main', fontWeight: 600 }}>
-                      Customer Details
-                    </Typography>
+              <Paper sx={{ ...cardBaseStyles }}>
+                <Typography variant='h6' sx={{ fontWeight: 700, color: TITLE_COLOR, mb: 0.5 }}>
+                  Customer Details
+                </Typography>
+                <Typography variant='body2' sx={{ color: SUBTEXT_COLOR, mb: 3 }}>
+                  Capture key contact and location information for the customer.
+                </Typography>
 
-                    <div className='row'>
-                      <div className='col-12 col-md-4'>
-                        <TextField
-                          fullWidth
-                          label='Customer Name'
-                          required
-                          size='small'
-                          value={formData.customerName}
-                          onChange={e => handleInputChange('customerName', e.target.value)}
-                          sx={{ mb: 2 }}
-                        />
-                      </div>
-                      <div className='col-12 col-md-4'>
-                        <TextField
-                          fullWidth
-                          label='Company Name'
-                          required
-                          size='small'
-                          value={formData.companyName}
-                          onChange={e => handleInputChange('companyName', e.target.value)}
-                          sx={{ mb: 2 }}
-                        />
-                      </div>
-                      <div className='col-12 col-md-4'>
-                        <TextField
-                          fullWidth
-                          label='Contact Person'
-                          size='small'
-                          value={formData.contactPerson}
-                          onChange={e => handleInputChange('contactPerson', e.target.value)}
-                          sx={{ mb: 2 }}
-                        />
-                      </div>
-                      <div className='col-12 col-md-4'>
-                        <TextField
-                          fullWidth
-                          label='Mobile Number'
-                          size='small'
-                          placeholder='10-digit number'
-                          value={formData.mobileNumber}
-                          onChange={e => handleInputChange('mobileNumber', e.target.value)}
-                          sx={{ mb: 2 }}
-                        />
-                      </div>
-                      <div className='col-12 col-md-4'>
-                        <TextField
-                          fullWidth
-                          label='Email'
-                          size='small'
-                          type='email'
-                          value={formData.email}
-                          onChange={e => handleInputChange('email', e.target.value)}
-                          sx={{ mb: 2 }}
-                        />
-                      </div>
-                      <div className='col-12 col-md-4'>
-                        <FormControl fullWidth size='small' required sx={{ mb: 2 }}>
-                          <InputLabel>Country</InputLabel>
-                          <Select
-                            value={formData.country}
-                            label='Country'
-                            onChange={e => handleInputChange('country', e.target.value)}
-                          >
-                            <MenuItem value='India'>India</MenuItem>
-                            <MenuItem value='USA'>USA</MenuItem>
-                            <MenuItem value='UK'>UK</MenuItem>
-                          </Select>
-                        </FormControl>
-                      </div>
-                      <div className='col-12 col-md-4'>
-                        <TextField
-                          fullWidth
-                          label='State'
-                          required
-                          size='small'
-                          placeholder='Enter state'
-                          value={formData.state}
-                          onChange={e => handleInputChange('state', e.target.value)}
-                          sx={{ mb: 2 }}
-                        />
-                      </div>
-                      <div className='col-12 col-md-4'>
-                        <TextField
-                          fullWidth
-                          label='City'
-                          required
-                          size='small'
-                          placeholder='Enter city'
-                          value={formData.city}
-                          onChange={e => handleInputChange('city', e.target.value)}
-                          sx={{ mb: 2 }}
-                        />
-                      </div>
-                      <div className='col-12 col-md-4'>
-                        <TextField
-                          fullWidth
-                          label='Pincode'
-                          required
-                          size='small'
-                          placeholder='Enter pincode'
-                          value={formData.pincode}
-                          onChange={e => handleInputChange('pincode', e.target.value)}
-                          sx={{ mb: 2 }}
-                        />
-                      </div>
-                      <div className='col-12 col-md-6'>
-                        <TextField
-                          fullWidth
-                          label='Address'
-                          required
-                          multiline
-                          rows={3}
-                          size='small'
-                          placeholder='Enter complete address'
-                          value={formData.address}
-                          onChange={e => handleInputChange('address', e.target.value)}
-                          sx={{ mb: 2 }}
-                        />
-                      </div>
-                      <div className='col-12 col-md-6'>
-                        <TextField
-                          fullWidth
-                          label='Notes'
-                          multiline
-                          rows={3}
-                          size='small'
-                          placeholder='Enter any additional notes'
-                          value={formData.notes}
-                          onChange={e => handleInputChange('notes', e.target.value)}
-                          sx={{ mb: 2 }}
-                        />
-                      </div>
-                    </div>
-                  </Box>
-                </div>
+                <Box
+                  sx={{
+                    display: 'grid',
+                    gap: 2,
+                    gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }
+                  }}
+                >
+                  <TextField
+                    fullWidth
+                    label='Customer Name'
+                    required
+                    size='small'
+                    value={formData.customerName}
+                    onChange={e => handleInputChange('customerName', e.target.value)}
+                    sx={{ ...inputStyles }}
+                  />
+                  <TextField
+                    fullWidth
+                    label='Company Name'
+                    required
+                    size='small'
+                    value={formData.companyName}
+                    onChange={e => handleInputChange('companyName', e.target.value)}
+                    sx={{ ...inputStyles }}
+                  />
+                  <TextField
+                    fullWidth
+                    label='Contact Person'
+                    size='small'
+                    value={formData.contactPerson}
+                    onChange={e => handleInputChange('contactPerson', e.target.value)}
+                    sx={{ ...inputStyles }}
+                  />
+                  <TextField
+                    fullWidth
+                    label='Mobile Number'
+                    size='small'
+                    placeholder='10-digit number'
+                    value={formData.mobileNumber}
+                    onChange={e => handleInputChange('mobileNumber', e.target.value)}
+                    sx={{ ...inputStyles }}
+                  />
+                  <TextField
+                    fullWidth
+                    label='Email'
+                    size='small'
+                    type='email'
+                    value={formData.email}
+                    onChange={e => handleInputChange('email', e.target.value)}
+                    sx={{ ...inputStyles }}
+                  />
+                  <FormControl fullWidth size='small' required sx={{ ...inputStyles }}>
+                    <InputLabel>Country</InputLabel>
+                    <Select
+                      value={formData.country}
+                      label='Country'
+                      onChange={e => handleInputChange('country', e.target.value)}
+                    >
+                      <MenuItem value='India'>India</MenuItem>
+                      <MenuItem value='USA'>USA</MenuItem>
+                      <MenuItem value='UK'>UK</MenuItem>
+                    </Select>
+                  </FormControl>
+                  <TextField
+                    fullWidth
+                    label='State'
+                    required
+                    size='small'
+                    placeholder='Enter state'
+                    value={formData.state}
+                    onChange={e => handleInputChange('state', e.target.value)}
+                    sx={{ ...inputStyles }}
+                  />
+                  <TextField
+                    fullWidth
+                    label='City'
+                    required
+                    size='small'
+                    placeholder='Enter city'
+                    value={formData.city}
+                    onChange={e => handleInputChange('city', e.target.value)}
+                    sx={{ ...inputStyles }}
+                  />
+                  <TextField
+                    fullWidth
+                    label='Pincode'
+                    required
+                    size='small'
+                    placeholder='Enter pincode'
+                    value={formData.pincode}
+                    onChange={e => handleInputChange('pincode', e.target.value)}
+                    sx={{ ...inputStyles }}
+                  />
+                  <TextField
+                    fullWidth
+                    label='Address'
+                    required
+                    multiline
+                    rows={3}
+                    size='small'
+                    placeholder='Enter complete address'
+                    value={formData.address}
+                    onChange={e => handleInputChange('address', e.target.value)}
+                    sx={{ ...inputStyles, gridColumn: { xs: '1 / -1', md: 'span 2' } }}
+                  />
+                  <TextField
+                    fullWidth
+                    label='Notes'
+                    multiline
+                    rows={3}
+                    size='small'
+                    placeholder='Enter any additional notes'
+                    value={formData.notes}
+                    onChange={e => handleInputChange('notes', e.target.value)}
+                    sx={{ ...inputStyles, gridColumn: { xs: '1 / -1', md: 'span 1' } }}
+                  />
+                </Box>
 
-                {/* Action Buttons */}
                 <Box
                   sx={{
                     display: 'flex',
@@ -544,28 +618,32 @@ const Customers = () => {
                     justifyContent: { xs: 'stretch', sm: 'space-between' },
                     flexWrap: 'wrap',
                     flexDirection: { xs: 'column', sm: 'row' },
-                    mt: 2
+                    mt: 3
                   }}
                 >
                   <Button
-                    variant='contained'
-                    size='medium'
                     onClick={handleAddCustomer}
-                    sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+                    variant='contained'
+                    sx={{ ...primaryButtonStyles, width: { xs: '100%', sm: 'auto' } }}
                   >
                     Add Customer
                   </Button>
                   <Button
                     variant='outlined'
-                    size='medium'
-                    endIcon={<ArrowBackIcon sx={{ transform: 'rotate(180deg)' }} />}
+                    endIcon={<ArrowForwardIcon />}
                     onClick={() => navigate('/devices')}
-                    sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+                    sx={{
+                      ...secondaryButtonStyles,
+                      width: { xs: '100%', sm: 'auto' },
+                      borderColor: PRIMARY_COLOR,
+                      color: PRIMARY_COLOR,
+                      '&:hover': { borderColor: '#1D4ED8', backgroundColor: 'rgba(37, 99, 235, 0.08)' }
+                    }}
                   >
                     Next: Device Module →
                   </Button>
                 </Box>
-              </div>
+              </Paper>
 
               <Box sx={{ width: '100%' }}></Box>
             </TabPanel>

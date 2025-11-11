@@ -1,6 +1,17 @@
 import React, { useCallback, useState, useEffect } from 'react'
-import { Box, Typography, TextField, Button, useTheme, useMediaQuery, IconButton, Paper, Grid } from '@mui/material'
+import {
+  Box,
+  Typography,
+  TextField,
+  Button,
+  useTheme,
+  useMediaQuery,
+  IconButton,
+  Paper
+  // InputAdornment
+} from '@mui/material'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
+// import SearchIcon from '@mui/icons-material/Search'
 import { DatePicker } from '@mui/x-date-pickers/DatePicker'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment'
@@ -20,6 +31,59 @@ interface WeightSet {
 }
 
 const EditWeightSet = () => {
+  const PRIMARY_COLOR = '#2563EB'
+  const PAGE_BACKGROUND = '#F8FAFC'
+  const TITLE_COLOR = '#111827'
+  const SUBTEXT_COLOR = '#6B7280'
+  const CARD_RADIUS = '12px'
+  const CARD_BORDER = '1px solid rgba(148, 163, 184, 0.25)'
+  const CARD_SHADOW = '0 1px 3px rgba(15, 23, 42, 0.08)'
+
+  const cardBaseStyles = {
+    p: { xs: 2.5, md: 3 },
+    borderRadius: CARD_RADIUS,
+    border: CARD_BORDER,
+    boxShadow: CARD_SHADOW,
+    backgroundColor: '#FFFFFF'
+  }
+
+  const inputStyles = {
+    '& .MuiOutlinedInput-root': {
+      borderRadius: '12px',
+      backgroundColor: '#FFFFFF',
+      transition: 'box-shadow 0.2s ease, border-color 0.2s ease',
+      '& fieldset': { borderColor: 'rgba(148, 163, 184, 0.4)' },
+      '&:hover fieldset': { borderColor: PRIMARY_COLOR },
+      '&.Mui-focused fieldset': { borderColor: PRIMARY_COLOR }
+    },
+    '& .MuiOutlinedInput-root.Mui-focused': {
+      boxShadow: '0 0 0 2px #93C5FD'
+    },
+    '& .MuiOutlinedInput-input': {
+      py: 1.1
+    }
+  }
+
+  const primaryButtonStyles = {
+    textTransform: 'none',
+    borderRadius: '999px',
+    px: 3,
+    py: 1.15,
+    backgroundColor: PRIMARY_COLOR,
+    boxShadow: '0 8px 16px rgba(37, 99, 235, 0.18)',
+    '&:hover': { backgroundColor: '#1D4ED8' }
+  }
+
+  const secondaryButtonStyles = {
+    textTransform: 'none',
+    borderRadius: '999px',
+    px: 3,
+    py: 1.15,
+    borderColor: 'rgba(148, 163, 184, 0.6)',
+    color: SUBTEXT_COLOR,
+    '&:hover': { borderColor: SUBTEXT_COLOR, backgroundColor: '#F3F4F6' }
+  }
+
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
   const [sidebarOpen, setSidebarOpen] = useState(!isMobile)
@@ -44,6 +108,7 @@ const EditWeightSet = () => {
     dateOfIssue: null as Moment | null,
     calibrationDueDate: null as Moment | null
   })
+  // const [searchTerm, setSearchTerm] = useState('')
 
   useEffect(() => {
     if (weightSetData) {
@@ -103,7 +168,7 @@ const EditWeightSet = () => {
   }
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', flexDirection: 'row' }}>
+    <Box sx={{ display: 'flex', minHeight: '100vh', flexDirection: 'row', backgroundColor: PAGE_BACKGROUND }}>
       {/* Sidebar */}
       <Sidebar open={sidebarOpen} onToggle={handleToggleSidebar} />
 
@@ -115,7 +180,7 @@ const EditWeightSet = () => {
           display: 'flex',
           flexDirection: 'column',
           minHeight: '100vh',
-          backgroundColor: 'background.default',
+          backgroundColor: PAGE_BACKGROUND,
           width: '100%',
           overflow: 'hidden',
           transition: theme.transitions.create('margin-left', {
@@ -161,12 +226,15 @@ const EditWeightSet = () => {
             },
             '&::-webkit-scrollbar-thumb:hover': {
               background: theme.palette.mode === 'dark' ? '#777' : '#999'
-            }
+            },
+            // p: { xs: 2, md: 3 },
+            fontFamily: 'Inter, "Open Sans", sans-serif'
           }}
         >
           {/* Page Header */}
-          <Box
+          <Paper
             sx={{
+              ...cardBaseStyles,
               mb: 3,
               display: 'flex',
               alignItems: 'center',
@@ -175,119 +243,116 @@ const EditWeightSet = () => {
               gap: 2
             }}
           >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
               <IconButton
                 onClick={() => navigate('/weight-sets')}
                 sx={{
-                  color: 'text.primary',
-                  '&:hover': {
-                    backgroundColor: 'action.hover'
-                  }
+                  width: 40,
+                  height: 40,
+                  borderRadius: '50%',
+                  border: CARD_BORDER,
+                  boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)',
+                  color: PRIMARY_COLOR,
+                  backgroundColor: 'rgba(37, 99, 235, 0.08)',
+                  '&:hover': { backgroundColor: 'rgba(37, 99, 235, 0.16)' }
                 }}
               >
-                <ArrowBackIcon />
+                <ArrowBackIcon fontSize='small' />
               </IconButton>
               <Box>
-                <Typography variant='h5' component='h1' sx={{ fontWeight: 700 }}>
+                <Typography
+                  variant='h5'
+                  component='h1'
+                  sx={{ fontWeight: 700, color: TITLE_COLOR, fontSize: { xs: '1.5rem', md: '1.75rem' }, mb: 0.25 }}
+                >
                   Edit Weight Set
                 </Typography>
-                <Typography variant='body2' color='text.secondary'>
-                  Modify weight set details and schedule
+                <Typography variant='body2' sx={{ color: SUBTEXT_COLOR }}>
+                  Modify weight set details and calibration schedule
                 </Typography>
               </Box>
             </Box>
-            <Box
-              sx={{
-                display: 'flex',
-                gap: 1.5,
-                flexDirection: { xs: 'column', sm: 'row' },
-                alignItems: { xs: 'stretch', sm: 'center' }
-              }}
-            >
-              <Button variant='outlined' onClick={handleCancel} sx={{ textTransform: 'none', minWidth: { sm: 120 } }}>
-                Cancel
+            <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+              <Button variant='outlined' onClick={handleCancel} sx={{ ...secondaryButtonStyles }}>
+                Cancel Edit
               </Button>
-              <Button variant='contained' onClick={handleSave} sx={{ textTransform: 'none', minWidth: { sm: 140 } }}>
+              <Button variant='contained' onClick={handleSave} sx={{ ...primaryButtonStyles }}>
                 Save Changes
               </Button>
             </Box>
-          </Box>
+          </Paper>
 
           {/* Form */}
-          <Paper
-            sx={{
-              p: { xs: 2, md: 3 },
-              borderRadius: 2,
-              border: '1px solid',
-              borderColor: 'divider',
-              boxShadow: 'none'
-            }}
-          >
-            <Typography variant='h6' sx={{ fontWeight: 600, mb: 3 }}>
+          <Paper sx={{ ...cardBaseStyles }}>
+            <Typography variant='h6' sx={{ fontWeight: 600, color: TITLE_COLOR, mb: 0.5 }}>
               Weight Set Information
+            </Typography>
+            <Typography variant='body2' sx={{ color: SUBTEXT_COLOR, mb: 3 }}>
+              Update the identification details and calibration schedule.
             </Typography>
 
             <LocalizationProvider dateAdapter={AdapterMoment}>
-              <Grid container spacing={2.5}>
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    fullWidth
-                    label='Weight Set No.'
-                    size='small'
-                    placeholder='e.g., Colgate std. Weights - 20 kg'
-                    value={formData.weightSetNo}
-                    onChange={e => handleInputChange('weightSetNo', e.target.value)}
-                  />
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    fullWidth
-                    label='Certificate Number'
-                    size='small'
-                    placeholder='e.g., KC/M/0097/25-27'
-                    value={formData.certificateNumber}
-                    onChange={e => handleInputChange('certificateNumber', e.target.value)}
-                  />
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    fullWidth
-                    label='Class'
-                    size='small'
-                    placeholder='e.g., M1'
-                    value={formData.class}
-                    onChange={e => handleInputChange('class', e.target.value)}
-                  />
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <DatePicker
-                    label='Date of Issue'
-                    value={formData.dateOfIssue}
-                    onChange={date => handleInputChange('dateOfIssue', date)}
-                    slotProps={{
-                      textField: {
-                        size: 'small',
-                        fullWidth: true,
-                        placeholder: 'Pick a date'
-                      }
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <DatePicker
-                    label='Calibration Due Date'
-                    value={formData.calibrationDueDate}
-                    onChange={date => handleInputChange('calibrationDueDate', date)}
-                    slotProps={{
-                      textField: {
-                        size: 'small',
-                        fullWidth: true,
-                        placeholder: 'Pick a date'
-                      }
-                    }}
-                  />
-                </Grid>
-              </Grid>
+              <Box
+                sx={{
+                  display: 'grid',
+                  gap: 2,
+                  gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' }
+                }}
+              >
+                <TextField
+                  fullWidth
+                  label='Weight Set No.'
+                  size='small'
+                  placeholder='e.g., Colgate Std. Weights – 20 kg'
+                  value={formData.weightSetNo}
+                  onChange={e => handleInputChange('weightSetNo', e.target.value)}
+                  sx={{ ...inputStyles }}
+                />
+                <TextField
+                  fullWidth
+                  label='Certificate Number'
+                  size='small'
+                  placeholder='e.g., KC/M/0097/25-27'
+                  value={formData.certificateNumber}
+                  onChange={e => handleInputChange('certificateNumber', e.target.value)}
+                  sx={{ ...inputStyles }}
+                />
+                <TextField
+                  fullWidth
+                  label='Class'
+                  size='small'
+                  placeholder='e.g., M1'
+                  value={formData.class}
+                  onChange={e => handleInputChange('class', e.target.value)}
+                  sx={{ ...inputStyles }}
+                />
+                <DatePicker
+                  label='Date of Issue'
+                  value={formData.dateOfIssue}
+                  onChange={date => handleInputChange('dateOfIssue', date)}
+                  slotProps={{
+                    textField: {
+                      size: 'small',
+                      fullWidth: true,
+                      placeholder: 'Pick a date',
+                      sx: { ...inputStyles }
+                    }
+                  }}
+                />
+                <DatePicker
+                  label='Calibration Due Date'
+                  value={formData.calibrationDueDate}
+                  onChange={date => handleInputChange('calibrationDueDate', date)}
+                  slotProps={{
+                    textField: {
+                      size: 'small',
+                      fullWidth: true,
+                      placeholder: 'Pick a date',
+                      sx: { ...inputStyles }
+                    }
+                  }}
+                />
+              </Box>
             </LocalizationProvider>
           </Paper>
         </Box>

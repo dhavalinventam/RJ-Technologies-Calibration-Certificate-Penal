@@ -1,7 +1,18 @@
-import React, { useCallback, useState } from 'react'
-import { Box, Typography, Button, useTheme, useMediaQuery, IconButton, Paper } from '@mui/material'
+import React, { useCallback, useMemo, useState } from 'react'
+import {
+  Box,
+  Typography,
+  Button,
+  useTheme,
+  useMediaQuery,
+  IconButton,
+  Paper,
+  TextField,
+  InputAdornment
+} from '@mui/material'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import EditIcon from '@mui/icons-material/Edit'
+import SearchIcon from '@mui/icons-material/Search'
 import { useNavigate, useParams } from 'react-router-dom'
 import Sidebar from '@/layout/Sidebar'
 import Header from '@/layout/Header'
@@ -18,12 +29,47 @@ interface WeightSet {
 }
 
 const ViewWeightSet = () => {
+  const PRIMARY_COLOR = '#2563EB'
+  const PAGE_BACKGROUND = '#F8FAFC'
+  const TITLE_COLOR = '#111827'
+  const SUBTEXT_COLOR = '#6B7280'
+  const VALUE_COLOR = '#1F2937'
+  const CARD_RADIUS = '12px'
+  const CARD_BORDER = '1px solid rgba(148, 163, 184, 0.25)'
+  const CARD_SHADOW = '0 1px 3px rgba(15, 23, 42, 0.08)'
+
+  const cardBaseStyles = {
+    p: { xs: 2.5, md: 3 },
+    borderRadius: CARD_RADIUS,
+    border: CARD_BORDER,
+    boxShadow: CARD_SHADOW,
+    backgroundColor: '#FFFFFF'
+  }
+
+  const inputStyles = {
+    '& .MuiOutlinedInput-root': {
+      borderRadius: '12px',
+      backgroundColor: '#FFFFFF',
+      transition: 'box-shadow 0.2s ease, border-color 0.2s ease',
+      '& fieldset': { borderColor: 'rgba(148, 163, 184, 0.4)' },
+      '&:hover fieldset': { borderColor: PRIMARY_COLOR },
+      '&.Mui-focused fieldset': { borderColor: PRIMARY_COLOR }
+    },
+    '& .MuiOutlinedInput-root.Mui-focused': {
+      boxShadow: '0 0 0 2px #93C5FD'
+    },
+    '& .MuiOutlinedInput-input': {
+      py: 1.1
+    }
+  }
+
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
   const [sidebarOpen, setSidebarOpen] = useState(!isMobile)
   const { mode, toggleTheme } = useThemeContext()
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
+  const [searchTerm, setSearchTerm] = useState('')
 
   // Sample weight set data - replace with actual data from API
   const [weightSet] = useState<WeightSet | null>({
@@ -35,6 +81,20 @@ const ViewWeightSet = () => {
     calibrationDueDate: '11.08.2027',
     createdAt: '14.10.2025 18:39'
   })
+
+  const summaryDetails = useMemo(
+    () =>
+      weightSet
+        ? ([
+            { label: 'Certificate Number', value: weightSet.certificateNumber },
+            { label: 'Class', value: weightSet.class },
+            { label: 'Date of Issue', value: weightSet.dateOfIssue },
+            { label: 'Calibration Due Date', value: weightSet.calibrationDueDate },
+            weightSet.createdAt ? { label: 'Created At', value: weightSet.createdAt } : null
+          ].filter(Boolean) as { label: string; value: string }[])
+        : [],
+    [weightSet]
+  )
 
   const handleToggleSidebar = useCallback(() => {
     setSidebarOpen(!sidebarOpen)
@@ -55,7 +115,7 @@ const ViewWeightSet = () => {
   }
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', flexDirection: 'row' }}>
+    <Box sx={{ display: 'flex', minHeight: '100vh', flexDirection: 'row', backgroundColor: PAGE_BACKGROUND }}>
       {/* Sidebar */}
       <Sidebar open={sidebarOpen} onToggle={handleToggleSidebar} />
 
@@ -67,7 +127,7 @@ const ViewWeightSet = () => {
           display: 'flex',
           flexDirection: 'column',
           minHeight: '100vh',
-          backgroundColor: 'background.default',
+          backgroundColor: PAGE_BACKGROUND,
           width: '100%',
           overflow: 'hidden',
           transition: theme.transitions.create('margin-left', {
@@ -113,12 +173,14 @@ const ViewWeightSet = () => {
             },
             '&::-webkit-scrollbar-thumb:hover': {
               background: theme.palette.mode === 'dark' ? '#777' : '#999'
-            }
+            },
+            // p: { xs: 2, md: 3 },
+            fontFamily: 'Inter, "Open Sans", sans-serif'
           }}
         >
-          {/* Page Header */}
-          <Box
+          <Paper
             sx={{
+              ...cardBaseStyles,
               mb: 3,
               display: 'flex',
               alignItems: 'center',
@@ -127,112 +189,154 @@ const ViewWeightSet = () => {
               gap: 2
             }}
           >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
               <IconButton
                 onClick={() => navigate('/weight-sets')}
                 sx={{
-                  color: 'text.primary',
-                  '&:hover': {
-                    backgroundColor: 'action.hover'
-                  }
+                  width: 40,
+                  height: 40,
+                  borderRadius: '50%',
+                  border: CARD_BORDER,
+                  boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)',
+                  color: PRIMARY_COLOR,
+                  backgroundColor: 'rgba(37, 99, 235, 0.08)',
+                  '&:hover': { backgroundColor: 'rgba(37, 99, 235, 0.16)' }
                 }}
               >
-                <ArrowBackIcon />
+                <ArrowBackIcon fontSize='small' />
               </IconButton>
               <Box>
-                <Typography variant='h5' component='h1' sx={{ fontWeight: 700 }}>
+                <Typography
+                  variant='h5'
+                  component='h1'
+                  sx={{ fontWeight: 700, color: TITLE_COLOR, fontSize: { xs: '1.5rem', md: '1.75rem' }, mb: 0.25 }}
+                >
                   Weight Set Details
                 </Typography>
-                <Typography variant='body2' color='text.secondary'>
-                  View weight set information
+                <Typography variant='body2' sx={{ color: SUBTEXT_COLOR }}>
+                  View weight set information and calibration history
                 </Typography>
               </Box>
             </Box>
-            <Button variant='contained' startIcon={<EditIcon />} onClick={handleEdit} sx={{ textTransform: 'none' }}>
-              Edit
-            </Button>
-          </Box>
+            <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
+              <Button
+                variant='contained'
+                startIcon={<EditIcon />}
+                onClick={handleEdit}
+                sx={{
+                  textTransform: 'none',
+                  borderRadius: '999px',
+                  px: 3,
+                  py: 1.15,
+                  backgroundColor: PRIMARY_COLOR,
+                  boxShadow: '0 8px 16px rgba(37, 99, 235, 0.18)',
+                  '&:hover': { backgroundColor: '#1D4ED8' }
+                }}
+              >
+                Edit Weight Set
+              </Button>
+            </Box>
+          </Paper>
 
-          {/* Details Card */}
-          <Paper
-            sx={{
-              p: 3,
-              borderRadius: 1,
-              boxShadow: 'none',
-              border: '1px solid',
-              borderColor: 'divider'
-            }}
-          >
-            {/* Weight Set Name Heading */}
-            <Typography variant='h6' sx={{ mb: 3, fontWeight: 600, color: 'text.primary' }}>
-              {weightSet.weightSetNo}
+          <Paper sx={{ ...cardBaseStyles, mb: 3, p: { xs: 2, md: 2.5 } }}>
+            <TextField
+              fullWidth
+              placeholder='Search related records...'
+              size='small'
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position='start'>
+                    <SearchIcon sx={{ color: '#9CA3AF' }} />
+                  </InputAdornment>
+                )
+              }}
+              sx={{ ...inputStyles }}
+            />
+          </Paper>
+
+          <Paper sx={{ ...cardBaseStyles, mb: 3 }}>
+            <Typography variant='h6' sx={{ fontWeight: 700, color: TITLE_COLOR, mb: 1 }}>
+              Weight Set Summary
             </Typography>
+            <Typography variant='body2' sx={{ color: SUBTEXT_COLOR, mb: 3 }}>
+              Overview of certificate details and calibration schedule.
+            </Typography>
+            <Box
+              sx={{
+                display: 'grid',
+                gap: 2,
+                gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' }
+              }}
+            >
+              <Box
+                sx={{
+                  border: CARD_BORDER,
+                  borderRadius: 2,
+                  backgroundColor: '#F9FAFB',
+                  p: 2
+                }}
+              >
+                <Typography variant='subtitle2' sx={{ color: SUBTEXT_COLOR, fontWeight: 500, mb: 0.5 }}>
+                  Weight Set Name
+                </Typography>
+                <Typography variant='body1' sx={{ color: VALUE_COLOR, fontWeight: 600 }}>
+                  {weightSet.weightSetNo}
+                </Typography>
+              </Box>
+              <Box
+                sx={{
+                  border: CARD_BORDER,
+                  borderRadius: 2,
+                  backgroundColor: '#F9FAFB',
+                  p: 2
+                }}
+              >
+                <Typography variant='subtitle2' sx={{ color: SUBTEXT_COLOR, fontWeight: 500, mb: 0.5 }}>
+                  Weight Set ID
+                </Typography>
+                <Typography variant='body1' sx={{ color: VALUE_COLOR, fontWeight: 600 }}>
+                  {weightSet.id}
+                </Typography>
+              </Box>
+            </Box>
+          </Paper>
 
-            {/* Details Grid */}
-            <div className='row'>
-              <div className='col-12 col-md-6'>
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant='body2' color='text.secondary' sx={{ mb: 0.5 }}>
-                    Weight Set No.
+          <Paper sx={{ ...cardBaseStyles }}>
+            <Typography variant='h6' sx={{ fontWeight: 700, color: TITLE_COLOR, mb: 1 }}>
+              Certificate & Calibration Details
+            </Typography>
+            <Typography variant='body2' sx={{ color: SUBTEXT_COLOR, mb: 3 }}>
+              Key certificate identifiers and scheduling information.
+            </Typography>
+            <Box
+              sx={{
+                display: 'grid',
+                gap: 2,
+                gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' }
+              }}
+            >
+              {summaryDetails.map(detail => (
+                <Box
+                  key={detail.label}
+                  sx={{
+                    border: CARD_BORDER,
+                    borderRadius: 2,
+                    backgroundColor: '#FFFFFF',
+                    p: 2,
+                    boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)'
+                  }}
+                >
+                  <Typography variant='subtitle2' sx={{ color: SUBTEXT_COLOR, fontWeight: 500, mb: 0.5 }}>
+                    {detail.label}
                   </Typography>
-                  <Typography variant='body1' sx={{ fontWeight: 500 }}>
-                    {weightSet.weightSetNo}
-                  </Typography>
-                </Box>
-              </div>
-              <div className='col-12 col-md-6'>
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant='body2' color='text.secondary' sx={{ mb: 0.5 }}>
-                    Certificate Number
-                  </Typography>
-                  <Typography variant='body1' sx={{ fontWeight: 500 }}>
-                    {weightSet.certificateNumber}
-                  </Typography>
-                </Box>
-              </div>
-              <div className='col-12 col-md-6'>
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant='body2' color='text.secondary' sx={{ mb: 0.5 }}>
-                    Class
-                  </Typography>
-                  <Typography variant='body1' sx={{ fontWeight: 500 }}>
-                    {weightSet.class}
-                  </Typography>
-                </Box>
-              </div>
-              <div className='col-12 col-md-6'>
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant='body2' color='text.secondary' sx={{ mb: 0.5 }}>
-                    Date of Issue
-                  </Typography>
-                  <Typography variant='body1' sx={{ fontWeight: 500 }}>
-                    {weightSet.dateOfIssue}
+                  <Typography variant='body1' sx={{ color: VALUE_COLOR, fontWeight: 600 }}>
+                    {detail.value}
                   </Typography>
                 </Box>
-              </div>
-              <div className='col-12 col-md-6'>
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant='body2' color='text.secondary' sx={{ mb: 0.5 }}>
-                    Calibration Due Date
-                  </Typography>
-                  <Typography variant='body1' sx={{ fontWeight: 500 }}>
-                    {weightSet.calibrationDueDate}
-                  </Typography>
-                </Box>
-              </div>
-              {weightSet.createdAt && (
-                <div className='col-12 col-md-6'>
-                  <Box sx={{ mb: 2 }}>
-                    <Typography variant='body2' color='text.secondary' sx={{ mb: 0.5 }}>
-                      Created At
-                    </Typography>
-                    <Typography variant='body1' sx={{ fontWeight: 500 }}>
-                      {weightSet.createdAt}
-                    </Typography>
-                  </Box>
-                </div>
-              )}
-            </div>
+              ))}
+            </Box>
           </Paper>
         </Box>
       </Box>
