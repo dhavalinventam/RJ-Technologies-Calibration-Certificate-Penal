@@ -7,8 +7,15 @@ import {
   Button,
   useTheme,
   useMediaQuery,
-  Card,
-  CardContent
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  IconButton,
+  Tooltip
 } from '@mui/material'
 import SearchIcon from '@mui/icons-material/Search'
 import EditIcon from '@mui/icons-material/Edit'
@@ -74,6 +81,64 @@ const ProcedureTemplates = () => {
     }
   ]
 
+  const PRIMARY_COLOR = '#2563EB'
+  const PAGE_BACKGROUND = '#F8FAFC'
+  const TITLE_COLOR = '#111827'
+  const SUBTEXT_COLOR = '#6B7280'
+  const TABLE_TEXT_COLOR = '#1F2937'
+  const CARD_RADIUS = '12px'
+  const CARD_BORDER = '1px solid rgba(148, 163, 184, 0.25)'
+  const CARD_SHADOW = '0 1px 3px rgba(15, 23, 42, 0.08)'
+
+  const cardBaseStyles = {
+    p: { xs: 2.5, md: 3 },
+    borderRadius: CARD_RADIUS,
+    border: CARD_BORDER,
+    boxShadow: CARD_SHADOW,
+    backgroundColor: '#FFFFFF'
+  }
+
+  const inputStyles = {
+    '& .MuiOutlinedInput-root': {
+      borderRadius: '12px',
+      backgroundColor: '#FFFFFF',
+      transition: 'box-shadow 0.2s ease, border-color 0.2s ease',
+      '& fieldset': { borderColor: 'rgba(148, 163, 184, 0.4)' },
+      '&:hover fieldset': { borderColor: PRIMARY_COLOR },
+      '&.Mui-focused fieldset': { borderColor: PRIMARY_COLOR }
+    },
+    '& .MuiOutlinedInput-root.Mui-focused': {
+      boxShadow: '0 0 0 2px #93C5FD'
+    },
+    '& .MuiOutlinedInput-input': {
+      py: 1.1
+    }
+  }
+
+  const primaryButtonStyles = {
+    textTransform: 'none',
+    borderRadius: '999px',
+    px: 3,
+    py: 1.15,
+    backgroundColor: PRIMARY_COLOR,
+    boxShadow: '0 8px 16px rgba(37, 99, 235, 0.18)',
+    '&:hover': { backgroundColor: '#1D4ED8' }
+  }
+
+  const tableHeaderCellStyles = {
+    fontWeight: 600,
+    color: TABLE_TEXT_COLOR,
+    fontSize: '0.9rem',
+    py: 1.5,
+    whiteSpace: 'nowrap'
+  }
+
+  const tableCellStyles = {
+    color: TABLE_TEXT_COLOR,
+    fontSize: '0.9rem',
+    whiteSpace: 'nowrap'
+  }
+
   const [templates, setTemplates] = useState<ProcedureTemplate[]>(loadTemplates())
 
   // Reload templates when component mounts or when location changes (returning from Add/Edit)
@@ -121,14 +186,7 @@ const ProcedureTemplates = () => {
   }
 
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        minHeight: '100vh',
-        flexDirection: 'row',
-        fontFamily: 'Inter, "Segoe UI", sans-serif'
-      }}
-    >
+    <Box sx={{ display: 'flex', minHeight: '100vh', flexDirection: 'row', backgroundColor: PAGE_BACKGROUND }}>
       {/* Sidebar */}
       <Sidebar open={sidebarOpen} onToggle={handleToggleSidebar} />
 
@@ -140,7 +198,7 @@ const ProcedureTemplates = () => {
           display: 'flex',
           flexDirection: 'column',
           minHeight: '100vh',
-          backgroundColor: 'background.default',
+          backgroundColor: PAGE_BACKGROUND,
           width: '100%',
           overflow: 'hidden',
           transition: theme.transitions.create('margin-left', {
@@ -186,324 +244,162 @@ const ProcedureTemplates = () => {
             },
             '&::-webkit-scrollbar-thumb:hover': {
               background: theme.palette.mode === 'dark' ? '#777' : '#999'
-            }
+            },
+            fontFamily: 'Inter, "Open Sans", sans-serif'
           }}
         >
-          {/* Page Header */}
-          <Box
-            sx={{
-              mb: 3,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              flexWrap: 'wrap',
-              gap: 2
-            }}
-          >
-            <Box>
-              <Typography variant='h5' component='h1' sx={{ fontWeight: 700 }}>
-                Procedure Templates
-              </Typography>
-              <Typography variant='body2' color='text.secondary'>
-                Manage reusable procedure instructions
-              </Typography>
-            </Box>
-            <Box
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <Paper
               sx={{
-                width: { xs: '100%', sm: 'auto' },
+                ...cardBaseStyles,
                 display: 'flex',
-                flexDirection: { xs: 'column', sm: 'row' },
-                alignItems: { xs: 'stretch', sm: 'center' },
-                gap: { xs: 1, sm: 2 }
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: 2
               }}
             >
+              <Box>
+                <Typography
+                  variant='h5'
+                  component='h1'
+                  sx={{ fontWeight: 700, color: TITLE_COLOR, fontSize: { xs: '1.5rem', md: '1.8rem' }, mb: 0.5 }}
+                >
+                  Procedure Templates
+                </Typography>
+                <Typography variant='body2' sx={{ color: SUBTEXT_COLOR }}>
+                  Manage reusable procedure instructions
+                </Typography>
+              </Box>
+              <Button
+                variant='contained'
+                startIcon={<AddIcon />}
+                onClick={handleAdd}
+                sx={{ ...primaryButtonStyles, width: { xs: '100%', sm: 'auto' } }}
+              >
+                Add Template
+              </Button>
+            </Paper>
+
+            <Paper sx={{ ...cardBaseStyles, p: { xs: 2, md: 2.5 } }}>
               <TextField
                 fullWidth
-                placeholder='Search templates...'
+                placeholder='Search by name or description...'
                 size='small'
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position='start'>
-                      <SearchIcon fontSize='small' />
+                      <SearchIcon sx={{ color: '#9CA3AF' }} />
                     </InputAdornment>
                   )
                 }}
-                sx={{ minWidth: { sm: 240 } }}
+                sx={{ ...inputStyles }}
               />
-              <Button
-                variant='contained'
-                startIcon={<AddIcon />}
-                onClick={handleAdd}
-                sx={{
-                  textTransform: 'none',
-                  minHeight: 40,
-                  borderRadius: 2,
-                  px: { xs: 2.5, sm: 4 },
-                  letterSpacing: 0.2,
-                  fontWeight: 600,
-                  whiteSpace: 'nowrap'
-                }}
-              >
-                Add Template
-              </Button>
-            </Box>
-          </Box>
+            </Paper>
 
-          {/* Template Cards Grid */}
-          <Box
-            sx={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: 3,
-              mb: 4
-            }}
-          >
-            {filteredTemplates.length === 0 ? (
-              <Box
-                sx={{
-                  gridColumn: '1 / -1',
-                  textAlign: 'center',
-                  py: 4
-                }}
-              >
-                <Typography variant='body2' color='text.secondary'>
-                  No templates found
-                </Typography>
-              </Box>
-            ) : (
-              filteredTemplates.map(template => (
-                <Card
-                  key={template.id}
-                  sx={{
-                    flex: '1 1 320px',
-                    minWidth: { xs: '100%', sm: '280px' },
-                    maxWidth: { md: '360px', lg: '380px' },
-                    display: 'flex',
-                    flexDirection: 'column',
-                    backgroundColor: 'background.paper',
-                    borderRadius: 3,
-                    position: 'relative',
-                    overflow: 'hidden',
-                    border: '1px solid',
-                    borderColor: theme.palette.mode === 'dark' ? 'divider' : 'rgba(226, 232, 240, 0.8)',
-                    boxShadow:
-                      theme.palette.mode === 'dark'
-                        ? '0 10px 24px rgba(15, 23, 42, 0.32)'
-                        : '0 14px 30px rgba(15, 23, 42, 0.12)',
-                    transition: 'transform 0.28s ease, box-shadow 0.28s ease',
-                    '&::before': {
-                      content: '""',
-                      position: 'absolute',
-                      inset: 0,
-                      background:
-                        theme.palette.mode === 'dark'
-                          ? 'linear-gradient(140deg, rgba(33, 150, 243, 0.12), rgba(144, 202, 249, 0.04) 46%, transparent 75%)'
-                          : 'linear-gradient(140deg, rgba(33, 150, 243, 0.10), rgba(144, 202, 249, 0.06) 45%, transparent 78%)',
-                      pointerEvents: 'none',
-                      transition: 'opacity 0.28s ease',
-                      opacity: 0.8
-                    },
-                    '&::after': {
-                      content: '""',
-                      position: 'absolute',
-                      top: -60,
-                      right: -60,
-                      width: 140,
-                      height: 140,
-                      borderRadius: '50%',
-                      background:
-                        theme.palette.mode === 'dark' ? 'rgba(33, 150, 243, 0.16)' : 'rgba(33, 150, 243, 0.18)',
-                      transform: 'scale(0.65)',
-                      transition: 'transform 0.28s ease, opacity 0.28s ease',
-                      opacity: 0.65,
-                      pointerEvents: 'none'
-                    },
-                    '&:hover': {
-                      transform: 'translateY(-10px) scale(1.015)',
-                      boxShadow:
-                        theme.palette.mode === 'dark'
-                          ? '0 22px 36px rgba(15, 23, 42, 0.48)'
-                          : '0 26px 44px rgba(15, 23, 42, 0.18)',
-                      '&::before': {
-                        opacity: 1
-                      },
-                      '&::after': {
-                        transform: 'scale(0.9)',
-                        opacity: 0.9
-                      }
-                    }
-                  }}
-                >
-                  <CardContent
-                    sx={{
-                      flexGrow: 1,
-                      p: 3.25,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: 2,
-                      position: 'relative'
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between'
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          width: 46,
-                          height: 46,
-                          borderRadius: '50%',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontWeight: 700,
-                          fontSize: '1.1rem',
-                          color: theme.palette.mode === 'dark' ? 'primary.light' : 'primary.main',
-                          backgroundColor:
-                            theme.palette.mode === 'dark' ? 'rgba(33, 150, 243, 0.12)' : 'rgba(33, 150, 243, 0.14)',
-                          boxShadow:
-                            theme.palette.mode === 'dark'
-                              ? 'inset 0 0 0 1px rgba(33, 150, 243, 0.4)'
-                              : 'inset 0 0 0 1px rgba(33, 150, 243, 0.24)'
-                        }}
-                      >
-                        {(template.templateName || '?').charAt(0).toUpperCase()}
-                      </Box>
-                      <Typography
-                        variant='body2'
-                        color='text.secondary'
-                        sx={{
-                          fontSize: '0.8rem',
-                          letterSpacing: '0.08em',
-                          textTransform: 'uppercase',
-                          fontWeight: 600
-                        }}
-                      >
-                        Created {formatDate(template.createdAt)}
-                      </Typography>
-                    </Box>
-                    <Typography
-                      variant='h6'
-                      sx={{
-                        fontWeight: 600,
-                        lineHeight: 1.35,
-                        color: 'text.primary',
-                        fontSize: '1.18rem',
-                        transition: 'color 0.28s ease'
-                      }}
-                    >
-                      {template.templateName}
-                    </Typography>
-                    <Typography
-                      variant='body2'
-                      sx={{
-                        color: 'text.secondary',
-                        mb: 2.5,
-                        fontSize: '0.9rem',
-                        lineHeight: 1.6,
-                        transition: 'color 0.28s ease',
-                        display: '-webkit-box',
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: 'vertical',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        minHeight: '3.2rem'
-                      }}
-                    >
-                      {template.templateText}
-                    </Typography>
-                  </CardContent>
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'stretch',
-                      gap: 1.35,
-                      px: 3,
-                      pt: 2.25,
-                      pb: 3,
-                      borderTop: '1px solid',
-                      borderColor: 'divider',
-                      backgroundColor:
-                        theme.palette.mode === 'dark' ? 'rgba(148, 163, 184, 0.08)' : 'rgba(148, 163, 184, 0.08)'
-                    }}
-                  >
-                    <Button
-                      variant='outlined'
-                      size='small'
-                      startIcon={<VisibilityIcon fontSize='small' />}
-                      onClick={() => handleView(template)}
-                      sx={{
-                        textTransform: 'none',
-                        flex: 1,
-                        fontWeight: 600,
-                        borderRadius: 2,
-                        borderColor: 'divider',
-                        color: 'text.primary',
-                        minHeight: 42,
-                        transition: 'transform 0.22s ease, border-color 0.22s ease, background-color 0.22s ease',
-                        '&:hover': {
-                          borderColor: 'primary.main',
-                          backgroundColor: 'action.hover',
-                          transform: 'translateY(-2px)'
-                        }
-                      }}
-                    >
-                      View
-                    </Button>
-                    <Button
-                      variant='outlined'
-                      size='small'
-                      startIcon={<EditIcon fontSize='small' />}
-                      onClick={() => handleEdit(template)}
-                      sx={{
-                        textTransform: 'none',
-                        flex: 1,
-                        fontWeight: 600,
-                        borderRadius: 2,
-                        borderColor: 'divider',
-                        color: 'text.primary',
-                        minHeight: 42,
-                        transition: 'transform 0.22s ease, border-color 0.22s ease, background-color 0.22s ease',
-                        '&:hover': {
-                          borderColor: 'primary.main',
-                          backgroundColor: 'action.hover',
-                          transform: 'translateY(-2px)'
-                        }
-                      }}
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      variant='contained'
-                      size='small'
-                      startIcon={<DeleteIcon fontSize='small' />}
-                      color='error'
-                      onClick={() => handleDelete(template.id)}
-                      sx={{
-                        textTransform: 'none',
-                        flex: 1,
-                        fontWeight: 600,
-                        borderRadius: 2,
-                        minHeight: 42,
-                        boxShadow: 'none',
-                        transition: 'transform 0.22s ease, box-shadow 0.22s ease',
-                        '&:hover': {
-                          boxShadow: '0 12px 24px rgba(244, 67, 54, 0.28)',
-                          transform: 'translateY(-2px)'
-                        }
-                      }}
-                    >
-                      Delete
-                    </Button>
-                  </Box>
-                </Card>
-              ))
-            )}
+            <Paper sx={{ ...cardBaseStyles, p: 0, overflow: 'hidden' }}>
+              <TableContainer sx={{ overflowX: 'auto' }}>
+                <Table sx={{ minWidth: 960 }}>
+                  <TableHead>
+                    <TableRow sx={{ backgroundColor: '#F3F4F6' }}>
+                      {['Template Name', 'Description', 'Created', 'Updated', 'Actions'].map(header => (
+                        <TableCell key={header} sx={{ ...tableHeaderCellStyles }}>
+                          {header}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {filteredTemplates.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} align='center' sx={{ py: 4, color: SUBTEXT_COLOR }}>
+                          No templates found
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      filteredTemplates.map((template, index) => (
+                        <TableRow
+                          key={template.id}
+                          hover
+                          sx={{
+                            backgroundColor: index % 2 === 0 ? '#FFFFFF' : '#F9FAFB',
+                            transition: 'background-color 0.2s ease',
+                            '&:hover': { backgroundColor: '#EFF6FF' }
+                          }}
+                        >
+                          <TableCell sx={{ ...tableCellStyles, fontWeight: 600 }}>{template.templateName}</TableCell>
+                          <TableCell sx={{ ...tableCellStyles, maxWidth: 420 }}>
+                            <Typography
+                              component='span'
+                              variant='body2'
+                              sx={{
+                                color: SUBTEXT_COLOR,
+                                display: 'inline-block',
+                                maxWidth: '100%',
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis'
+                              }}
+                            >
+                              {template.templateText}
+                            </Typography>
+                          </TableCell>
+                          <TableCell sx={{ ...tableCellStyles }}>{formatDate(template.createdAt)}</TableCell>
+                          <TableCell sx={{ ...tableCellStyles }}>
+                            {template.updatedAt ? formatDate(template.updatedAt) : '—'}
+                          </TableCell>
+                          <TableCell sx={{ ...tableCellStyles }}>
+                            <Box sx={{ display: 'flex', gap: 1 }}>
+                              <Tooltip title='View' arrow>
+                                <IconButton
+                                  size='small'
+                                  onClick={() => handleView(template)}
+                                  sx={{
+                                    color: PRIMARY_COLOR,
+                                    backgroundColor: 'rgba(37, 99, 235, 0.08)',
+                                    '&:hover': { backgroundColor: 'rgba(37, 99, 235, 0.16)' }
+                                  }}
+                                >
+                                  <VisibilityIcon fontSize='small' />
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title='Edit' arrow>
+                                <IconButton
+                                  size='small'
+                                  onClick={() => handleEdit(template)}
+                                  sx={{
+                                    color: '#4B5563',
+                                    backgroundColor: '#F3F4F6',
+                                    '&:hover': { backgroundColor: '#E5E7EB' }
+                                  }}
+                                >
+                                  <EditIcon fontSize='small' />
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title='Delete' arrow>
+                                <IconButton
+                                  size='small'
+                                  color='error'
+                                  onClick={() => handleDelete(template.id)}
+                                  sx={{
+                                    backgroundColor: 'rgba(239, 68, 68, 0.08)',
+                                    '&:hover': { backgroundColor: 'rgba(239, 68, 68, 0.16)' }
+                                  }}
+                                >
+                                  <DeleteIcon fontSize='small' />
+                                </IconButton>
+                              </Tooltip>
+                            </Box>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Paper>
           </Box>
         </Box>
       </Box>

@@ -1,5 +1,5 @@
 import React, { useCallback, useState, useEffect } from 'react'
-import { Box, Typography, TextField, Button, useTheme, useMediaQuery, Paper } from '@mui/material'
+import { Box, Typography, TextField, Button, useTheme, useMediaQuery, Paper, IconButton } from '@mui/material'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import { useNavigate, useParams } from 'react-router-dom'
 import Sidebar from '@/layout/Sidebar'
@@ -15,6 +15,59 @@ interface ProcedureTemplate {
 }
 
 const EditTemplate = () => {
+  const PRIMARY_COLOR = '#2563EB'
+  const PAGE_BACKGROUND = '#F8FAFC'
+  const TITLE_COLOR = '#111827'
+  const SUBTEXT_COLOR = '#6B7280'
+  const CARD_RADIUS = '12px'
+  const CARD_BORDER = '1px solid rgba(148, 163, 184, 0.25)'
+  const CARD_SHADOW = '0 1px 3px rgba(15, 23, 42, 0.08)'
+
+  const cardBaseStyles = {
+    p: { xs: 2.5, md: 3 },
+    borderRadius: CARD_RADIUS,
+    border: CARD_BORDER,
+    boxShadow: CARD_SHADOW,
+    backgroundColor: '#FFFFFF'
+  }
+
+  const inputStyles = {
+    '& .MuiOutlinedInput-root': {
+      borderRadius: '12px',
+      backgroundColor: '#FFFFFF',
+      transition: 'box-shadow 0.2s ease, border-color 0.2s ease',
+      '& fieldset': { borderColor: 'rgba(148, 163, 184, 0.4)' },
+      '&:hover fieldset': { borderColor: PRIMARY_COLOR },
+      '&.Mui-focused fieldset': { borderColor: PRIMARY_COLOR }
+    },
+    '& .MuiOutlinedInput-root.Mui-focused': {
+      boxShadow: '0 0 0 2px #93C5FD'
+    },
+    '& .MuiOutlinedInput-input': {
+      py: 1.1
+    }
+  }
+
+  const primaryButtonStyles = {
+    textTransform: 'none',
+    borderRadius: '999px',
+    px: 3,
+    py: 1.15,
+    backgroundColor: PRIMARY_COLOR,
+    boxShadow: '0 8px 16px rgba(37, 99, 235, 0.18)',
+    '&:hover': { backgroundColor: '#1D4ED8' }
+  }
+
+  const secondaryButtonStyles = {
+    textTransform: 'none',
+    borderRadius: '999px',
+    px: 3,
+    py: 1.15,
+    borderColor: 'rgba(148, 163, 184, 0.6)',
+    color: SUBTEXT_COLOR,
+    '&:hover': { borderColor: SUBTEXT_COLOR, backgroundColor: '#F3F4F6' }
+  }
+
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
   const [sidebarOpen, setSidebarOpen] = useState(!isMobile)
@@ -117,7 +170,7 @@ const EditTemplate = () => {
   }
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', flexDirection: 'row' }}>
+    <Box sx={{ display: 'flex', minHeight: '100vh', flexDirection: 'row', backgroundColor: PAGE_BACKGROUND }}>
       {/* Sidebar */}
       <Sidebar open={sidebarOpen} onToggle={handleToggleSidebar} />
 
@@ -129,7 +182,7 @@ const EditTemplate = () => {
           display: 'flex',
           flexDirection: 'column',
           minHeight: '100vh',
-          backgroundColor: 'background.default',
+          backgroundColor: PAGE_BACKGROUND,
           width: '100%',
           overflow: 'hidden',
           transition: theme.transitions.create('margin-left', {
@@ -175,110 +228,102 @@ const EditTemplate = () => {
             },
             '&::-webkit-scrollbar-thumb:hover': {
               background: theme.palette.mode === 'dark' ? '#777' : '#999'
-            }
+            },
+            // p: { xs: 2, md: 3 },
+            fontFamily: 'Inter, "Open Sans", sans-serif'
           }}
         >
-          {/* Page Header */}
-          <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Button
-              startIcon={<ArrowBackIcon />}
-              onClick={() => navigate('/procedure-templates')}
-              sx={{
-                textTransform: 'none',
-                color: 'text.primary',
-                '&:hover': {
-                  backgroundColor: 'action.hover'
-                }
-              }}
-            >
-              Back to Templates
-            </Button>
-            <Typography variant='h5' component='h1' sx={{ fontWeight: 700 }}>
-              Edit Template
-            </Typography>
-          </Box>
-
-          {/* Form Card */}
           <Paper
             sx={{
-              borderRadius: 1,
-              boxShadow: 2,
-              overflow: 'hidden',
-              maxWidth: 900,
-              mx: 'auto'
+              ...cardBaseStyles,
+              mb: 3,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: 2
             }}
           >
-            {/* Card Header */}
-            <Box
-              sx={{
-                backgroundColor: 'primary.main',
-                color: 'white',
-                p: 2,
-                borderRadius: '4px 4px 0 0'
-              }}
-            >
-              <Typography variant='h6' sx={{ fontWeight: 600 }}>
-                Edit Procedure Template
-              </Typography>
-            </Box>
-
-            {/* Form Content */}
-            <Box sx={{ p: 3 }}>
-              <div className='row'>
-                <div className='col-12'>
-                  <TextField
-                    fullWidth
-                    label='Template Name'
-                    required
-                    size='small'
-                    placeholder='e.g., Standard SOP V1.1'
-                    value={formData.templateName}
-                    onChange={e => handleInputChange('templateName', e.target.value)}
-                    sx={{ mb: 3 }}
-                  />
-                </div>
-                <div className='col-12'>
-                  <TextField
-                    fullWidth
-                    label='Template Text'
-                    required
-                    multiline
-                    rows={10}
-                    size='small'
-                    placeholder='Enter the full procedure instruction text...'
-                    value={formData.templateText}
-                    onChange={e => handleInputChange('templateText', e.target.value)}
-                    sx={{ mb: 3 }}
-                  />
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <Box
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              <IconButton
+                onClick={() => navigate('/procedure-templates')}
                 sx={{
-                  display: 'flex',
-                  gap: 2,
-                  justifyContent: 'flex-end',
-                  flexWrap: 'wrap'
+                  width: 40,
+                  height: 40,
+                  borderRadius: '50%',
+                  border: CARD_BORDER,
+                  boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)',
+                  color: PRIMARY_COLOR,
+                  backgroundColor: 'rgba(37, 99, 235, 0.08)',
+                  '&:hover': { backgroundColor: 'rgba(37, 99, 235, 0.16)' }
                 }}
               >
-                <Button
-                  variant='outlined'
-                  size='medium'
-                  onClick={handleCancel}
-                  sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
+                <ArrowBackIcon fontSize='small' />
+              </IconButton>
+              <Box>
+                <Typography
+                  variant='h5'
+                  component='h1'
+                  sx={{ fontWeight: 700, color: TITLE_COLOR, fontSize: { xs: '1.5rem', md: '1.75rem' }, mb: 0.25 }}
                 >
-                  Cancel
-                </Button>
-                <Button
-                  variant='contained'
-                  size='medium'
-                  onClick={handleSave}
-                  sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
-                >
-                  Save Template
-                </Button>
+                  Edit Template
+                </Typography>
+                <Typography variant='body2' sx={{ color: SUBTEXT_COLOR }}>
+                  Update procedure content and metadata
+                </Typography>
               </Box>
+            </Box>
+            <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
+              <Button
+                variant='outlined'
+                onClick={handleCancel}
+                sx={{ ...secondaryButtonStyles, width: { xs: '100%', sm: 'auto' } }}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant='contained'
+                onClick={handleSave}
+                sx={{ ...primaryButtonStyles, width: { xs: '100%', sm: 'auto' } }}
+              >
+                Save Changes
+              </Button>
+            </Box>
+          </Paper>
+
+          <Paper sx={{ ...cardBaseStyles, maxWidth: 900, mx: 'auto' }}>
+            <Typography variant='h6' sx={{ fontWeight: 700, color: TITLE_COLOR, mb: 1 }}>
+              Template Details
+            </Typography>
+            <Typography variant='body2' sx={{ color: SUBTEXT_COLOR, mb: 3 }}>
+              Modify the name and content of this procedure template.
+            </Typography>
+            <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', md: '1fr' } }}>
+              <TextField
+                fullWidth
+                label='Template Name'
+                required
+                size='small'
+                value={formData.templateName}
+                onChange={e => handleInputChange('templateName', e.target.value)}
+                sx={{ ...inputStyles }}
+              />
+              <TextField
+                fullWidth
+                label='Procedure Content'
+                required
+                multiline
+                minRows={8}
+                value={formData.templateText}
+                onChange={e => handleInputChange('templateText', e.target.value)}
+                sx={{
+                  ...inputStyles,
+                  '& .MuiOutlinedInput-root': {
+                    ...inputStyles['& .MuiOutlinedInput-root'],
+                    alignItems: 'flex-start'
+                  }
+                }}
+              />
             </Box>
           </Paper>
         </Box>
