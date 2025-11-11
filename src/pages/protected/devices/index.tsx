@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { ReactNode, useCallback, useEffect, useMemo, useState } from 'react'
 import {
   Box,
   Typography,
@@ -28,7 +28,6 @@ import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
 import AddIcon from '@mui/icons-material/Add'
 import VisibilityIcon from '@mui/icons-material/Visibility'
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward'
 import { useNavigate, useLocation } from 'react-router-dom'
 import Sidebar from '@/layout/Sidebar'
 import Header from '@/layout/Header'
@@ -48,9 +47,76 @@ const PAGE_BACKGROUND = '#F8FAFC'
 const TITLE_COLOR = '#111827'
 const SUBTEXT_COLOR = '#6B7280'
 const TABLE_TEXT_COLOR = '#1F2937'
+const LABEL_COLOR = '#4B5563'
 const CARD_RADIUS = '12px'
 const CARD_BORDER = '1px solid rgba(148, 163, 184, 0.25)'
 const CARD_SHADOW = '0 1px 3px rgba(15, 23, 42, 0.08)'
+
+const cardBaseStyles = {
+  p: { xs: 2.5, md: 3 },
+  borderRadius: CARD_RADIUS,
+  border: CARD_BORDER,
+  boxShadow: CARD_SHADOW,
+  backgroundColor: '#FFFFFF'
+}
+
+const inputStyles = {
+  '& .MuiOutlinedInput-root': {
+    borderRadius: '12px',
+    backgroundColor: '#FFFFFF',
+    transition: 'box-shadow 0.2s ease, border-color 0.2s ease',
+    '& fieldset': { borderColor: 'rgba(148, 163, 184, 0.4)' },
+    '&:hover fieldset': { borderColor: PRIMARY_COLOR },
+    '&.Mui-focused fieldset': { borderColor: PRIMARY_COLOR }
+  },
+  '& .MuiOutlinedInput-root.Mui-focused': {
+    boxShadow: '0 0 0 2px #93C5FD'
+  },
+  '& .MuiOutlinedInput-input': {
+    py: 1.1
+  },
+  '& .MuiInputLabel-root': {
+    color: LABEL_COLOR,
+    fontSize: '0.875rem'
+  }
+}
+
+const primaryButtonStyles = {
+  textTransform: 'none',
+  borderRadius: '999px',
+  px: 3,
+  py: 1.15,
+  backgroundColor: PRIMARY_COLOR,
+  boxShadow: '0 8px 16px rgba(37, 99, 235, 0.18)',
+  '&:hover': { backgroundColor: '#1D4ED8' }
+}
+
+const smallOutlinedButtonStyles = {
+  textTransform: 'none',
+  borderRadius: '999px',
+  px: 2,
+  py: 0.75,
+  fontSize: '0.8125rem',
+  borderColor: PRIMARY_COLOR,
+  color: PRIMARY_COLOR,
+  '&:hover': { borderColor: '#1D4ED8', backgroundColor: 'rgba(37, 99, 235, 0.08)' }
+}
+
+const tableHeaderCellStyles = {
+  fontWeight: 600,
+  color: TABLE_TEXT_COLOR,
+  fontSize: '0.9rem',
+  py: 1.5,
+  textAlign: 'center',
+  whiteSpace: 'nowrap'
+}
+
+const tableCellStyles = {
+  color: TABLE_TEXT_COLOR,
+  fontSize: '0.9rem',
+  textAlign: 'center',
+  whiteSpace: 'nowrap'
+}
 
 const ECCENTRICITY_POSITIONS = [
   { key: 'center', label: 'Center' },
@@ -71,7 +137,7 @@ const createEmptyLinearityRow = (): LinearityRow => ({
   withinTolerance: ''
 })
 
-const createInitialLinearityRows = (): LinearityRow[] => Array.from({ length: 5 }, createEmptyLinearityRow)
+const createInitialLinearityRows = (): LinearityRow[] => [createEmptyLinearityRow()]
 
 const createEmptyRepeatabilityMeasurement = (): RepeatabilityMeasurement => ({
   withoutTestWeight: '',
@@ -81,7 +147,7 @@ const createEmptyRepeatabilityMeasurement = (): RepeatabilityMeasurement => ({
 
 const createInitialRepeatabilityData = (): RepeatabilityData => ({
   testWeight: '',
-  measurements: Array.from({ length: 5 }, createEmptyRepeatabilityMeasurement),
+  measurements: [createEmptyRepeatabilityMeasurement()],
   deviation: '',
   allowableError: '',
   withinTolerance: ''
@@ -204,6 +270,89 @@ function TabPanel(props: TabPanelProps) {
   )
 }
 
+function DataSectionCard({
+  title,
+  description,
+  extraContent,
+  children
+}: {
+  title: string
+  description?: string
+  extraContent?: ReactNode
+  children: ReactNode
+}) {
+  return (
+    <Paper sx={{ ...cardBaseStyles, gap: 2 }}>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: { xs: 'flex-start', sm: 'center' },
+          justifyContent: 'space-between',
+          gap: 2,
+          flexWrap: 'wrap'
+        }}
+      >
+        <Box>
+          <Typography variant='h6' sx={{ fontWeight: 600, color: TITLE_COLOR }}>
+            {title}
+          </Typography>
+          {description ? (
+            <Typography variant='body2' sx={{ color: SUBTEXT_COLOR, mt: 0.5 }}>
+              {description}
+            </Typography>
+          ) : null}
+        </Box>
+        {extraContent}
+      </Box>
+      {children}
+    </Paper>
+  )
+}
+
+function ResponsiveStyledTable({
+  headers,
+  rows,
+  renderCell
+}: {
+  headers: string[]
+  rows: ReactNode[][]
+  renderCell?: (value: ReactNode, columnIndex: number, rowIndex: number) => ReactNode
+}) {
+  return (
+    <TableContainer
+      sx={{
+        borderRadius: 2,
+        border: CARD_BORDER,
+        boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)',
+        overflowX: 'auto'
+      }}
+    >
+      <Table size='small' sx={{ minWidth: 720 }}>
+        <TableHead>
+          <TableRow sx={{ backgroundColor: '#F3F4F6' }}>
+            {headers.map(header => (
+              <TableCell key={header} sx={{ ...tableHeaderCellStyles }}>
+                {header}
+              </TableCell>
+            ))}
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {rows.map((row, rowIndex) => (
+            <TableRow key={`row-${rowIndex}`} sx={{ backgroundColor: rowIndex % 2 === 0 ? '#FFFFFF' : '#F9FAFB' }}>
+              {row.map((cell, columnIndex) => (
+                <TableCell key={`cell-${rowIndex}-${columnIndex}`} sx={{ ...tableCellStyles }}>
+                  {renderCell ? renderCell(cell, columnIndex, rowIndex) : cell}
+                </TableCell>
+              ))}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
+  )
+}
+
 const Devices = () => {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
@@ -294,7 +443,7 @@ const Devices = () => {
   }
 
   const handleRemoveLinearityRow = (index: number) => {
-    setLinearityRows(prev => (prev.length > 5 ? prev.filter((_, rowIndex) => rowIndex !== index) : prev))
+    setLinearityRows(prev => (prev.length > 1 ? prev.filter((_, rowIndex) => rowIndex !== index) : prev))
   }
 
   const handleEccentricityChange = (
@@ -356,7 +505,7 @@ const Devices = () => {
     setRepeatabilityData(prev => ({
       ...prev,
       measurements:
-        prev.measurements.length > 5 ? prev.measurements.filter((_, rowIndex) => rowIndex !== index) : prev.measurements
+        prev.measurements.length > 1 ? prev.measurements.filter((_, rowIndex) => rowIndex !== index) : prev.measurements
     }))
   }
 
@@ -373,210 +522,6 @@ const Devices = () => {
       }
     }))
   }
-
-  const renderUncertaintyTableOne = () => (
-    <Box sx={{ mb: 1 }}>
-      <Box sx={{ overflowX: 'auto' }}>
-        <Box
-          component='table'
-          sx={{
-            width: '100%',
-            borderCollapse: 'separate',
-            borderSpacing: 0,
-            minWidth: 720
-          }}
-        >
-          <Box component='thead'>
-            <Box component='tr'>
-              <Box
-                component='th'
-                sx={{
-                  backgroundColor: '#F9FAFB',
-                  color: '#111827',
-                  fontWeight: 600,
-                  fontSize: '0.9rem',
-                  padding: '12px 16px',
-                  textAlign: 'left',
-                  borderBottom: '1px solid',
-                  borderColor: 'divider',
-                  minWidth: 160
-                }}
-              >
-                Loads Applied
-              </Box>
-              {UNCERTAINTY_TABLE_ONE_COLUMNS.map(column => (
-                <Box
-                  component='th'
-                  key={column}
-                  sx={{
-                    backgroundColor: '#F9FAFB',
-                    color: '#111827',
-                    fontWeight: 600,
-                    fontSize: '0.9rem',
-                    padding: '12px 16px',
-                    textAlign: 'center',
-                    borderBottom: '1px solid',
-                    borderColor: 'divider',
-                    minWidth: 140
-                  }}
-                >
-                  {column}
-                </Box>
-              ))}
-            </Box>
-          </Box>
-          <Box component='tbody'>
-            <Box component='tr'>
-              <Box
-                component='td'
-                sx={{
-                  padding: '16px',
-                  fontWeight: 600,
-                  color: '#111827',
-                  borderBottom: '1px solid',
-                  borderColor: 'divider',
-                  backgroundColor: 'background.paper'
-                }}
-              >
-                Combined Uncertainty
-              </Box>
-              {UNCERTAINTY_TABLE_ONE_COLUMNS.map(column => {
-                const key = column as keyof UncertaintyData['tableOne']
-                return (
-                  <Box
-                    component='td'
-                    key={column}
-                    sx={{
-                      padding: '12px 16px',
-                      borderBottom: '1px solid',
-                      borderColor: 'divider',
-                      backgroundColor: 'background.paper'
-                    }}
-                  >
-                    <TextField
-                      size='small'
-                      fullWidth
-                      placeholder='Enter value'
-                      value={uncertaintyData.tableOne[key]}
-                      onChange={e => handleUncertaintyChange('tableOne', key, e.target.value)}
-                      inputProps={{ style: { textAlign: 'center' } }}
-                      sx={{
-                        '& .MuiOutlinedInput-root': {
-                          borderRadius: 1.5
-                        }
-                      }}
-                    />
-                  </Box>
-                )
-              })}
-            </Box>
-          </Box>
-        </Box>
-      </Box>
-    </Box>
-  )
-
-  const renderUncertaintyTableTwo = () => (
-    <Box>
-      <Box sx={{ overflowX: 'auto' }}>
-        <Box
-          component='table'
-          sx={{
-            width: '100%',
-            borderCollapse: 'separate',
-            borderSpacing: 0,
-            minWidth: 720
-          }}
-        >
-          <Box component='thead'>
-            <Box component='tr'>
-              <Box
-                component='th'
-                sx={{
-                  backgroundColor: '#F9FAFB',
-                  color: '#111827',
-                  fontWeight: 600,
-                  fontSize: '0.9rem',
-                  padding: '12px 16px',
-                  textAlign: 'left',
-                  borderBottom: '1px solid',
-                  borderColor: 'divider',
-                  minWidth: 160
-                }}
-              >
-                Loads Applied
-              </Box>
-              {UNCERTAINTY_TABLE_TWO_COLUMNS.map(column => (
-                <Box
-                  component='th'
-                  key={column}
-                  sx={{
-                    backgroundColor: '#F9FAFB',
-                    color: '#111827',
-                    fontWeight: 600,
-                    fontSize: '0.9rem',
-                    padding: '12px 16px',
-                    textAlign: 'center',
-                    borderBottom: '1px solid',
-                    borderColor: 'divider',
-                    minWidth: 140
-                  }}
-                >
-                  {column}
-                </Box>
-              ))}
-            </Box>
-          </Box>
-          <Box component='tbody'>
-            <Box component='tr'>
-              <Box
-                component='td'
-                sx={{
-                  padding: '16px',
-                  fontWeight: 600,
-                  color: '#111827',
-                  borderBottom: '1px solid',
-                  borderColor: 'divider',
-                  backgroundColor: 'background.paper'
-                }}
-              >
-                Combined Uncertainty
-              </Box>
-              {UNCERTAINTY_TABLE_TWO_COLUMNS.map(column => {
-                const key = column as keyof UncertaintyData['tableTwo']
-                return (
-                  <Box
-                    component='td'
-                    key={column}
-                    sx={{
-                      padding: '12px 16px',
-                      borderBottom: '1px solid',
-                      borderColor: 'divider',
-                      backgroundColor: 'background.paper'
-                    }}
-                  >
-                    <TextField
-                      size='small'
-                      fullWidth
-                      placeholder='Enter value'
-                      value={uncertaintyData.tableTwo[key]}
-                      onChange={e => handleUncertaintyChange('tableTwo', key, e.target.value)}
-                      inputProps={{ style: { textAlign: 'center' } }}
-                      sx={{
-                        '& .MuiOutlinedInput-root': {
-                          borderRadius: 1.5
-                        }
-                      }}
-                    />
-                  </Box>
-                )
-              })}
-            </Box>
-          </Box>
-        </Box>
-      </Box>
-    </Box>
-  )
 
   const handleAddDevice = () => {
     const trimmedData = Object.fromEntries(
@@ -1036,754 +981,427 @@ const Devices = () => {
 
           {/* Tab Panel: Add Device */}
           <TabPanel value={tabValue} index={1}>
-            <Paper
-              sx={{
-                p: { xs: 2, md: 3 },
-                borderRadius: CARD_RADIUS,
-                border: CARD_BORDER,
-                boxShadow: CARD_SHADOW,
-                backgroundColor: '#FFFFFF'
-              }}
-            >
-              <div className='row'>
-                {/* Customer Details Section */}
-                <div className='col-12 col-md-12'>
-                  <Box sx={{ mb: 3 }}>
-                    <Typography variant='h6' sx={{ mb: 2, color: 'primary.main', fontWeight: 600 }}>
-                      Customer Details
-                    </Typography>
-                    <div className='row'>
-                      <div className='col-12 col-md-4'>
-                        <FormControl fullWidth size='small' required sx={{ mb: 2 }}>
-                          <InputLabel>Customer</InputLabel>
-                          <Select
-                            value={formData.customer}
-                            label='Customer'
-                            onChange={e => handleInputChange('customer', e.target.value)}
-                          >
-                            {customers.map(customer => (
-                              <MenuItem key={customer.id} value={customer.name}>
-                                {customer.name} - {customer.company}
-                              </MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
-                      </div>
-                    </div>
-                  </Box>
-                </div>
-
-                {/* Device Information Section */}
-                <div className='col-12 col-md-12'>
-                  <Box sx={{ mb: 3 }}>
-                    <Typography variant='h6' sx={{ mb: 2, color: 'primary.main', fontWeight: 600 }}>
-                      Device Information
-                    </Typography>
-                    <div className='row'>
-                      <div className='col-12 col-md-4'>
-                        <TextField
-                          fullWidth
-                          label='Serial Number'
-                          required
-                          size='small'
-                          placeholder='Unique serial number'
-                          value={formData.serialNumber}
-                          onChange={e => handleInputChange('serialNumber', e.target.value)}
-                          sx={{ mb: 2 }}
-                        />
-                      </div>
-                      <div className='col-12 col-md-4'>
-                        <TextField
-                          fullWidth
-                          label='Device Name'
-                          required
-                          size='small'
-                          placeholder='e.g., Weighing Scale'
-                          value={formData.deviceName}
-                          onChange={e => handleInputChange('deviceName', e.target.value)}
-                          sx={{ mb: 2 }}
-                        />
-                      </div>
-                      <div className='col-12 col-md-4'>
-                        <TextField
-                          fullWidth
-                          label='Manufacturer'
-                          required
-                          size='small'
-                          placeholder='e.g., Mettler Toledo'
-                          value={formData.manufacturer}
-                          onChange={e => handleInputChange('manufacturer', e.target.value)}
-                          sx={{ mb: 2 }}
-                        />
-                      </div>
-                      <div className='col-12 col-md-4'>
-                        <TextField
-                          fullWidth
-                          label='Model'
-                          required
-                          size='small'
-                          placeholder='e.g., XS205'
-                          value={formData.model}
-                          onChange={e => handleInputChange('model', e.target.value)}
-                          sx={{ mb: 2 }}
-                        />
-                      </div>
-
-                      <div className='col-12 col-md-4'>
-                        <TextField
-                          fullWidth
-                          label='Tag Number'
-                          size='small'
-                          placeholder='Internal tag/ID'
-                          value={formData.tagNumber}
-                          onChange={e => handleInputChange('tagNumber', e.target.value)}
-                          sx={{ mb: 2 }}
-                        />
-                      </div>
-                      <div className='col-12 col-md-4'>
-                        <TextField
-                          fullWidth
-                          label='Terminal Model'
-                          size='small'
-                          placeholder='Terminal model'
-                          value={formData.terminalModel}
-                          onChange={e => handleInputChange('terminalModel', e.target.value)}
-                          sx={{ mb: 2 }}
-                        />
-                      </div>
-                      <div className='col-12 col-md-4'>
-                        <TextField
-                          fullWidth
-                          label='Max Capacity'
-                          size='small'
-                          placeholder='e.g., 200g, 5kg'
-                          value={formData.maxCapacity}
-                          onChange={e => handleInputChange('maxCapacity', e.target.value)}
-                          sx={{ mb: 2 }}
-                        />
-                      </div>
-                      <div className='col-12 col-md-4'>
-                        <TextField
-                          fullWidth
-                          label='Readability'
-                          size='small'
-                          placeholder='e.g., 0.01mg, 0.1g'
-                          value={formData.readability}
-                          onChange={e => handleInputChange('readability', e.target.value)}
-                          sx={{ mb: 2 }}
-                        />
-                      </div>
-                      <div className='col-12 col-md-4'>
-                        <TextField
-                          fullWidth
-                          label='Verification Value'
-                          size='small'
-                          placeholder='Verification value'
-                          value={formData.verificationValue}
-                          onChange={e => handleInputChange('verificationValue', e.target.value)}
-                          sx={{ mb: 2 }}
-                        />
-                      </div>
-                      <div className='col-12 col-md-4'>
-                        <TextField
-                          fullWidth
-                          label='Location'
-                          size='small'
-                          placeholder='Device location'
-                          value={formData.location}
-                          onChange={e => handleInputChange('location', e.target.value)}
-                          sx={{ mb: 2 }}
-                        />
-                      </div>
-                    </div>
-                  </Box>
-                </div>
-
-                {/* Linearity Section */}
-                <div className='col-12 col-md-12'>
-                  <Box sx={{ mb: 3 }}>
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        mb: 2,
-                        flexWrap: 'wrap',
-                        gap: 2
-                      }}
-                    >
-                      <Typography variant='h6' sx={{ color: 'primary.main', fontWeight: 600 }}>
-                        Linearity
-                      </Typography>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
-                        <TextField
-                          size='small'
-                          type='number'
-                          inputProps={{ min: 1 }}
-                          value={linearityRowsToAdd}
-                          onChange={e => setLinearityRowsToAdd(e.target.value)}
-                          onKeyDown={e => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault()
-                              handleAddLinearityRows()
-                            }
-                          }}
-                          sx={{ width: 120 }}
-                          placeholder='Rows'
-                        />
-                        <Button
-                          variant='outlined'
-                          startIcon={<AddIcon fontSize='small' />}
-                          onClick={handleAddLinearityRows}
-                          size='small'
-                          sx={{ textTransform: 'none' }}
-                        >
-                          Add Row
-                        </Button>
-                      </Box>
-                    </Box>
-
-                    <Box
-                      sx={{
-                        border: '1px solid',
-                        borderColor: 'divider',
-                        borderRadius: 1,
-                        overflow: 'hidden',
-                        backgroundColor: 'background.paper'
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 2,
-                          px: 2,
-                          py: 1.5,
-                          backgroundColor: 'action.hover',
-                          fontWeight: 600,
-                          minHeight: 48
-                        }}
-                      >
-                        <Typography sx={{ flex: 1.2, fontWeight: 600, fontSize: '0.9rem' }}>Nominal Value</Typography>
-                        <Typography sx={{ flex: 1.2, fontWeight: 600, fontSize: '0.9rem' }}>Reading</Typography>
-                        <Typography sx={{ flex: 1.1, fontWeight: 600, fontSize: '0.9rem' }}>Error</Typography>
-                        <Typography sx={{ flex: 1.2, fontWeight: 600, fontSize: '0.9rem' }}>Allowable Error</Typography>
-                        <Typography sx={{ flex: 1, fontWeight: 600, fontSize: '0.9rem' }}>Within Tolerances</Typography>
-                        <Typography sx={{ width: 60, fontWeight: 600, fontSize: '0.9rem', textAlign: 'center' }}>
-                          Action
-                        </Typography>
-                      </Box>
-
-                      {linearityRows.length === 0 ? (
-                        <Box sx={{ px: 2, py: 3 }}>
-                          <Typography variant='body2' color='text.secondary'>
-                            No linearity data added yet.
-                          </Typography>
-                        </Box>
-                      ) : (
-                        linearityRows.map((row, index) => (
-                          <Box
-                            key={index}
-                            sx={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: 2,
-                              px: 2,
-                              py: 1.5,
-                              borderTop: '1px solid',
-                              borderColor: 'divider',
-                              flexWrap: 'wrap'
-                            }}
-                          >
-                            <TextField
-                              placeholder='Enter value'
-                              size='small'
-                              fullWidth
-                              value={row.nominalValue}
-                              onChange={e => handleLinearityChange(index, 'nominalValue', e.target.value)}
-                              sx={{ flex: 1.2, minWidth: { xs: '100%', sm: 150 } }}
-                            />
-                            <TextField
-                              placeholder='Enter reading'
-                              size='small'
-                              fullWidth
-                              value={row.reading}
-                              onChange={e => handleLinearityChange(index, 'reading', e.target.value)}
-                              sx={{ flex: 1.2, minWidth: { xs: '100%', sm: 150 } }}
-                            />
-                            <TextField
-                              placeholder='Enter error'
-                              size='small'
-                              fullWidth
-                              value={row.error}
-                              onChange={e => handleLinearityChange(index, 'error', e.target.value)}
-                              sx={{ flex: 1.1, minWidth: { xs: '100%', sm: 130 } }}
-                            />
-                            <TextField
-                              placeholder='Enter allowable error'
-                              size='small'
-                              fullWidth
-                              value={row.allowableError}
-                              onChange={e => handleLinearityChange(index, 'allowableError', e.target.value)}
-                              sx={{ flex: 1.2, minWidth: { xs: '100%', sm: 150 } }}
-                            />
-                            <TextField
-                              placeholder='Yes/No'
-                              size='small'
-                              fullWidth
-                              value={row.withinTolerance}
-                              onChange={e => handleLinearityChange(index, 'withinTolerance', e.target.value)}
-                              sx={{ flex: 1, minWidth: { xs: '100%', sm: 120 } }}
-                            />
-                            <IconButton
-                              onClick={() => handleRemoveLinearityRow(index)}
-                              sx={{
-                                width: 40,
-                                height: 40,
-                                color: 'error.main',
-                                flexShrink: 0
-                              }}
-                              aria-label='Remove linearity row'
-                            >
-                              <DeleteIcon fontSize='small' />
-                            </IconButton>
-                          </Box>
-                        ))
-                      )}
-                    </Box>
-                  </Box>
-                </div>
-
-                {/* Eccentricity Section */}
-                <div className='col-12 col-md-12'>
-                  <Box sx={{ mb: 3 }}>
-                    <Typography variant='h6' sx={{ color: 'primary.main', fontWeight: 600, mb: 2 }}>
-                      Eccentricity
-                    </Typography>
-
-                    <Box
-                      sx={{
-                        border: '1px solid',
-                        borderColor: 'divider',
-                        borderRadius: 1,
-                        backgroundColor: 'background.paper',
-                        p: { xs: 2, sm: 3 }
-                      }}
-                    >
-                      <Box sx={{ mb: 3 }}>
-                        <Typography variant='subtitle2' sx={{ mb: 1, fontWeight: 600 }}>
-                          Test Weight
-                        </Typography>
-                        <TextField
-                          placeholder='Enter test weight'
-                          size='small'
-                          fullWidth
-                          value={eccentricityData.testWeight}
-                          onChange={e => handleEccentricityChange('testWeight', e.target.value)}
-                        />
-                      </Box>
-
-                      <Typography variant='subtitle1' sx={{ fontWeight: 600, mb: 1.5 }}>
-                        Positions
-                      </Typography>
-
-                      <Box
-                        sx={{
-                          display: { xs: 'none', sm: 'flex' },
-                          gap: 3,
-                          mb: 1,
-                          fontSize: '0.875rem',
-                          fontWeight: 600,
-                          color: 'text.secondary'
-                        }}
-                      >
-                        <Typography sx={{ width: 140, flexShrink: 0 }}>&nbsp;</Typography>
-                        <Typography sx={{ flex: 1 }}>Displayed Value</Typography>
-                        <Typography sx={{ flex: 1 }}>Deviation</Typography>
-                      </Box>
-
-                      {ECCENTRICITY_POSITIONS.map(position => (
-                        <Box
-                          key={position.key}
-                          sx={{
-                            display: 'flex',
-                            gap: 3,
-                            alignItems: 'center',
-                            flexWrap: { xs: 'wrap', sm: 'nowrap' },
-                            mb: 2
-                          }}
-                        >
-                          <Typography
-                            sx={{
-                              width: { xs: '100%', sm: 140 },
-                              flexShrink: 0,
-                              fontWeight: 600,
-                              color: 'text.primary'
-                            }}
-                          >
-                            {position.label}
-                          </Typography>
-                          <TextField
-                            placeholder='Displayed value'
-                            size='small'
-                            value={eccentricityData.positions[position.key].displayedValue}
-                            onChange={e =>
-                              handleEccentricityPositionChange(position.key, 'displayedValue', e.target.value)
-                            }
-                            sx={{ flex: 1, minWidth: { xs: '100%', sm: 200 }, mb: { xs: 1, sm: 0 } }}
-                          />
-                          <TextField
-                            placeholder='Deviation'
-                            size='small'
-                            value={eccentricityData.positions[position.key].deviation}
-                            onChange={e => handleEccentricityPositionChange(position.key, 'deviation', e.target.value)}
-                            sx={{ flex: 1, minWidth: { xs: '100%', sm: 200 } }}
-                          />
-                        </Box>
-                      ))}
-
-                      <div className='row'>
-                        <div className='col-12 col-md-4'>
-                          <Typography variant='subtitle2' sx={{ mb: 1, fontWeight: 600 }}>
-                            Maximum Deviation
-                          </Typography>
-                          <TextField
-                            placeholder='Enter maximum deviation'
-                            size='small'
-                            fullWidth
-                            value={eccentricityData.maximumDeviation}
-                            onChange={e => handleEccentricityChange('maximumDeviation', e.target.value)}
-                          />
-                        </div>
-                        <div className='col-12 col-md-4'>
-                          <Typography variant='subtitle2' sx={{ mb: 1, fontWeight: 600 }}>
-                            Allowable Deviation
-                          </Typography>
-                          <TextField
-                            placeholder='Enter allowable deviation'
-                            size='small'
-                            fullWidth
-                            value={eccentricityData.allowableDeviation}
-                            onChange={e => handleEccentricityChange('allowableDeviation', e.target.value)}
-                          />
-                        </div>
-                        <div className='col-12 col-md-4'>
-                          <Typography variant='subtitle2' sx={{ mb: 1, fontWeight: 600 }}>
-                            Within Tolerances
-                          </Typography>
-                          <TextField
-                            placeholder='Enter result'
-                            size='small'
-                            fullWidth
-                            value={eccentricityData.withinTolerance}
-                            onChange={e => handleEccentricityChange('withinTolerance', e.target.value)}
-                          />
-                        </div>
-                      </div>
-                    </Box>
-                  </Box>
-                </div>
-
-                {/* Repeatability Section */}
-                <div className='col-12 col-md-12'>
-                  <Box sx={{ mb: 3 }}>
-                    <Typography variant='h6' sx={{ color: 'primary.main', fontWeight: 600, mb: 2 }}>
-                      Repeatability
-                    </Typography>
-                    <Box
-                      sx={{
-                        border: '1px solid',
-                        borderColor: 'divider',
-                        borderRadius: 1,
-                        backgroundColor: 'background.paper',
-                        p: { xs: 2, sm: 3 }
-                      }}
-                    >
-                      <Box sx={{ mb: 3 }}>
-                        <Typography variant='subtitle2' sx={{ mb: 1, fontWeight: 600 }}>
-                          Test Weight
-                        </Typography>
-                        <TextField
-                          placeholder='Enter test weight'
-                          size='small'
-                          fullWidth
-                          value={repeatabilityData.testWeight}
-                          onChange={e => handleRepeatabilityChange('testWeight', e.target.value)}
-                        />
-                      </Box>
-
-                      <Box
-                        sx={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                          mb: 1.5,
-                          flexWrap: 'wrap',
-                          gap: 2
-                        }}
-                      >
-                        <Typography variant='subtitle1' sx={{ fontWeight: 600 }}>
-                          Measurements
-                        </Typography>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
-                          <TextField
-                            size='small'
-                            type='number'
-                            inputProps={{ min: 1 }}
-                            value={repeatabilityRowsToAdd}
-                            onChange={e => setRepeatabilityRowsToAdd(e.target.value)}
-                            onKeyDown={e => {
-                              if (e.key === 'Enter') {
-                                e.preventDefault()
-                                handleAddRepeatabilityRows()
-                              }
-                            }}
-                            sx={{ width: 120 }}
-                            placeholder='Rows'
-                          />
-                          <Button
-                            variant='outlined'
-                            startIcon={<AddIcon fontSize='small' />}
-                            size='small'
-                            sx={{ textTransform: 'none' }}
-                            onClick={handleAddRepeatabilityRows}
-                          >
-                            Add Row
-                          </Button>
-                        </Box>
-                      </Box>
-
-                      <Box
-                        sx={{
-                          border: '1px solid',
-                          borderColor: 'divider',
-                          borderRadius: 1,
-                          overflow: 'hidden'
-                        }}
-                      >
-                        <Box
-                          sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 2,
-                            px: 2,
-                            py: 1.5,
-                            backgroundColor: 'action.hover',
-                            fontWeight: 600,
-                            minHeight: 48
-                          }}
-                        >
-                          <Typography sx={{ flex: 1, fontWeight: 600, fontSize: '0.9rem' }}>
-                            Without Test Weight
-                          </Typography>
-                          <Typography sx={{ flex: 1, fontWeight: 600, fontSize: '0.9rem' }}>
-                            With Test Weight
-                          </Typography>
-                          <Typography sx={{ flex: 1, fontWeight: 600, fontSize: '0.9rem' }}>As Found</Typography>
-                          <Typography sx={{ width: 60, textAlign: 'center', fontWeight: 600, fontSize: '0.9rem' }}>
-                            Action
-                          </Typography>
-                        </Box>
-
-                        {repeatabilityData.measurements.length === 0 ? (
-                          <Box sx={{ px: 2, py: 3 }}>
-                            <Typography variant='body2' color='text.secondary'>
-                              No measurements added yet.
-                            </Typography>
-                          </Box>
-                        ) : (
-                          repeatabilityData.measurements.map((row, index) => (
-                            <Box
-                              key={index}
-                              sx={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 2,
-                                px: 2,
-                                py: 1.5,
-                                borderTop: '1px solid',
-                                borderColor: 'divider',
-                                flexWrap: 'wrap'
-                              }}
-                            >
-                              <TextField
-                                placeholder='Enter value'
-                                size='small'
-                                fullWidth
-                                value={row.withoutTestWeight}
-                                onChange={e => handleRepeatabilityRowChange(index, 'withoutTestWeight', e.target.value)}
-                                sx={{ flex: 1, minWidth: { xs: '100%', sm: 160 } }}
-                              />
-                              <TextField
-                                placeholder='Enter value'
-                                size='small'
-                                fullWidth
-                                value={row.withTestWeight}
-                                onChange={e => handleRepeatabilityRowChange(index, 'withTestWeight', e.target.value)}
-                                sx={{ flex: 1, minWidth: { xs: '100%', sm: 160 } }}
-                              />
-                              <TextField
-                                placeholder='Enter value'
-                                size='small'
-                                fullWidth
-                                value={row.asFound}
-                                onChange={e => handleRepeatabilityRowChange(index, 'asFound', e.target.value)}
-                                sx={{ flex: 1, minWidth: { xs: '100%', sm: 160 } }}
-                              />
-                              <IconButton
-                                onClick={() => handleRemoveRepeatabilityRow(index)}
-                                sx={{
-                                  width: 40,
-                                  height: 40,
-                                  color: 'error.main',
-                                  flexShrink: 0
-                                }}
-                                aria-label='Remove repeatability row'
-                              >
-                                <DeleteIcon fontSize='small' />
-                              </IconButton>
-                            </Box>
-                          ))
-                        )}
-                      </Box>
-
-                      <div className='row' style={{ marginTop: 16 }}>
-                        <div className='col-12 col-md-4'>
-                          <Typography variant='subtitle2' sx={{ mb: 1, fontWeight: 600 }}>
-                            Deviation
-                          </Typography>
-                          <TextField
-                            placeholder='Enter deviation'
-                            size='small'
-                            fullWidth
-                            value={repeatabilityData.deviation}
-                            onChange={e => handleRepeatabilityChange('deviation', e.target.value)}
-                          />
-                        </div>
-                        <div className='col-12 col-md-4'>
-                          <Typography variant='subtitle2' sx={{ mb: 1, fontWeight: 600 }}>
-                            Allowable Error
-                          </Typography>
-                          <TextField
-                            placeholder='Enter allowable error'
-                            size='small'
-                            fullWidth
-                            value={repeatabilityData.allowableError}
-                            onChange={e => handleRepeatabilityChange('allowableError', e.target.value)}
-                          />
-                        </div>
-                        <div className='col-12 col-md-4'>
-                          <Typography variant='subtitle2' sx={{ mb: 1, fontWeight: 600 }}>
-                            Within Tolerances
-                          </Typography>
-                          <TextField
-                            placeholder='Enter result'
-                            size='small'
-                            fullWidth
-                            value={repeatabilityData.withinTolerance}
-                            onChange={e => handleRepeatabilityChange('withinTolerance', e.target.value)}
-                          />
-                        </div>
-                      </div>
-                    </Box>
-                  </Box>
-                </div>
-
-                {/* Uncertainty Section */}
-                <div className='col-12 col-md-12'>
-                  <Box sx={{ mb: 3 }}>
-                    <Typography variant='h6' sx={{ color: 'primary.main', fontWeight: 600, mb: 2 }}>
-                      Uncertainty
-                    </Typography>
-                    <Box
-                      sx={{
-                        border: '1px solid',
-                        borderColor: 'divider',
-                        borderRadius: 2,
-                        boxShadow: '0 10px 30px -12px rgba(15, 23, 42, 0.25)',
-                        backgroundColor: 'background.paper',
-                        p: { xs: 2, sm: 3 },
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: 3
-                      }}
-                    >
-                      {renderUncertaintyTableOne()}
-                      {renderUncertaintyTableTwo()}
-                    </Box>
-                  </Box>
-                </div>
-
-                {/* Action Buttons */}
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+              <Paper sx={{ ...cardBaseStyles }}>
+                <Typography variant='h6' sx={{ fontWeight: 600, color: TITLE_COLOR, mb: 0.5 }}>
+                  Customer Details
+                </Typography>
+                <Typography variant='body2' sx={{ color: SUBTEXT_COLOR, mb: 2.5 }}>
+                  Assign the device to a customer and specify where it is located.
+                </Typography>
                 <Box
                   sx={{
-                    display: 'flex',
+                    display: 'grid',
                     gap: 2,
-                    justifyContent: { xs: 'stretch', sm: 'space-between' },
-                    flexWrap: 'wrap',
-                    flexDirection: { xs: 'column', sm: 'row' },
-                    mt: 2
+                    gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' }
                   }}
                 >
-                  <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
-                    <Button
-                      variant='contained'
-                      size='medium'
-                      onClick={handleAddDevice}
-                      sx={{
-                        textTransform: 'none',
-                        width: { xs: '100%', sm: 'auto' },
-                        borderRadius: '999px',
-                        px: 3,
-                        py: 1.15,
-                        backgroundColor: PRIMARY_COLOR,
-                        boxShadow: '0 8px 16px rgba(37, 99, 235, 0.18)',
-                        '&:hover': { backgroundColor: '#1D4ED8' }
-                      }}
+                  <FormControl fullWidth size='small' required sx={{ ...inputStyles }}>
+                    <InputLabel>Customer</InputLabel>
+                    <Select
+                      value={formData.customer}
+                      label='Customer'
+                      onChange={e => handleInputChange('customer', e.target.value)}
                     >
-                      {editingDeviceId ? 'Save Changes' : 'Add Device'}
+                      {customers.map(customer => (
+                        <MenuItem key={customer.id} value={customer.name}>
+                          {customer.name} - {customer.company}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                  <TextField
+                    fullWidth
+                    size='small'
+                    label='Location'
+                    placeholder='Device location'
+                    value={formData.location}
+                    onChange={e => handleInputChange('location', e.target.value)}
+                    sx={{ ...inputStyles }}
+                  />
+                </Box>
+              </Paper>
+
+              <Paper sx={{ ...cardBaseStyles }}>
+                <Typography variant='h6' sx={{ fontWeight: 600, color: TITLE_COLOR, mb: 0.5 }}>
+                  Device Information
+                </Typography>
+                <Typography variant='body2' sx={{ color: SUBTEXT_COLOR, mb: 2.5 }}>
+                  Update core device specifications.
+                </Typography>
+                <Box
+                  sx={{
+                    display: 'grid',
+                    gap: 2,
+                    gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }
+                  }}
+                >
+                  <TextField
+                    fullWidth
+                    size='small'
+                    label='Serial Number'
+                    required
+                    placeholder='Unique serial number'
+                    value={formData.serialNumber}
+                    onChange={e => handleInputChange('serialNumber', e.target.value)}
+                    sx={{ ...inputStyles }}
+                  />
+                  <TextField
+                    fullWidth
+                    size='small'
+                    label='Device Name'
+                    placeholder='e.g., Weighing Scale'
+                    value={formData.deviceName}
+                    onChange={e => handleInputChange('deviceName', e.target.value)}
+                    sx={{ ...inputStyles }}
+                  />
+                  <TextField
+                    fullWidth
+                    size='small'
+                    label='Manufacturer'
+                    placeholder='e.g., Mettler Toledo'
+                    value={formData.manufacturer}
+                    onChange={e => handleInputChange('manufacturer', e.target.value)}
+                    sx={{ ...inputStyles }}
+                  />
+                  <TextField
+                    fullWidth
+                    size='small'
+                    label='Model'
+                    placeholder='e.g., XS205'
+                    value={formData.model}
+                    onChange={e => handleInputChange('model', e.target.value)}
+                    sx={{ ...inputStyles }}
+                  />
+                  <TextField
+                    fullWidth
+                    size='small'
+                    label='Tag Number'
+                    placeholder='Internal tag/ID'
+                    value={formData.tagNumber}
+                    onChange={e => handleInputChange('tagNumber', e.target.value)}
+                    sx={{ ...inputStyles }}
+                  />
+                  <TextField
+                    fullWidth
+                    size='small'
+                    label='Terminal Model'
+                    placeholder='Terminal model'
+                    value={formData.terminalModel}
+                    onChange={e => handleInputChange('terminalModel', e.target.value)}
+                    sx={{ ...inputStyles }}
+                  />
+                  <TextField
+                    fullWidth
+                    size='small'
+                    label='Max Capacity'
+                    placeholder='e.g., 200g, 5kg'
+                    value={formData.maxCapacity}
+                    onChange={e => handleInputChange('maxCapacity', e.target.value)}
+                    sx={{ ...inputStyles }}
+                  />
+                  <TextField
+                    fullWidth
+                    size='small'
+                    label='Readability'
+                    placeholder='e.g., 0.01mg, 0.1g'
+                    value={formData.readability}
+                    onChange={e => handleInputChange('readability', e.target.value)}
+                    sx={{ ...inputStyles }}
+                  />
+                  <TextField
+                    fullWidth
+                    size='small'
+                    label='Verification Value'
+                    placeholder='Verification value'
+                    value={formData.verificationValue}
+                    onChange={e => handleInputChange('verificationValue', e.target.value)}
+                    sx={{ ...inputStyles }}
+                  />
+                </Box>
+              </Paper>
+
+              <DataSectionCard
+                title='Linearity'
+                description='Record linearity measurements and tolerances.'
+                extraContent={
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
+                    <TextField
+                      size='small'
+                      type='number'
+                      label='Rows'
+                      value={linearityRowsToAdd}
+                      onChange={e => setLinearityRowsToAdd(e.target.value)}
+                      inputProps={{ min: 1 }}
+                      sx={{ width: { xs: '100%', sm: 120 }, ...inputStyles }}
+                    />
+                    <Button
+                      size='small'
+                      variant='outlined'
+                      startIcon={<AddIcon fontSize='small' />}
+                      onClick={handleAddLinearityRows}
+                      sx={{ ...smallOutlinedButtonStyles }}
+                    >
+                      Add Row
                     </Button>
-                    {editingDeviceId && (
-                      <Button
-                        variant='outlined'
-                        size='medium'
-                        onClick={handleCancelEdit}
+                  </Box>
+                }
+              >
+                <ResponsiveStyledTable
+                  headers={['Nominal Value', 'Reading', 'Error', 'Allowable Error', 'Within Tolerances', 'Actions']}
+                  rows={linearityRows.map((row, index) => [
+                    row.nominalValue,
+                    row.reading,
+                    row.error,
+                    row.allowableError,
+                    row.withinTolerance,
+                    index
+                  ])}
+                  renderCell={(value, columnIndex, rowIndex) => {
+                    if (columnIndex === 5) {
+                      return (
+                        <Tooltip title='Delete Row' arrow>
+                          <IconButton size='small' color='error' onClick={() => handleRemoveLinearityRow(rowIndex)}>
+                            <DeleteIcon fontSize='small' />
+                          </IconButton>
+                        </Tooltip>
+                      )
+                    }
+                    const fieldKeys: Array<keyof LinearityRow> = [
+                      'nominalValue',
+                      'reading',
+                      'error',
+                      'allowableError',
+                      'withinTolerance'
+                    ]
+                    const key = fieldKeys[columnIndex]
+                    return (
+                      <TextField
+                        value={(linearityRows[rowIndex][key] as string) || ''}
+                        onChange={e => handleLinearityChange(rowIndex, key, e.target.value)}
+                        size='small'
+                        sx={{ ...inputStyles, width: '100%' }}
+                        placeholder='Enter value'
+                      />
+                    )
+                  }}
+                />
+              </DataSectionCard>
+
+              <DataSectionCard title='Eccentricity' description='Log eccentricity positions and tolerances.'>
+                <Box
+                  sx={{
+                    display: 'grid',
+                    gap: 2,
+                    gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' },
+                    mb: 3
+                  }}
+                >
+                  {[
+                    { label: 'Test Weight', key: 'testWeight' },
+                    { label: 'Maximum Deviation', key: 'maximumDeviation' },
+                    { label: 'Allowable Deviation', key: 'allowableDeviation' },
+                    { label: 'Within Tolerances', key: 'withinTolerance' }
+                  ].map(item => (
+                    <TextField
+                      key={item.label}
+                      fullWidth
+                      size='small'
+                      label={item.label}
+                      value={(eccentricityData as any)[item.key] || ''}
+                      onChange={e => handleEccentricityChange(item.key as any, e.target.value)}
+                      sx={{ ...inputStyles }}
+                    />
+                  ))}
+                </Box>
+
+                <Box
+                  sx={{
+                    display: 'grid',
+                    gap: 2,
+                    gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }
+                  }}
+                >
+                  {ECCENTRICITY_POSITIONS.map(position => {
+                    const positionKey = position.key as keyof typeof eccentricityData.positions
+                    return (
+                      <Paper
+                        key={position.key}
+                        elevation={0}
                         sx={{
-                          textTransform: 'none',
-                          width: { xs: '100%', sm: 'auto' },
-                          borderRadius: '999px',
-                          px: 3,
-                          py: 1.15,
-                          borderColor: 'rgba(148, 163, 184, 0.6)',
-                          color: SUBTEXT_COLOR,
-                          '&:hover': { borderColor: SUBTEXT_COLOR, backgroundColor: '#F3F4F6' }
+                          border: CARD_BORDER,
+                          boxShadow: '0 1px 2px rgba(15, 23, 42, 0.04)',
+                          borderRadius: 2,
+                          p: 2,
+                          backgroundColor: '#FFFFFF'
                         }}
                       >
-                        Cancel Edit
-                      </Button>
-                    )}
+                        <Typography variant='subtitle2' sx={{ color: LABEL_COLOR, fontWeight: 600, mb: 1 }}>
+                          {position.label}
+                        </Typography>
+                        <TextField
+                          fullWidth
+                          size='small'
+                          label='Displayed Value'
+                          value={eccentricityData.positions[positionKey].displayedValue}
+                          onChange={e =>
+                            handleEccentricityPositionChange(positionKey, 'displayedValue', e.target.value)
+                          }
+                          sx={{ ...inputStyles, mb: 2 }}
+                        />
+                        <TextField
+                          fullWidth
+                          size='small'
+                          label='Deviation'
+                          value={eccentricityData.positions[positionKey].deviation}
+                          onChange={e => handleEccentricityPositionChange(positionKey, 'deviation', e.target.value)}
+                          sx={{ ...inputStyles }}
+                        />
+                      </Paper>
+                    )
+                  })}
+                </Box>
+              </DataSectionCard>
+
+              <DataSectionCard
+                title='Repeatability'
+                description='Capture repeatability measurements and deviations.'
+                extraContent={
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
+                    <TextField
+                      size='small'
+                      type='number'
+                      label='Rows'
+                      value={repeatabilityRowsToAdd}
+                      onChange={e => setRepeatabilityRowsToAdd(e.target.value)}
+                      inputProps={{ min: 1 }}
+                      sx={{ width: { xs: '100%', sm: 120 }, ...inputStyles }}
+                    />
+                    <Button
+                      size='small'
+                      variant='outlined'
+                      startIcon={<AddIcon fontSize='small' />}
+                      onClick={handleAddRepeatabilityRows}
+                      sx={{ ...smallOutlinedButtonStyles }}
+                    >
+                      Add Row
+                    </Button>
                   </Box>
-                  <Button
-                    variant='outlined'
-                    size='medium'
-                    endIcon={<ArrowForwardIcon />}
-                    onClick={() => navigate('/certificates')}
-                    sx={{
-                      textTransform: 'none',
-                      width: { xs: '100%', sm: 'auto' },
-                      borderRadius: '999px',
-                      px: 3,
-                      py: 1.15,
-                      borderColor: PRIMARY_COLOR,
-                      color: PRIMARY_COLOR,
-                      '&:hover': { borderColor: '#1D4ED8', backgroundColor: 'rgba(37, 99, 235, 0.08)' }
-                    }}
-                  >
-                    Next: Calibration Module →
+                }
+              >
+                <Box
+                  sx={{
+                    display: 'grid',
+                    gap: 2,
+                    gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' },
+                    mb: 2
+                  }}
+                >
+                  {[
+                    { label: 'Test Weight', key: 'testWeight' },
+                    { label: 'Deviation', key: 'deviation' },
+                    { label: 'Allowable Error', key: 'allowableError' },
+                    { label: 'Within Tolerances', key: 'withinTolerance' }
+                  ].map(item => (
+                    <TextField
+                      key={item.label}
+                      fullWidth
+                      size='small'
+                      label={item.label}
+                      value={(repeatabilityData as any)[item.key] || ''}
+                      onChange={e => handleRepeatabilityChange(item.key as any, e.target.value)}
+                      sx={{ ...inputStyles }}
+                    />
+                  ))}
+                </Box>
+
+                <ResponsiveStyledTable
+                  headers={['Without Test Weight', 'With Test Weight', 'As Found', 'Actions']}
+                  rows={repeatabilityData.measurements.map((row, index) => [
+                    row.withoutTestWeight,
+                    row.withTestWeight,
+                    row.asFound,
+                    index
+                  ])}
+                  renderCell={(value, columnIndex, rowIndex) => {
+                    if (columnIndex === 3) {
+                      return (
+                        <Tooltip title='Delete Row' arrow>
+                          <IconButton size='small' color='error' onClick={() => handleRemoveRepeatabilityRow(rowIndex)}>
+                            <DeleteIcon fontSize='small' />
+                          </IconButton>
+                        </Tooltip>
+                      )
+                    }
+                    const fieldKeys: Array<keyof RepeatabilityMeasurement> = [
+                      'withoutTestWeight',
+                      'withTestWeight',
+                      'asFound'
+                    ]
+                    const key = fieldKeys[columnIndex]
+                    return (
+                      <TextField
+                        value={(repeatabilityData.measurements[rowIndex][key] as string) || ''}
+                        onChange={e => handleRepeatabilityRowChange(rowIndex, key, e.target.value)}
+                        size='small'
+                        sx={{ ...inputStyles, width: '100%' }}
+                        placeholder='Enter value'
+                      />
+                    )
+                  }}
+                />
+              </DataSectionCard>
+
+              <DataSectionCard title='Uncertainty' description='Review uncertainty matrices for different load ranges.'>
+                <Typography variant='subtitle2' sx={{ color: LABEL_COLOR, fontWeight: 500, mb: 1.5 }}>
+                  Loads Applied – Table 1
+                </Typography>
+                <ResponsiveStyledTable
+                  headers={UNCERTAINTY_TABLE_ONE_COLUMNS.map(column => column.toUpperCase())}
+                  rows={[
+                    UNCERTAINTY_TABLE_ONE_COLUMNS.map(column => (
+                      <TextField
+                        key={column}
+                        value={uncertaintyData.tableOne[column] || ''}
+                        onChange={e => handleUncertaintyChange('tableOne', column, e.target.value)}
+                        size='small'
+                        sx={{ ...inputStyles, width: '100%' }}
+                        placeholder='Enter value'
+                      />
+                    ))
+                  ]}
+                  renderCell={undefined}
+                />
+
+                <Typography variant='subtitle2' sx={{ color: LABEL_COLOR, fontWeight: 500, mb: 1.5, mt: 3 }}>
+                  Loads Applied – Table 2
+                </Typography>
+                <ResponsiveStyledTable
+                  headers={UNCERTAINTY_TABLE_TWO_COLUMNS.map(column => column.toUpperCase())}
+                  rows={[
+                    UNCERTAINTY_TABLE_TWO_COLUMNS.map(column => (
+                      <TextField
+                        key={column}
+                        value={uncertaintyData.tableTwo[column] || ''}
+                        onChange={e => handleUncertaintyChange('tableTwo', column, e.target.value)}
+                        size='small'
+                        sx={{ ...inputStyles, width: '100%' }}
+                        placeholder='Enter value'
+                      />
+                    ))
+                  ]}
+                  renderCell={undefined}
+                />
+              </DataSectionCard>
+
+              <Paper sx={{ ...cardBaseStyles }}>
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, flexWrap: 'wrap' }}>
+                  <Button onClick={handleAddDevice} variant='contained' sx={{ ...primaryButtonStyles }}>
+                    {editingDeviceId ? 'Save Changes' : 'Save Device'}
                   </Button>
                 </Box>
-              </div>
-            </Paper>
+              </Paper>
+            </Box>
           </TabPanel>
         </Box>
       </Box>
