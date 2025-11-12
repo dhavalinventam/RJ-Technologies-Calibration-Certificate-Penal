@@ -62,7 +62,7 @@ const cardBaseStyles = {
 
 const inputStyles = {
   '& .MuiOutlinedInput-root': {
-    borderRadius: '12px',
+    borderRadius: '8px',
     backgroundColor: '#FFFFFF',
     transition: 'box-shadow 0.2s ease, border-color 0.2s ease',
     '& fieldset': { borderColor: 'rgba(148, 163, 184, 0.4)' },
@@ -847,7 +847,7 @@ const Devices = () => {
                   }}
                   sx={{
                     '& .MuiOutlinedInput-root': {
-                      borderRadius: '12px',
+                      borderRadius: '8px',
                       backgroundColor: '#FFFFFF',
                       transition: 'box-shadow 0.2s ease',
                       '& fieldset': { borderColor: 'rgba(148, 163, 184, 0.4)' },

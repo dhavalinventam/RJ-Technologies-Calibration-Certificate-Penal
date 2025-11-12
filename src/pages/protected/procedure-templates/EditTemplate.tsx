@@ -33,7 +33,7 @@ const EditTemplate = () => {
 
   const inputStyles = {
     '& .MuiOutlinedInput-root': {
-      borderRadius: '12px',
+      borderRadius: '8px',
       backgroundColor: '#FFFFFF',
       transition: 'box-shadow 0.2s ease, border-color 0.2s ease',
       '& fieldset': { borderColor: 'rgba(148, 163, 184, 0.4)' },
@@ -264,7 +264,7 @@ const EditTemplate = () => {
                 <Typography
                   variant='h5'
                   component='h1'
-                  sx={{ fontWeight: 700, color: TITLE_COLOR, fontSize: { xs: '1.5rem', md: '1.75rem' }, mb: 0.25 }}
+                  sx={{ fontWeight: 700, color: TITLE_COLOR, fontSize: { xs: '1.2rem', md: '1.5rem' }, mb: 0.25 }}
                 >
                   Edit Template
                 </Typography>
