@@ -311,6 +311,20 @@ const createInitialRepeatability = () => ({
   withinTolerances: 'YES'
 })
 
+const uncertaintyTableOneColumns = ['xi', '0 kg', '20 kg', '50 kg', '70 kg'] as const
+const uncertaintyTableTwoColumns = ['xi', '100 kg', '120 kg', '150 kg', 'N/A'] as const
+
+const createInitialUncertainty = () => ({
+  tableOne: Object.fromEntries(uncertaintyTableOneColumns.map(column => [column, ''])) as Record<
+    (typeof uncertaintyTableOneColumns)[number],
+    string
+  >,
+  tableTwo: Object.fromEntries(uncertaintyTableTwoColumns.map(column => [column, ''])) as Record<
+    (typeof uncertaintyTableTwoColumns)[number],
+    string
+  >
+})
+
 const CreateCertificate = () => {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
@@ -404,14 +418,32 @@ const CreateCertificate = () => {
   // Repeatability (Step 6) data
   const [repeatability, setRepeatability] = useState(() => createInitialRepeatability())
 
+  // Uncertainty (Step 7) data
+  const [uncertainty, setUncertainty] = useState(() => createInitialUncertainty())
+
   const resetDeviceDependentState = () => {
     setDevice(createInitialDeviceFields())
     setLinearityRecords(createInitialLinearityRecords())
     setEccentricity(createInitialEccentricity())
     setRepeatability(createInitialRepeatability())
+    setUncertainty(createInitialUncertainty())
     setCustomer(createInitialCustomerFields())
     setSelectedCustomer(null)
     setCustomerNameInputValue('')
+  }
+
+  const updateUncertaintyValue = (
+    table: 'tableOne' | 'tableTwo',
+    column: (typeof uncertaintyTableOneColumns)[number] | (typeof uncertaintyTableTwoColumns)[number],
+    value: string
+  ) => {
+    setUncertainty(prev => ({
+      ...prev,
+      [table]: {
+        ...prev[table],
+        [column]: value
+      }
+    }))
   }
 
   const applyDeviceData = deviceRecord => {
@@ -478,6 +510,26 @@ const CreateCertificate = () => {
       })
     } else {
       setRepeatability(createInitialRepeatability())
+    }
+
+    if (deviceRecord.uncertaintyData) {
+      const template = createInitialUncertainty()
+      const mappedTableOne = { ...template.tableOne }
+      const mappedTableTwo = { ...template.tableTwo }
+
+      uncertaintyTableOneColumns.forEach(column => {
+        mappedTableOne[column] = deviceRecord.uncertaintyData.tableOne?.[column] || ''
+      })
+      uncertaintyTableTwoColumns.forEach(column => {
+        mappedTableTwo[column] = deviceRecord.uncertaintyData.tableTwo?.[column] || ''
+      })
+
+      setUncertainty({
+        tableOne: mappedTableOne,
+        tableTwo: mappedTableTwo
+      })
+    } else {
+      setUncertainty(createInitialUncertainty())
     }
 
     const matchedCustomerName = (deviceRecord.customer || '').trim()
@@ -2615,6 +2667,61 @@ const CreateCertificate = () => {
                     />
                   </div>
                 </div>
+              </Box>
+            ) : activeStep === 7 ? (
+              <Box className='cc_card'>
+                <Box sx={{ mb: 2 }}>
+                  <Typography variant='h6' sx={{ fontWeight: 600, mb: 0.5, fontSize: '1.125rem' }}>
+                    Uncertainty
+                  </Typography>
+                  <Typography variant='body2' color='text.secondary'>
+                    Capture uncertainty matrices for loads applied during calibration.
+                  </Typography>
+                </Box>
+
+                <Box sx={{ mb: 3 }}>
+                  <Typography variant='subtitle2' sx={{ mb: 1, fontWeight: 600 }}>
+                    Loads Applied – Table 1
+                  </Typography>
+                  <div className='row'>
+                    {uncertaintyTableOneColumns.map(column => (
+                      <div key={column} className='col-12 col-sm-6 col-md-4 col-lg-3' style={{ marginBottom: '16px' }}>
+                        <Typography variant='body2' sx={{ mb: 0.7 }} component='label' className='cc_label'>
+                          {column.toUpperCase()}
+                        </Typography>
+                        <TextField
+                          size='small'
+                          fullWidth
+                          placeholder='Enter value'
+                          value={uncertainty.tableOne[column]}
+                          onChange={e => updateUncertaintyValue('tableOne', column, e.target.value)}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </Box>
+
+                <Box>
+                  <Typography variant='subtitle2' sx={{ mb: 1, fontWeight: 600 }}>
+                    Loads Applied – Table 2
+                  </Typography>
+                  <div className='row'>
+                    {uncertaintyTableTwoColumns.map(column => (
+                      <div key={column} className='col-12 col-sm-6 col-md-4 col-lg-3' style={{ marginBottom: '16px' }}>
+                        <Typography variant='body2' sx={{ mb: 0.7 }} component='label' className='cc_label'>
+                          {column.toUpperCase()}
+                        </Typography>
+                        <TextField
+                          size='small'
+                          fullWidth
+                          placeholder='Enter value'
+                          value={uncertainty.tableTwo[column]}
+                          onChange={e => updateUncertaintyValue('tableTwo', column, e.target.value)}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </Box>
               </Box>
             ) : (
               <Box className='cc_card'>
