@@ -21,5 +21,10 @@ export default defineConfig({
       '@services': path.resolve(__dirname, 'src/services'),
       '@utils': path.resolve(__dirname, 'src/utils')
     }
+  },
+  server: {
+    host: '0.0.0.0', // Allow access from other devices
+    port: 5173, // Default Vite port
+    open: false // Set true if you want it to auto-open in browser
   }
 })
