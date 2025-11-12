@@ -30,6 +30,7 @@ import './CreateCertificate.css'
 import { useNavigate } from 'react-router-dom'
 import jsPDF from 'jspdf'
 import { Device, defaultDevices } from '@/pages/protected/devices/deviceData'
+import { CUSTOMER_STORAGE_KEY } from '@/pages/protected/customers/customerData'
 
 const PRIMARY_COLOR = '#2563EB'
 const PAGE_BACKGROUND = '#F8FAFC'
@@ -157,6 +158,97 @@ const defaultProcedureTemplates = [
   }
 ]
 
+const deriveCityStateFromLocation = (location: string | undefined) => {
+  if (!location || typeof location !== 'string') {
+    return { city: '', state: '' }
+  }
+  const parts = location
+    .split(',')
+    .map(part => part.trim())
+    .filter(Boolean)
+  return {
+    city: parts[0] || '',
+    state: parts[1] || ''
+  }
+}
+
+const normalizeCustomerOption = (option: any) => {
+  if (!option || typeof option !== 'object') {
+    return {
+      id: `customer-${Date.now()}`,
+      customerName: '',
+      company: '',
+      address: '',
+      city: '',
+      state: '',
+      zip: '',
+      contactPerson: '',
+      mobile: '',
+      location: ''
+    }
+  }
+
+  const customerName = option.customerName || option.name || option.customer || ''
+  const company = option.company || option.companyName || ''
+  const address = option.address || option.addressLine || option.street || ''
+  const rawLocation = option.location || ''
+  const { city: derivedCity, state: derivedState } = deriveCityStateFromLocation(rawLocation)
+  const city = option.city || option.town || derivedCity
+  const state = option.state || option.stateProvince || option.province || derivedState
+  const zip = option.zip || option.zipCode || option.postalCode || option.pincode || option.pin || ''
+  const contactPerson = option.contactPerson || option.contact || option.contactName || option.person || ''
+  const mobile =
+    option.mobile || option.mobileNumber || option.phone || option.phoneNumber || option.contactNumber || ''
+
+  const sanitizedIdBase = (customerName || company || 'unknown')
+    .toString()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+  const normalizedId = option.id || (sanitizedIdBase ? `customer-${sanitizedIdBase}` : `customer-${Date.now()}`)
+
+  return {
+    ...option,
+    id: normalizedId,
+    customerName,
+    company,
+    address,
+    city,
+    state,
+    zip,
+    pincode: option.pincode || zip,
+    contactPerson,
+    mobile,
+    location: rawLocation || `${city}${state ? `, ${state}` : ''}`
+  }
+}
+
+const buildCustomerOptions = (records: any[]) => {
+  if (!Array.isArray(records)) return []
+  return records.filter(Boolean).map(normalizeCustomerOption)
+}
+
+const findStoredCustomerByName = (name: string) => {
+  if (!name) return null
+  try {
+    const stored = localStorage.getItem(CUSTOMER_STORAGE_KEY)
+    if (!stored) return null
+    const parsed = JSON.parse(stored)
+    if (!Array.isArray(parsed)) return null
+    const lowerName = name.toLowerCase()
+    for (const item of parsed) {
+      const normalized = normalizeCustomerOption(item)
+      if (normalized.customerName.toLowerCase() === lowerName || normalized.company.toLowerCase() === lowerName) {
+        return normalized
+      }
+    }
+    return null
+  } catch (error) {
+    console.error('Failed to read stored customer data', error)
+    return null
+  }
+}
+
 const ECCENTRICITY_POSITION_MAP = [
   { key: 'center', label: 'Center' },
   { key: 'leftFront', label: 'Left Front' },
@@ -164,6 +256,16 @@ const ECCENTRICITY_POSITION_MAP = [
   { key: 'rightRear', label: 'Right Rear' },
   { key: 'rightFront', label: 'Right Front' }
 ] as const
+
+const createInitialCustomerFields = () => ({
+  company: '',
+  address: '',
+  city: '',
+  state: '',
+  zip: '',
+  contact: '',
+  mobile: ''
+})
 
 const createInitialDeviceFields = () => ({
   manufacturer: '',
@@ -230,7 +332,7 @@ const CreateCertificate = () => {
   const [selectedDeviceName, setSelectedDeviceName] = useState<string | null>(null)
   const [deviceNameInputValue, setDeviceNameInputValue] = useState('')
   const [serialNumberInputValue, setSerialNumberInputValue] = useState('')
-  const [customerOptions, setCustomerOptions] = useState(defaultCustomerOptions)
+  const [customerOptions, setCustomerOptions] = useState(() => buildCustomerOptions(defaultCustomerOptions))
   const [selectedCustomer, setSelectedCustomer] = useState(null)
   const [customerNameInputValue, setCustomerNameInputValue] = useState('')
   const [procedureTemplateOptions, setProcedureTemplateOptions] = useState(defaultProcedureTemplates)
@@ -261,16 +363,16 @@ const CreateCertificate = () => {
       if (storedCustomers) {
         const parsed = JSON.parse(storedCustomers)
         if (Array.isArray(parsed) && parsed.length > 0) {
-          setCustomerOptions(parsed)
+          setCustomerOptions(buildCustomerOptions(parsed))
         } else {
-          setCustomerOptions(defaultCustomerOptions)
+          setCustomerOptions(buildCustomerOptions(defaultCustomerOptions))
         }
       } else {
-        setCustomerOptions(defaultCustomerOptions)
+        setCustomerOptions(buildCustomerOptions(defaultCustomerOptions))
       }
     } catch (error) {
       console.error('Failed to load customers:', error)
-      setCustomerOptions(defaultCustomerOptions)
+      setCustomerOptions(buildCustomerOptions(defaultCustomerOptions))
     }
   }, [])
   const [calibrationDetails, setCalibrationDetails] = useState({
@@ -285,15 +387,7 @@ const CreateCertificate = () => {
   const calibrationSignatureInputRef = useRef(null)
 
   // Customer (Step 1) fields
-  const [customer, setCustomer] = useState({
-    company: '',
-    address: '',
-    city: '',
-    state: '',
-    zip: '',
-    contact: '',
-    mobile: ''
-  })
+  const [customer, setCustomer] = useState(() => createInitialCustomerFields())
 
   // Device (Step 2) fields
   const [device, setDevice] = useState(() => createInitialDeviceFields())
@@ -315,6 +409,9 @@ const CreateCertificate = () => {
     setLinearityRecords(createInitialLinearityRecords())
     setEccentricity(createInitialEccentricity())
     setRepeatability(createInitialRepeatability())
+    setCustomer(createInitialCustomerFields())
+    setSelectedCustomer(null)
+    setCustomerNameInputValue('')
   }
 
   const applyDeviceData = deviceRecord => {
@@ -381,6 +478,52 @@ const CreateCertificate = () => {
       })
     } else {
       setRepeatability(createInitialRepeatability())
+    }
+
+    const matchedCustomerName = (deviceRecord.customer || '').trim()
+    if (matchedCustomerName) {
+      const lowerName = matchedCustomerName.toLowerCase()
+      const matchedOption =
+        customerOptions.find(option => {
+          const optionName = (option?.customerName || option?.name || '').toLowerCase()
+          const optionCompany = (option?.company || '').toLowerCase()
+          return optionName === lowerName || optionCompany === lowerName
+        }) || null
+
+      const storedCustomer = findStoredCustomerByName(matchedCustomerName)
+      const normalizedStored = storedCustomer ? normalizeCustomerOption(storedCustomer) : null
+      const fallbackLocation = matchedOption?.location || normalizedStored?.location || ''
+      const derivedLocation = deriveCityStateFromLocation(fallbackLocation)
+
+      const resolvedCompany = matchedOption?.company || normalizedStored?.company || matchedCustomerName
+      const resolvedAddress = matchedOption?.address || normalizedStored?.address || ''
+      const resolvedCity = matchedOption?.city || normalizedStored?.city || derivedLocation.city
+      const resolvedState = matchedOption?.state || normalizedStored?.state || derivedLocation.state
+      const resolvedZip = matchedOption?.zip || normalizedStored?.zip || normalizedStored?.pincode || ''
+      const resolvedContact = matchedOption?.contactPerson || normalizedStored?.contactPerson || ''
+      const resolvedMobile = matchedOption?.mobile || normalizedStored?.mobile || ''
+
+      if (matchedOption) {
+        setSelectedCustomer(matchedOption)
+        setCustomerNameInputValue(matchedOption.customerName || matchedOption.name || matchedCustomerName)
+      } else {
+        setSelectedCustomer(null)
+        setCustomerNameInputValue(normalizedStored?.customerName || normalizedStored?.name || matchedCustomerName)
+      }
+
+      setCustomer({
+        company: resolvedCompany,
+        address: resolvedAddress,
+        city: resolvedCity,
+        state: resolvedState,
+        zip: resolvedZip,
+        contact: resolvedContact,
+        mobile: resolvedMobile
+      })
+    } else {
+      setSelectedCustomer(null)
+      setCustomerNameInputValue('')
+      setCustomer(createInitialCustomerFields())
     }
   }
 
@@ -1753,33 +1896,28 @@ const CreateCertificate = () => {
                       onChange={(_, newValue) => {
                         setSelectedCustomer(newValue)
                         if (newValue) {
+                          const derived = deriveCityStateFromLocation(newValue.location)
                           setCustomer({
                             company: newValue.company || '',
                             address: newValue.address || '',
-                            city: newValue.city || '',
-                            state: newValue.state || '',
+                            city: newValue.city || derived.city,
+                            state: newValue.state || derived.state,
                             zip: newValue.zip || newValue.pincode || '',
                             contact: newValue.contactPerson || '',
                             mobile: newValue.mobile || ''
                           })
-                          setCustomerNameInputValue(newValue.customerName || '')
+                          setCustomerNameInputValue(newValue.customerName || newValue.name || '')
                         } else {
-                          setCustomer({
-                            company: '',
-                            address: '',
-                            city: '',
-                            state: '',
-                            zip: '',
-                            contact: '',
-                            mobile: ''
-                          })
+                          setCustomer(createInitialCustomerFields())
                           setCustomerNameInputValue('')
                         }
                       }}
                       inputValue={customerNameInputValue}
                       onInputChange={(_, newInputValue) => setCustomerNameInputValue(newInputValue)}
-                      getOptionLabel={option => option?.customerName || ''}
-                      isOptionEqualToValue={(option, value) => option?.id === value?.id}
+                      getOptionLabel={option => option?.customerName || option?.name || ''}
+                      isOptionEqualToValue={(option, value) =>
+                        (option?.id || option?.customerName) === (value?.id || value?.customerName)
+                      }
                       renderInput={params => (
                         <TextField
                           {...params}

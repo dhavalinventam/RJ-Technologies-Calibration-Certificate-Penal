@@ -6,7 +6,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import Sidebar from '@/layout/Sidebar'
 import Header from '@/layout/Header'
 import { useTheme as useThemeContext } from '@/context/ThemeContext'
-import { Customer, CUSTOMER_STORAGE_KEY, DEFAULT_CUSTOMERS } from './customerData'
+import { Customer, CUSTOMER_STORAGE_KEY, DEFAULT_CUSTOMERS, normalizeCustomer } from './customerData'
 
 const PRIMARY_COLOR = '#2563EB'
 const PAGE_BACKGROUND = '#F8FAFC'
@@ -32,13 +32,14 @@ const loadCustomerById = (id: string): Customer | null => {
       const parsed: Customer[] = JSON.parse(stored)
       const found = parsed.find(customer => customer.id === id)
       if (found) {
-        return found
+        return normalizeCustomer(found)
       }
     }
   } catch (error) {
     console.error('Failed to load customers', error)
   }
-  return DEFAULT_CUSTOMERS.find(customer => customer.id === id) || null
+  const fallback = DEFAULT_CUSTOMERS.find(customer => customer.id === id)
+  return fallback ? normalizeCustomer(fallback) : null
 }
 
 const ViewCustomer = () => {
@@ -188,14 +189,18 @@ const ViewCustomer = () => {
                 sx={{
                   display: 'grid',
                   gap: 2,
-                  gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' }
+                  gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' }
                 }}
               >
                 {[
                   { label: 'Customer Name', value: customer.name },
                   { label: 'Company', value: customer.company },
-                  { label: 'Location', value: customer.location },
-                  { label: 'Contact Person', value: customer.contactPerson }
+                  { label: 'Contact Person', value: customer.contactPerson },
+                  { label: 'Primary Location', value: customer.location },
+                  { label: 'City', value: customer.city },
+                  { label: 'State/Province', value: customer.state },
+                  { label: 'Country', value: customer.country },
+                  { label: 'Postal Code', value: customer.zip }
                 ].map(detail => (
                   <Box
                     key={detail.label}
@@ -220,10 +225,10 @@ const ViewCustomer = () => {
 
             <Paper sx={{ ...cardBaseStyles }}>
               <Typography variant='h6' sx={{ fontWeight: 700, color: TITLE_COLOR, mb: 1 }}>
-                Contact Details
+                Address & Contact Details
               </Typography>
               <Typography variant='body2' sx={{ color: SUBTEXT_COLOR, mb: 3 }}>
-                Reach out to the customer using the information below.
+                Reference address and channels to reach this customer.
               </Typography>
               <Box
                 sx={{
@@ -233,6 +238,7 @@ const ViewCustomer = () => {
                 }}
               >
                 {[
+                  { label: 'Street Address', value: customer.address },
                   { label: 'Email', value: customer.email },
                   { label: 'Phone', value: customer.mobile }
                 ].map(detail => (
@@ -250,7 +256,7 @@ const ViewCustomer = () => {
                       {detail.label}
                     </Typography>
                     <Typography variant='body1' sx={{ color: VALUE_COLOR, fontWeight: 600 }}>
-                      {detail.value || '—'}
+                      {detail.value && detail.value.toString().trim().length > 0 ? detail.value : '—'}
                     </Typography>
                   </Box>
                 ))}

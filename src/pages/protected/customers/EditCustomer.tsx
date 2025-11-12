@@ -5,7 +5,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import Sidebar from '@/layout/Sidebar'
 import Header from '@/layout/Header'
 import { useTheme as useThemeContext } from '@/context/ThemeContext'
-import { Customer, CUSTOMER_STORAGE_KEY, DEFAULT_CUSTOMERS, saveCustomers } from './customerData'
+import { Customer, CUSTOMER_STORAGE_KEY, DEFAULT_CUSTOMERS, normalizeCustomer, saveCustomers } from './customerData'
 
 const PRIMARY_COLOR = '#2563EB'
 const PAGE_BACKGROUND = '#F8FAFC'
@@ -40,6 +40,13 @@ const inputStyles = {
   }
 }
 
+const composeLocation = (city: string, state: string, country: string) => {
+  return [city, state, country]
+    .map(part => part.trim())
+    .filter(part => part.length > 0)
+    .join(', ')
+}
+
 const loadCustomer = (id: string): Customer | null => {
   try {
     const stored = localStorage.getItem(CUSTOMER_STORAGE_KEY)
@@ -47,13 +54,14 @@ const loadCustomer = (id: string): Customer | null => {
       const parsed: Customer[] = JSON.parse(stored)
       const found = parsed.find(customer => customer.id === id)
       if (found) {
-        return found
+        return normalizeCustomer(found)
       }
     }
   } catch (error) {
     console.error('Failed to load customer from storage', error)
   }
-  return DEFAULT_CUSTOMERS.find(customer => customer.id === id) || null
+  const fallback = DEFAULT_CUSTOMERS.find(customer => customer.id === id)
+  return fallback ? normalizeCustomer(fallback) : null
 }
 
 const EditCustomer = () => {
@@ -69,7 +77,11 @@ const EditCustomer = () => {
   const [formState, setFormState] = useState({
     name: '',
     company: '',
-    location: '',
+    address: '',
+    city: '',
+    state: '',
+    zip: '',
+    country: 'India',
     contactPerson: '',
     mobile: '',
     email: ''
@@ -80,7 +92,11 @@ const EditCustomer = () => {
       setFormState({
         name: customer.name,
         company: customer.company,
-        location: customer.location,
+        address: customer.address || '',
+        city: customer.city || '',
+        state: customer.state || '',
+        zip: customer.zip || '',
+        country: customer.country || 'India',
         contactPerson: customer.contactPerson,
         mobile: customer.mobile,
         email: customer.email
@@ -107,14 +123,23 @@ const EditCustomer = () => {
   }
 
   const handleSave = () => {
+    const trimmedCity = formState.city.trim()
+    const trimmedState = formState.state.trim()
+    const trimmedCountry = formState.country.trim() || 'India'
+
     const updatedCustomer: Customer = {
       id,
       name: formState.name.trim() || customer.name,
       company: formState.company.trim() || '—',
-      location: formState.location.trim() || '—',
+      location: composeLocation(trimmedCity, trimmedState, trimmedCountry),
       contactPerson: formState.contactPerson.trim() || '—',
       mobile: formState.mobile.trim() || '—',
-      email: formState.email.trim() || '—'
+      email: formState.email.trim() || '—',
+      address: formState.address.trim(),
+      city: trimmedCity,
+      state: trimmedState,
+      zip: formState.zip.trim(),
+      country: trimmedCountry
     }
 
     try {
@@ -281,7 +306,7 @@ const EditCustomer = () => {
                 sx={{
                   display: 'grid',
                   gap: 2.5,
-                  gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))' }
+                  gridTemplateColumns: { xs: '1fr', md: 'repeat(3, minmax(0, 1fr))' }
                 }}
               >
                 <TextField
@@ -296,14 +321,6 @@ const EditCustomer = () => {
                   label='Company Name'
                   value={formState.company}
                   onChange={event => handleChange('company', event.target.value)}
-                  fullWidth
-                  size='small'
-                  sx={inputStyles}
-                />
-                <TextField
-                  label='Location'
-                  value={formState.location}
-                  onChange={event => handleChange('location', event.target.value)}
                   fullWidth
                   size='small'
                   sx={inputStyles}
@@ -331,6 +348,50 @@ const EditCustomer = () => {
                   fullWidth
                   size='small'
                   sx={inputStyles}
+                />
+                <TextField
+                  label='Country'
+                  value={formState.country}
+                  onChange={event => handleChange('country', event.target.value)}
+                  fullWidth
+                  size='small'
+                  sx={inputStyles}
+                />
+                <TextField
+                  label='State / Province'
+                  value={formState.state}
+                  onChange={event => handleChange('state', event.target.value)}
+                  fullWidth
+                  size='small'
+                  sx={inputStyles}
+                />
+                <TextField
+                  label='City'
+                  value={formState.city}
+                  onChange={event => handleChange('city', event.target.value)}
+                  fullWidth
+                  size='small'
+                  sx={inputStyles}
+                />
+                <TextField
+                  label='Postal / Zip Code'
+                  value={formState.zip}
+                  onChange={event => handleChange('zip', event.target.value)}
+                  fullWidth
+                  size='small'
+                  sx={inputStyles}
+                />
+                <TextField
+                  label='Street Address'
+                  value={formState.address}
+                  onChange={event => handleChange('address', event.target.value)}
+                  fullWidth
+                  size='small'
+                  sx={{ ...inputStyles, gridColumn: { md: '1 / span 3' } }}
+                  multiline
+                  minRows={2}
+                  inputProps={{ style: { resize: 'vertical' } }}
+                  FormHelperTextProps={{ sx: { mt: 0.5 } }}
                 />
               </Box>
             </Paper>

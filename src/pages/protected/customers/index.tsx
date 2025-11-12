@@ -124,6 +124,13 @@ const tableCellStyles = {
   whiteSpace: 'nowrap'
 }
 
+const composeLocation = (city: string, state: string, country: string) => {
+  return [city, state, country]
+    .map(segment => segment.trim())
+    .filter(segment => segment.length > 0)
+    .join(', ')
+}
+
 const Customers = () => {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
@@ -151,8 +158,7 @@ const Customers = () => {
     address: '',
     contactPerson: '',
     mobileNumber: '',
-    email: '',
-    notes: ''
+    email: ''
   })
 
   const handleToggleSidebar = useCallback(() => {
@@ -176,19 +182,22 @@ const Customers = () => {
       return
     }
 
+    const trimmedCity = formData.city.trim()
+    const trimmedState = formData.state.trim()
+    const trimmedCountry = formData.country.trim()
     const newCustomer: Customer = {
       id: `customer-${Date.now()}`,
       name: formData.customerName.trim(),
       company: formData.companyName.trim(),
-      location:
-        formData.city && formData.state
-          ? `${formData.city.trim()}, ${formData.state.trim()}`
-          : formData.city || formData.state
-            ? `${formData.city} ${formData.state}`.trim()
-            : '—',
+      location: composeLocation(trimmedCity, trimmedState, trimmedCountry),
       contactPerson: formData.contactPerson.trim() || '—',
       mobile: formData.mobileNumber.trim() || '—',
-      email: formData.email.trim() || '—'
+      email: formData.email.trim() || '—',
+      address: formData.address.trim(),
+      city: trimmedCity,
+      state: trimmedState,
+      zip: formData.pincode.trim(),
+      country: trimmedCountry || 'India'
     }
 
     setCustomers(prev => [newCustomer, ...prev])
@@ -203,8 +212,7 @@ const Customers = () => {
       address: '',
       contactPerson: '',
       mobileNumber: '',
-      email: '',
-      notes: ''
+      email: ''
     })
     setTabValue(0)
   }
@@ -221,13 +229,23 @@ const Customers = () => {
     setCustomers(prev => prev.filter(c => c.id !== customerId))
   }
 
-  const filteredCustomers = customers.filter(
-    customer =>
-      customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      customer.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      customer.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      customer.contactPerson.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const filteredCustomers = customers.filter(customer => {
+    const term = searchTerm.toLowerCase()
+    const fields = [
+      customer.name,
+      customer.company,
+      customer.location,
+      customer.contactPerson,
+      customer.mobile,
+      customer.email,
+      customer.address || '',
+      customer.city || '',
+      customer.state || '',
+      customer.zip || '',
+      customer.country || ''
+    ]
+    return fields.some(field => field && field.toLowerCase().includes(term))
+  })
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', flexDirection: 'row', backgroundColor: PAGE_BACKGROUND }}>
@@ -580,17 +598,6 @@ const Customers = () => {
                     value={formData.address}
                     onChange={e => handleInputChange('address', e.target.value)}
                     sx={{ ...inputStyles, gridColumn: { xs: '1 / -1', md: 'span 2' } }}
-                  />
-                  <TextField
-                    fullWidth
-                    label='Notes'
-                    multiline
-                    rows={3}
-                    size='small'
-                    placeholder='Enter any additional notes'
-                    value={formData.notes}
-                    onChange={e => handleInputChange('notes', e.target.value)}
-                    sx={{ ...inputStyles, gridColumn: { xs: '1 / -1', md: 'span 1' } }}
                   />
                 </Box>
 
