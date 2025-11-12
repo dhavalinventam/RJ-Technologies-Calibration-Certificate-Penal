@@ -677,26 +677,70 @@ const CreateCertificate = () => {
     const doc = new jsPDF()
     const pageWidth = doc.internal.pageSize.getWidth()
     const pageHeight = doc.internal.pageSize.getHeight()
-    const margin = 20
+    const margin = 12 // Further reduced margin for maximum space utilization
+    const contentWidth = pageWidth - margin * 2
     let yPos = margin
 
-    // Helper function to draw underlined text
-    const drawUnderlinedText = (x, y, text, fontSize = 10) => {
-      doc.setFontSize(fontSize)
-      const textWidth = doc.getTextWidth(text)
-      doc.text(text, x, y)
-      doc.setLineWidth(0.1)
-      doc.line(x, y + 1, x + textWidth, y + 1)
+    // Set font to Helvetica (default in jsPDF, professional for ISO certificates)
+    doc.setFont('helvetica')
+
+    // Helper function to format date
+    const formatDate = dateString => {
+      if (!dateString) return ''
+      try {
+        const date = new Date(dateString)
+        return date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })
+      } catch {
+        return dateString
+      }
+    }
+
+    // Helper function to draw section divider
+    const drawSectionDivider = y => {
+      doc.setDrawColor(200, 200, 200)
+      doc.setLineWidth(0.3)
+      doc.line(margin, y, pageWidth - margin, y)
+    }
+
+    // Helper function to draw labeled value (clean layout without underlines)
+    const drawLabelValue = (label, value, x, y, labelWidth = 48, allowWrap = true) => {
+      doc.setFontSize(9)
+      doc.setFont('helvetica', 'normal')
+      doc.setTextColor(100, 100, 100) // Gray for labels
+      doc.text(label + ':', x, y)
+      doc.setTextColor(0, 0, 0) // Black for values
+      doc.setFont('helvetica', 'normal')
+      // Reduced gap - values appear much closer to labels
+      const valueX = x + labelWidth + 2 // Just 2px gap after label
+      const maxWidth = contentWidth / 2 - labelWidth - 8 // Adjusted for tighter layout
+
+      if (!value) {
+        return 4 // Reduced minimum height
+      }
+
+      // For fields that shouldn't wrap (phone, serial, etc.), display as-is
+      if (!allowWrap) {
+        // Display value directly
+        doc.text(value, valueX, y)
+        return 4
+      }
+
+      // Allow wrapping for addresses and long text
+      const wrappedText = doc.splitTextToSize(value, maxWidth)
+      doc.text(wrappedText, valueX, y)
+      return Math.max(wrappedText.length * 4.5, 4) // Reduced line height
     }
 
     // Helper function to split address into multiple lines
     const splitAddress = (address, maxWidth) => {
+      if (!address) return ['']
       const words = address.split(' ')
       const lines = []
       let currentLine = ''
 
       words.forEach(word => {
         const testLine = currentLine ? `${currentLine} ${word}` : word
+        doc.setFontSize(9)
         if (doc.getTextWidth(testLine) <= maxWidth) {
           currentLine = testLine
         } else {
@@ -705,204 +749,349 @@ const CreateCertificate = () => {
         }
       })
       if (currentLine) lines.push(currentLine)
-      return lines
+      return lines.length > 0 ? lines : ['']
     }
 
-    // Header Section
-    // Certificate Number (top-left)
-    doc.setFontSize(10)
-    doc.text('Certificate No.:', margin, yPos)
-    doc.setFontSize(12)
-    doc.setFont(undefined, 'bold')
-    doc.text(certificateNo || '', margin + 40, yPos)
-    doc.setFont(undefined, 'normal')
+    // Helper function to draw table with gray header
+    const drawTableHeader = (headers, colWidths, startY, headerHeight = 8) => {
+      const headerBgColor = [240, 240, 240] // Light gray background
+      const headerTextColor = [50, 50, 50] // Dark gray text
+      const borderColor = [180, 180, 180] // Gray border
 
-    // RJ Technologies (top-right)
-    doc.setFontSize(18)
-    doc.setFont(undefined, 'bold')
+      // Draw header background
+      doc.setFillColor(headerBgColor[0], headerBgColor[1], headerBgColor[2])
+      doc.rect(margin, startY, contentWidth, headerHeight, 'F')
+
+      // Draw header borders
+      doc.setDrawColor(borderColor[0], borderColor[1], borderColor[2])
+      doc.setLineWidth(0.3)
+      doc.rect(margin, startY, contentWidth, headerHeight, 'S')
+
+      // Draw header text
+      doc.setFontSize(9)
+      doc.setFont('helvetica', 'bold')
+      doc.setTextColor(headerTextColor[0], headerTextColor[1], headerTextColor[2])
+      let xPos = margin + 4
+      headers.forEach((header, index) => {
+        doc.text(header, xPos, startY + 6)
+        xPos += colWidths[index]
+        // Draw vertical line
+        if (index < headers.length - 1) {
+          doc.line(xPos, startY, xPos, startY + headerHeight)
+        }
+      })
+
+      // Reset text color
+      doc.setTextColor(0, 0, 0)
+      doc.setFont('helvetica', 'normal')
+      return startY + headerHeight
+    }
+
+    // Helper function to draw table row
+    const drawTableRow = (values, colWidths, startY, rowHeight = 7) => {
+      const borderColor = [200, 200, 200]
+      doc.setDrawColor(borderColor[0], borderColor[1], borderColor[2])
+      doc.setLineWidth(0.2)
+      doc.setFontSize(9)
+      doc.setFont('helvetica', 'normal')
+      doc.setTextColor(0, 0, 0)
+
+      // Draw row borders
+      doc.rect(margin, startY, contentWidth, rowHeight, 'S')
+
+      // Draw cell content
+      let xPos = margin + 4
+      values.forEach((value, index) => {
+        const cellText = value || ''
+        doc.text(cellText, xPos, startY + 5)
+        xPos += colWidths[index]
+        // Draw vertical line
+        if (index < values.length - 1) {
+          doc.line(xPos, startY, xPos, startY + rowHeight)
+        }
+      })
+
+      return startY + rowHeight
+    }
+
+    // Helper to draw merged header cell with gray background
+    const drawMergedHeaderCell = (text, startX, width, y, height, align = 'center') => {
+      const headerBgColor = [240, 240, 240]
+      const borderColor = [180, 180, 180]
+      const cellPadding = 4
+
+      doc.setFillColor(headerBgColor[0], headerBgColor[1], headerBgColor[2])
+      doc.rect(startX, y, width, height, 'F')
+      doc.setDrawColor(borderColor[0], borderColor[1], borderColor[2])
+      doc.setLineWidth(0.3)
+      doc.rect(startX, y, width, height, 'S')
+      doc.setFontSize(9)
+      doc.setFont('helvetica', 'bold')
+      doc.setTextColor(50, 50, 50)
+      const textWidth = doc.getTextWidth(text)
+      const textX = align === 'center' ? startX + width / 2 - textWidth / 2 : startX + cellPadding
+      doc.text(text, textX, y + 6)
+      doc.setTextColor(0, 0, 0)
+      doc.setFont('helvetica', 'normal')
+    }
+
+    // ==================== HEADER SECTION ====================
+    // Company Name (centered at top)
+    doc.setFontSize(15)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(0, 0, 0)
     const companyName = 'RJ Technologies'
     const companyNameWidth = doc.getTextWidth(companyName)
-    doc.text(companyName, pageWidth - margin - companyNameWidth, yPos)
-    doc.setFont(undefined, 'normal')
+    doc.text(companyName, (pageWidth - companyNameWidth) / 2, yPos)
 
-    // Address below certificate number
-    yPos += 7
+    // Company Address (centered below name)
+    yPos += 6 // Increased spacing for better visual separation
     doc.setFontSize(9)
-    const addressLines = splitAddress(
-      '301, Shahjanand Plaza, Bhattha, Paldi, Ahmedabad - 380007.',
-      pageWidth - margin * 2 - 50
-    )
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(80, 80, 80)
+    const companyAddress = '301, Shahjanand Plaza, Bhattha, Paldi, Ahmedabad - 380007'
+    const addressLines = splitAddress(companyAddress, contentWidth - 10)
     addressLines.forEach((line, index) => {
-      doc.text(line, margin, yPos + index * 4)
+      const lineWidth = doc.getTextWidth(line)
+      doc.text(line, (pageWidth - lineWidth) / 2, yPos + index * 4.5)
     })
-    yPos += addressLines.length * 4 + 5
+    yPos += addressLines.length * 4.5 + 10 // Increased top spacing before title for better look
 
-    // Title: Calibration Certificate (centered)
-    yPos += 10
-    doc.setFontSize(20)
-    doc.setFont(undefined, 'bold')
+    // Certificate Title and Number (on same line)
+    doc.setFontSize(14) // Reduced font size from 18 to 14
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(0, 0, 0)
     const title = 'Calibration Certificate'
-    const titleWidth = doc.getTextWidth(title)
-    doc.text(title, (pageWidth - titleWidth) / 2, yPos)
-    doc.setFont(undefined, 'normal')
 
-    // Customer Section
-    yPos += 20
-    doc.setFontSize(12)
-    doc.setFont(undefined, 'bold')
-    doc.text('Customer :', margin, yPos)
-    doc.setFont(undefined, 'normal')
-    yPos += 8
+    // Certificate Number (right-aligned on same line as title)
+    doc.setFontSize(9)
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(80, 80, 80)
+    const certNoText = `Certificate No.: ${certificateNo || 'N/A'}`
+    const certNoWidth = doc.getTextWidth(certNoText)
+    const certNoX = pageWidth - margin - certNoWidth
 
-    // Customer details in two columns
+    // Title left-aligned, certificate number on right
+    const titleX = margin
+    doc.setFontSize(14) // Reduced font size
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(0, 0, 0)
+    doc.text(title, titleX, yPos)
+
+    // Certificate number on same line, right-aligned
+    doc.setFontSize(9)
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(80, 80, 80)
+    doc.text(certNoText, certNoX, yPos)
+
+    yPos += 8 // Increased spacing after title
+
+    // Horizontal divider line below title
+    drawSectionDivider(yPos)
+    yPos += 6 // Increased spacing after divider
+
+    // Common spacing variables for all sections
     const leftColX = margin
-    const rightColX = pageWidth / 2 + 10
-    const lineHeight = 7
-    let customerY = yPos
+    const rightColX = margin + contentWidth / 2 + 8 // Reduced gap between columns
+    const labelWidth = 48 // Reduced label width for tighter spacing
+    const lineSpacing = 4.5 // Reduced line spacing
 
-    // Left column
-    doc.setFontSize(10)
-    doc.text('Company:', leftColX, customerY)
-    drawUnderlinedText(leftColX + 30, customerY, customer.company || '', 10)
-
-    customerY += lineHeight
-    doc.text('Address:', leftColX, customerY)
-    const addressText = customer.address || ''
-    if (addressText) {
-      // Handle multi-line addresses (split by newline or wrap if too long)
-      const addressParts = addressText.split('\n').filter(part => part.trim())
-      if (addressParts.length > 0) {
-        addressParts.forEach((part, idx) => {
-          drawUnderlinedText(leftColX + 30, customerY + idx * lineHeight, part, 10)
-        })
-        customerY += addressParts.length * lineHeight
-      } else {
-        drawUnderlinedText(leftColX + 30, customerY, '', 10)
-        customerY += lineHeight
-      }
-    } else {
-      drawUnderlinedText(leftColX + 30, customerY, '', 10)
-      customerY += lineHeight
-    }
-
-    customerY += lineHeight
-    doc.text('City:', leftColX, customerY)
-    drawUnderlinedText(leftColX + 30, customerY, customer.city || '', 10)
-
-    customerY += lineHeight
-    doc.text('Zip/Postal:', leftColX, customerY)
-    drawUnderlinedText(leftColX + 30, customerY, customer.zip || '', 10)
-
-    customerY += lineHeight
-    doc.text('Contact:', leftColX, customerY)
-    drawUnderlinedText(leftColX + 30, customerY, customer.contact || '', 10)
-
-    // Right column
-    let rightColY = yPos
-    doc.text('State/Province:', rightColX, rightColY)
-    drawUnderlinedText(rightColX + 40, rightColY, customer.state || '', 10)
-
-    rightColY += lineHeight * 2 // Align with Mobile NO. position
-    doc.text('Mobile NO.:', rightColX, rightColY)
-    drawUnderlinedText(rightColX + 40, rightColY, customer.mobile || '', 10)
-
-    // Device Section
-    yPos = Math.max(customerY, rightColY) + 15
-    doc.setFontSize(12)
-    doc.setFont(undefined, 'bold')
-    doc.text('Device :', margin, yPos)
-    doc.setFont(undefined, 'normal')
-    yPos += 8
-
-    // Device details in two columns
-    let deviceY = yPos
-    const deviceLineHeight = 7
-
-    // Left column
-    doc.setFontSize(10)
-    doc.text('Manufacturer:', leftColX, deviceY)
-    drawUnderlinedText(leftColX + 35, deviceY, device.manufacturer || '', 10)
-
-    deviceY += deviceLineHeight
-    doc.text('Model:', leftColX, deviceY)
-    drawUnderlinedText(leftColX + 35, deviceY, device.model || '', 10)
-
-    deviceY += deviceLineHeight
-    doc.text('Max Capacity:', leftColX, deviceY)
-    drawUnderlinedText(leftColX + 35, deviceY, device.maxCapacity || '', 10)
-
-    deviceY += deviceLineHeight
-    doc.text('Readability:', leftColX, deviceY)
-    drawUnderlinedText(leftColX + 35, deviceY, device.readability || '', 10)
-
-    deviceY += deviceLineHeight
-    doc.text('Location:', leftColX, deviceY)
-    drawUnderlinedText(leftColX + 35, deviceY, device.location || '', 10)
-
-    // Right column
-    let deviceRightY = yPos
-    doc.text('Serial No.:', rightColX, deviceRightY)
-    drawUnderlinedText(rightColX + 40, deviceRightY, device.serialNo || '', 10)
-
-    deviceRightY += deviceLineHeight
-    doc.text('Terminal Model:', rightColX, deviceRightY)
-    drawUnderlinedText(rightColX + 40, deviceRightY, device.terminalModel || '', 10)
-
-    deviceRightY += deviceLineHeight
-    doc.text('Tag No.:', rightColX, deviceRightY)
-    drawUnderlinedText(rightColX + 40, deviceRightY, device.tagNo || '', 10)
-
-    deviceRightY += deviceLineHeight
-    doc.text('Verification Value:', rightColX, deviceRightY)
-    drawUnderlinedText(rightColX + 40, deviceRightY, device.verificationValue || '', 10)
-
-    // Procedure Template Section
-    yPos = Math.max(deviceY, deviceRightY) + 15
-
+    // ==================== CUSTOMER SECTION ====================
     // Check if we need a new page
-    if (yPos > pageHeight - 40) {
+    if (yPos > pageHeight - 80) {
       doc.addPage()
       yPos = margin
     }
 
-    doc.setFontSize(12)
-    doc.setFont(undefined, 'bold')
-    doc.text('Procedure Template :', margin, yPos)
-    doc.setFont(undefined, 'normal')
-    yPos += 8
+    // Section heading
+    doc.setFontSize(10) // Reduced font size
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(0, 0, 0)
+    doc.text('Customer Information', margin, yPos)
+    yPos += 5 // Reduced spacing
+    drawSectionDivider(yPos - 1) // Only bottom divider, no top border
+    yPos += 6 // Reduced spacing after divider
 
-    // Helper function to wrap text for procedure template
-    const wrapText = (text, maxWidth, fontSize = 10) => {
-      if (!text) return ['']
-      doc.setFontSize(fontSize)
-      const words = text.split(' ')
-      const lines = []
-      let currentLine = ''
+    // Customer details in two columns with clean layout
+    let maxY = yPos
 
-      words.forEach(word => {
-        const testLine = currentLine ? `${currentLine} ${word}` : word
-        if (doc.getTextWidth(testLine) <= maxWidth) {
-          currentLine = testLine
-        } else {
-          if (currentLine) {
-            lines.push(currentLine)
-            currentLine = word
-          } else {
-            // Word itself is too long, add it anyway
-            lines.push(word)
-            currentLine = ''
-          }
-        }
+    // Left column
+    doc.setFontSize(9)
+    let leftY = yPos
+
+    // Company
+    const companyHeight = drawLabelValue('Company', customer.company || '', leftColX, leftY, labelWidth, true)
+    leftY += Math.max(companyHeight, lineSpacing)
+
+    // Address handling (allow wrapping)
+    const addressText = customer.address || ''
+    if (addressText) {
+      doc.setFontSize(9)
+      doc.setFont('helvetica', 'normal')
+      doc.setTextColor(100, 100, 100)
+      doc.text('Address:', leftColX, leftY)
+      doc.setTextColor(0, 0, 0)
+      const addressMaxWidth = contentWidth / 2 - labelWidth - 10 // Reduced padding
+      const addressLines = doc.splitTextToSize(addressText.replace(/\n/g, ' '), addressMaxWidth)
+      addressLines.forEach((line, idx) => {
+        doc.text(line, leftColX + labelWidth + 2, leftY + idx * 4.5) // Closer to label, tighter line spacing
       })
-      if (currentLine) lines.push(currentLine)
-      return lines.length > 0 ? lines : ['']
+      leftY += Math.max(addressLines.length * 4.5, lineSpacing)
+    } else {
+      leftY += drawLabelValue('Address', '', leftColX, leftY, labelWidth, true)
+      leftY += lineSpacing
     }
+
+    // City (no wrap)
+    leftY += drawLabelValue('City', customer.city || '', leftColX, leftY, labelWidth, false)
+    leftY += lineSpacing
+
+    // Zip/Postal (no wrap)
+    leftY += drawLabelValue('Zip/Postal', customer.zip || '', leftColX, leftY, labelWidth, false)
+    leftY += lineSpacing
+
+    // Contact (no wrap)
+    leftY += drawLabelValue('Contact', customer.contact || '', leftColX, leftY, labelWidth, false)
+
+    // Right column
+    let rightY = yPos
+
+    // State/Province (allow wrapping if long)
+    rightY += drawLabelValue('State/Province', customer.state || '', rightColX, rightY, labelWidth, true)
+    rightY += lineSpacing
+
+    // Mobile No. (no wrap - keep phone numbers together)
+    rightY += drawLabelValue('Mobile No.', customer.mobile || '', rightColX, rightY, labelWidth, false)
+
+    maxY = Math.max(leftY, rightY)
+    yPos = maxY + 8 // Reduced spacing after customer section
+
+    // ==================== DEVICE SECTION ====================
+    // Check if we need a new page
+    if (yPos > pageHeight - 80) {
+      doc.addPage()
+      yPos = margin
+    }
+
+    // Section heading
+    doc.setFontSize(10) // Reduced font size
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(0, 0, 0)
+    doc.text('Device Information', margin, yPos)
+    yPos += 5 // Reduced spacing
+    drawSectionDivider(yPos - 1) // Only bottom divider, no top border
+    yPos += 6 // Reduced spacing after divider
+
+    // Device details in two columns (reuse same spacing settings)
+    leftY = yPos
+    rightY = yPos
+    maxY = yPos
+
+    // Left column (no wrapping for these fields)
+    leftY += drawLabelValue('Manufacturer', device.manufacturer || '', leftColX, leftY, labelWidth, false)
+    leftY += lineSpacing
+    leftY += drawLabelValue('Model', device.model || '', leftColX, leftY, labelWidth, false)
+    leftY += lineSpacing
+    leftY += drawLabelValue('Max Capacity', device.maxCapacity || '', leftColX, leftY, labelWidth, false)
+    leftY += lineSpacing
+    leftY += drawLabelValue('Readability', device.readability || '', leftColX, leftY, labelWidth, false)
+    leftY += lineSpacing
+    leftY += drawLabelValue('Location', device.location || '', leftColX, leftY, labelWidth, false)
+
+    // Right column (no wrapping for serial numbers and codes)
+    rightY += drawLabelValue('Serial No.', device.serialNo || '', rightColX, rightY, labelWidth, false)
+    rightY += lineSpacing
+    rightY += drawLabelValue('Terminal Model', device.terminalModel || '', rightColX, rightY, labelWidth, false)
+    rightY += lineSpacing
+    rightY += drawLabelValue('Tag No.', device.tagNo || '', rightColX, rightY, labelWidth, false)
+    rightY += lineSpacing
+    rightY += drawLabelValue('Verification Value', device.verificationValue || '', rightColX, rightY, labelWidth, false)
+
+    maxY = Math.max(leftY, rightY)
+    yPos = maxY + 8 // Reduced spacing after device section
+
+    // ==================== CALIBRATION DATES SECTION ====================
+    // Check if we need a new page
+    if (yPos > pageHeight - 80) {
+      doc.addPage()
+      yPos = margin
+    }
+
+    // Section heading
+    doc.setFontSize(10) // Reduced font size
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(0, 0, 0)
+    doc.text('Calibration Dates', margin, yPos)
+    yPos += 5 // Reduced spacing
+    drawSectionDivider(yPos - 1) // Only bottom divider, no top border
+    yPos += 6 // Reduced spacing after divider
+
+    // Calibration dates in two columns
+    leftY = yPos
+    rightY = yPos
+
+    leftY += drawLabelValue(
+      'As Found Date',
+      formatDate(calibrationDetails.asFoundCalibrationDate),
+      leftColX,
+      leftY,
+      labelWidth,
+      false
+    )
+    leftY += lineSpacing
+    leftY += drawLabelValue(
+      'As Left Date',
+      formatDate(calibrationDetails.asLeftCalibrationDate),
+      leftColX,
+      leftY,
+      labelWidth,
+      false
+    )
+
+    rightY += drawLabelValue(
+      'Issue Date',
+      formatDate(calibrationDetails.issueDate),
+      rightColX,
+      rightY,
+      labelWidth,
+      false
+    )
+    rightY += lineSpacing
+    rightY += drawLabelValue(
+      'Next Cal. Due',
+      formatDate(calibrationDetails.nextCalibrationDueDate),
+      rightColX,
+      rightY,
+      labelWidth,
+      false
+    )
+
+    maxY = Math.max(leftY, rightY)
+    yPos = maxY + 8 // Reduced spacing
+
+    // ==================== PROCEDURE TEMPLATE SECTION ====================
+    // Check if we need a new page
+    if (yPos > pageHeight - 80) {
+      doc.addPage()
+      yPos = margin
+    }
+
+    // Section heading
+    doc.setFontSize(10) // Reduced font size
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(0, 0, 0)
+    doc.text('Procedure Template', margin, yPos)
+    yPos += 5 // Reduced spacing
+    drawSectionDivider(yPos - 1) // Only bottom divider, no top border
+    yPos += 6 // Reduced spacing after divider
 
     // Display Procedure Template with word wrapping
     const procedureText = procedureTemplate || ''
-    const maxWidth = pageWidth - margin * 2
-    const procedureLines = wrapText(procedureText, maxWidth, 10)
-    const templateLineHeight = 6
+    doc.setFontSize(9)
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(0, 0, 0)
+    const procedureLines = doc.splitTextToSize(procedureText, contentWidth)
+    const templateLineHeight = 5
 
     procedureLines.forEach(line => {
       // Check if we need a new page
@@ -910,24 +1099,27 @@ const CreateCertificate = () => {
         doc.addPage()
         yPos = margin
       }
-      doc.setFontSize(10)
       doc.text(line, margin, yPos)
       yPos += templateLineHeight
     })
 
-    // Linearity Section
-    yPos += 10
+    yPos += 8
+
+    // ==================== LINEARITY SECTION ====================
     // Check if we need a new page
-    if (yPos > pageHeight - 60) {
+    if (yPos > pageHeight - 80) {
       doc.addPage()
       yPos = margin
     }
 
-    doc.setFontSize(12)
-    doc.setFont(undefined, 'bold')
-    doc.text('Linearity :', margin, yPos)
-    doc.setFont(undefined, 'normal')
-    yPos += 10
+    // Section heading
+    doc.setFontSize(10) // Reduced font size
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(0, 0, 0)
+    doc.text('Linearity', margin, yPos)
+    yPos += 5 // Reduced spacing
+    drawSectionDivider(yPos - 1) // Only bottom divider, no top border
+    yPos += 6 // Reduced spacing after divider
 
     // Filter out empty records
     const validRecords = linearityRecords.filter(
@@ -936,354 +1128,207 @@ const CreateCertificate = () => {
     )
 
     if (validRecords.length > 0) {
-      // Table setup
+      // Table setup with equal column widths
       const colWidths = [
-        (pageWidth - margin * 2) * 0.2, // Nominal Value
-        (pageWidth - margin * 2) * 0.2, // Reading
-        (pageWidth - margin * 2) * 0.2, // Error
-        (pageWidth - margin * 2) * 0.2, // Allowable Error
-        (pageWidth - margin * 2) * 0.2 // Within Tolerances
+        contentWidth * 0.2, // Nominal Value
+        contentWidth * 0.2, // Reading
+        contentWidth * 0.2, // Error
+        contentWidth * 0.2, // Allowable Error
+        contentWidth * 0.2 // Within Tolerances
       ]
-      const rowHeight = 8
-      const cellPadding = 4 // Padding inside cells
-      const borderWidth = 0.3 // Thin border (normal weight)
-      const borderColor = [150, 150, 150] // Gray color for borders
+      const rowHeight = 7
 
-      // Set consistent border style for all borders
-      doc.setLineWidth(borderWidth)
-      doc.setDrawColor(borderColor[0], borderColor[1], borderColor[2])
-
-      // Draw table header
-      doc.setFontSize(9)
-      doc.setFont(undefined, 'normal')
-      const headerY = yPos - 5
-
-      // Draw header borders - complete rectangle with all sides
-      doc.rect(margin, headerY, pageWidth - margin * 2, rowHeight, 'S')
-
-      // Header text with padding
-      let headerX = margin
-      doc.text('Nominal Value', headerX + cellPadding, yPos)
-      headerX += colWidths[0]
-      doc.text('Reading', headerX + cellPadding, yPos)
-      headerX += colWidths[1]
-      doc.text('Error', headerX + cellPadding, yPos)
-      headerX += colWidths[2]
-      doc.text('Allowable Error', headerX + cellPadding, yPos)
-      headerX += colWidths[3]
-      doc.text('Within Tolerances', headerX + cellPadding, yPos)
-
-      // Draw vertical lines for header
-      let lineX = margin
-      for (let i = 0; i < colWidths.length; i++) {
-        lineX += colWidths[i]
-        if (i < colWidths.length - 1) {
-          doc.line(lineX, headerY, lineX, headerY + rowHeight)
-        }
-      }
-
-      yPos += rowHeight
+      // Draw table header with gray background
+      const headers = ['Nominal Value', 'Reading', 'Error', 'Allowable Error', 'Within Tolerances']
+      yPos = drawTableHeader(headers, colWidths, yPos, 8)
 
       // Draw table rows
       validRecords.forEach(record => {
         // Check if we need a new page
-        if (yPos > pageHeight - 20) {
+        if (yPos > pageHeight - 30) {
           doc.addPage()
           yPos = margin
           // Redraw header on new page
-          doc.setFontSize(9)
-          doc.setFont(undefined, 'normal')
-          const newHeaderY = yPos - 5
-
-          // Draw header borders - complete rectangle with all sides
-          doc.rect(margin, newHeaderY, pageWidth - margin * 2, rowHeight, 'S')
-
-          // Header text with padding
-          let headerX = margin
-          doc.text('Nominal Value', headerX + cellPadding, yPos)
-          headerX += colWidths[0]
-          doc.text('Reading', headerX + cellPadding, yPos)
-          headerX += colWidths[1]
-          doc.text('Error', headerX + cellPadding, yPos)
-          headerX += colWidths[2]
-          doc.text('Allowable Error', headerX + cellPadding, yPos)
-          headerX += colWidths[3]
-          doc.text('Within Tolerances', headerX + cellPadding, yPos)
-
-          // Draw vertical lines for header
-          let lineX = margin
-          for (let i = 0; i < colWidths.length; i++) {
-            lineX += colWidths[i]
-            if (i < colWidths.length - 1) {
-              doc.line(lineX, newHeaderY, lineX, newHeaderY + rowHeight)
-            }
-          }
-
-          yPos += rowHeight
+          yPos = drawTableHeader(headers, colWidths, yPos, 8)
         }
 
-        doc.setFontSize(9)
-        const rowY = yPos - 3
-        let cellX = margin
-
-        // Draw cell content with padding
-        doc.text(record.nominalValue || '', cellX + cellPadding, yPos)
-        cellX += colWidths[0]
-
-        doc.text(record.reading || '', cellX + cellPadding, yPos)
-        cellX += colWidths[1]
-
-        doc.text(record.error || '', cellX + cellPadding, yPos)
-        cellX += colWidths[2]
-
-        doc.text(record.allowableError || '', cellX + cellPadding, yPos)
-        cellX += colWidths[3]
-
-        doc.text(record.withinTolerances || '', cellX + cellPadding, yPos)
-
-        // Draw complete row borders - all sides with consistent border
-        // Left border
-        doc.line(margin, rowY, margin, rowY + rowHeight)
-        // Right border
-        doc.line(pageWidth - margin, rowY, pageWidth - margin, rowY + rowHeight)
-        // Bottom border
-        doc.line(margin, rowY + rowHeight, pageWidth - margin, rowY + rowHeight)
-
-        // Draw vertical lines
-        let lineX = margin
-        for (let i = 0; i < colWidths.length; i++) {
-          lineX += colWidths[i]
-          if (i < colWidths.length - 1) {
-            doc.line(lineX, rowY, lineX, rowY + rowHeight)
-          }
-        }
-
-        yPos += rowHeight
+        const values = [
+          record.nominalValue || '',
+          record.reading || '',
+          record.error || '',
+          record.allowableError || '',
+          record.withinTolerances || ''
+        ]
+        yPos = drawTableRow(values, colWidths, yPos, rowHeight)
       })
 
       // Add spacing after the table
-      yPos += 10
+      yPos += 12
+    } else {
+      yPos += 8
     }
 
-    // Eccentricity Section
-    yPos += 15
+    // ==================== ECCENTRICITY SECTION ====================
     // Check if we need a new page
-    if (yPos > pageHeight - 100) {
+    if (yPos > pageHeight - 120) {
       doc.addPage()
       yPos = margin
     }
 
-    doc.setFontSize(12)
-    doc.setFont(undefined, 'bold')
-    doc.text('Eccentricity :', margin, yPos)
-    doc.setFont(undefined, 'normal')
-    yPos += 10
+    // Section heading
+    doc.setFontSize(10) // Reduced font size
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(0, 0, 0)
+    doc.text('Eccentricity', margin, yPos)
+    yPos += 5 // Reduced spacing
+    drawSectionDivider(yPos - 1) // Only bottom divider, no top border
+    yPos += 6 // Reduced spacing after divider
 
     // Eccentricity Table Setup
-    const eccTableWidth = pageWidth - margin * 2
-    const eccCol1Width = eccTableWidth * 0.25 // Position column
-    const eccCol2Width = eccTableWidth * 0.375 // Displayed Value column
-    const eccCol3Width = eccTableWidth * 0.375 // Deviation column
-    const eccRowHeight = 8
+    const eccCol1Width = contentWidth * 0.25 // Position column
+    const eccCol2Width = contentWidth * 0.375 // Displayed Value column
+    const eccCol3Width = contentWidth * 0.375 // Deviation column
+    const eccRowHeight = 7
     const eccHeaderRowHeight = 8
-    const cellPadding = 4 // Padding inside cells
-    const borderWidth = 0.3 // Thin border (normal weight)
-    const borderColor = [150, 150, 150] // Gray color for borders
-
-    // Set consistent border style for all borders
-    doc.setLineWidth(borderWidth)
-    doc.setDrawColor(borderColor[0], borderColor[1], borderColor[2])
+    const borderColor = [180, 180, 180]
+    const cellPadding = 4
 
     // Header Row 1: "Test Weight" | "50 kg" (merged 2 cols)
     const header1Y = yPos
-    doc.setFontSize(9)
-    doc.setFont(undefined, 'normal')
-
-    // Draw borders for header row 1 - complete rectangle with all sides
-    doc.rect(margin, header1Y - 5, eccTableWidth, eccHeaderRowHeight, 'S')
-
-    // "Test Weight" (left-aligned in first column with padding)
-    doc.text('Test Weight', margin + cellPadding, header1Y)
-
-    // "50 kg" (centered in merged cell spanning col2 and col3)
-    const testWeightX = margin + eccCol1Width
-    const testWeightWidth = eccCol2Width + eccCol3Width
-    const testWeightText = eccentricity.testWeight || '50 kg'
-    const testWeightTextWidth = doc.getTextWidth(testWeightText)
-    doc.text(testWeightText, testWeightX + testWeightWidth / 2 - testWeightTextWidth / 2, header1Y)
-
-    // Vertical line after "Test Weight"
-    doc.line(margin + eccCol1Width, header1Y - 5, margin + eccCol1Width, header1Y - 5 + eccHeaderRowHeight)
-
+    drawMergedHeaderCell('Test Weight', margin, eccCol1Width, header1Y, eccHeaderRowHeight, 'left')
+    drawMergedHeaderCell(
+      eccentricity.testWeight || '50 kg',
+      margin + eccCol1Width,
+      eccCol2Width + eccCol3Width,
+      header1Y,
+      eccHeaderRowHeight,
+      'center'
+    )
+    doc.setDrawColor(borderColor[0], borderColor[1], borderColor[2])
+    doc.line(margin + eccCol1Width, header1Y, margin + eccCol1Width, header1Y + eccHeaderRowHeight)
     yPos += eccHeaderRowHeight
 
     // Header Row 2: "Position" | "As Found" (merged 2 cols)
     const header2Y = yPos
-    doc.setFontSize(9)
-    doc.setFont(undefined, 'normal')
-
-    // Draw borders for header row 2 - complete rectangle with all sides
-    doc.rect(margin, header2Y - 5, eccTableWidth, eccHeaderRowHeight, 'S')
-
-    // "Position" (left-aligned with padding)
-    doc.text('Position', margin + cellPadding, header2Y)
-
-    // "As Found" (centered in merged cell spanning col2 and col3)
-    const asFoundX = margin + eccCol1Width
-    const asFoundWidth = eccCol2Width + eccCol3Width
-    const asFoundText = 'As Found'
-    const asFoundTextWidth = doc.getTextWidth(asFoundText)
-    doc.text(asFoundText, asFoundX + asFoundWidth / 2 - asFoundTextWidth / 2, header2Y)
-
-    // Vertical line after "Position"
-    doc.line(margin + eccCol1Width, header2Y - 5, margin + eccCol1Width, header2Y - 5 + eccHeaderRowHeight)
-
+    drawMergedHeaderCell('Position', margin, eccCol1Width, header2Y, eccHeaderRowHeight, 'left')
+    drawMergedHeaderCell(
+      'As Found',
+      margin + eccCol1Width,
+      eccCol2Width + eccCol3Width,
+      header2Y,
+      eccHeaderRowHeight,
+      'center'
+    )
+    doc.line(margin + eccCol1Width, header2Y, margin + eccCol1Width, header2Y + eccHeaderRowHeight)
     yPos += eccHeaderRowHeight
 
     // Header Row 3: (empty) | "Displayed Value" | "Deviation"
     const header3Y = yPos
-    doc.setFontSize(9)
-    doc.setFont(undefined, 'normal')
-
-    // Draw borders for header row 3 - complete rectangle with all sides
-    doc.rect(margin, header3Y - 5, eccTableWidth, eccHeaderRowHeight, 'S')
-
-    // "Displayed Value" (centered in col2)
-    const displayedValueText = 'Displayed Value'
-    const displayedValueTextWidth = doc.getTextWidth(displayedValueText)
-    doc.text(displayedValueText, margin + eccCol1Width + eccCol2Width / 2 - displayedValueTextWidth / 2, header3Y)
-
-    // "Deviation" (centered in col3)
-    const deviationText = 'Deviation'
-    const deviationTextWidth = doc.getTextWidth(deviationText)
-    doc.text(deviationText, margin + eccCol1Width + eccCol2Width + eccCol3Width / 2 - deviationTextWidth / 2, header3Y)
-
-    // Vertical lines
-    doc.line(margin + eccCol1Width, header3Y - 5, margin + eccCol1Width, header3Y - 5 + eccHeaderRowHeight)
+    drawMergedHeaderCell('', margin, eccCol1Width, header3Y, eccHeaderRowHeight, 'left')
+    drawMergedHeaderCell('Displayed Value', margin + eccCol1Width, eccCol2Width, header3Y, eccHeaderRowHeight, 'center')
+    drawMergedHeaderCell(
+      'Deviation',
+      margin + eccCol1Width + eccCol2Width,
+      eccCol3Width,
+      header3Y,
+      eccHeaderRowHeight,
+      'center'
+    )
+    doc.line(margin + eccCol1Width, header3Y, margin + eccCol1Width, header3Y + eccHeaderRowHeight)
     doc.line(
       margin + eccCol1Width + eccCol2Width,
-      header3Y - 5,
+      header3Y,
       margin + eccCol1Width + eccCol2Width,
-      header3Y - 5 + eccHeaderRowHeight
+      header3Y + eccHeaderRowHeight
     )
-
     yPos += eccHeaderRowHeight
 
     // Data Rows
     eccentricity.positions.forEach(pos => {
       // Check if we need a new page
-      if (yPos > pageHeight - 20) {
+      if (yPos > pageHeight - 30) {
         doc.addPage()
         yPos = margin
       }
 
-      const rowY = yPos - 3
-      doc.setFontSize(9)
+      const values = [pos.position || '', pos.displayedValue || '', pos.deviation || '']
 
-      // Position (left-aligned with padding)
-      doc.text(pos.position || '', margin + cellPadding, yPos)
+      // Draw row with special handling for centered columns
+      doc.setFontSize(9)
+      doc.setFont('helvetica', 'normal')
+      doc.setTextColor(0, 0, 0)
+      const rowY = yPos
+      const borderColorRow = [200, 200, 200]
+      doc.setDrawColor(borderColorRow[0], borderColorRow[1], borderColorRow[2])
+      doc.setLineWidth(0.2)
+      doc.rect(margin, rowY, contentWidth, eccRowHeight, 'S')
+
+      // Position (left-aligned)
+      doc.text(values[0], margin + cellPadding, rowY + 5)
+      doc.line(margin + eccCol1Width, rowY, margin + eccCol1Width, rowY + eccRowHeight)
 
       // Displayed Value (centered)
-      const dispValueText = pos.displayedValue || ''
-      const dispValueTextWidth = doc.getTextWidth(dispValueText)
-      doc.text(dispValueText, margin + eccCol1Width + eccCol2Width / 2 - dispValueTextWidth / 2, yPos)
+      const dispTextWidth = doc.getTextWidth(values[1])
+      doc.text(values[1], margin + eccCol1Width + eccCol2Width / 2 - dispTextWidth / 2, rowY + 5)
+      doc.line(margin + eccCol1Width + eccCol2Width, rowY, margin + eccCol1Width + eccCol2Width, rowY + eccRowHeight)
 
       // Deviation (centered)
-      const devText = pos.deviation || ''
-      const devTextWidth = doc.getTextWidth(devText)
-      doc.text(devText, margin + eccCol1Width + eccCol2Width + eccCol3Width / 2 - devTextWidth / 2, yPos)
-
-      // Draw complete row borders - all sides with consistent 1px border
-      // Left border
-      doc.line(margin, rowY, margin, rowY + eccRowHeight)
-      // Right border
-      doc.line(pageWidth - margin, rowY, pageWidth - margin, rowY + eccRowHeight)
-      // Bottom border
-      doc.line(margin, rowY + eccRowHeight, pageWidth - margin, rowY + eccRowHeight)
-      // Vertical dividers
-      doc.line(margin + eccCol1Width, rowY, margin + eccCol1Width, rowY + eccRowHeight)
-      doc.line(margin + eccCol1Width + eccCol2Width, rowY, margin + eccCol1Width + eccCol2Width, rowY + eccRowHeight)
+      const devTextWidth = doc.getTextWidth(values[2])
+      doc.text(values[2], margin + eccCol1Width + eccCol2Width + eccCol3Width / 2 - devTextWidth / 2, rowY + 5)
 
       yPos += eccRowHeight
     })
 
     // Summary Rows
-    // Maximum Deviation (label in first column, value centered in merged last two columns)
-    if (yPos > pageHeight - 20) {
-      doc.addPage()
-      yPos = margin
-    }
-    const maxDevY = yPos - 3
-    doc.setFontSize(9)
-    doc.text('Maximum Deviation:', margin + cellPadding, yPos)
-    const maxDevValue = eccentricity.maximumDeviation || ''
-    const maxDevValueWidth = doc.getTextWidth(maxDevValue)
-    // Center the value in merged columns 2 and 3
-    const mergedColWidth = eccCol2Width + eccCol3Width
-    const mergedColStartX = margin + eccCol1Width
-    doc.text(maxDevValue, mergedColStartX + mergedColWidth / 2 - maxDevValueWidth / 2, yPos)
-    // Draw complete row borders - all sides (no vertical divider between columns 2 and 3)
-    doc.line(margin, maxDevY, margin, maxDevY + eccRowHeight) // Left border
-    doc.line(pageWidth - margin, maxDevY, pageWidth - margin, maxDevY + eccRowHeight) // Right border
-    doc.line(margin, maxDevY + eccRowHeight, pageWidth - margin, maxDevY + eccRowHeight) // Bottom border
-    doc.line(margin + eccCol1Width, maxDevY, margin + eccCol1Width, maxDevY + eccRowHeight) // Vertical divider (only between col1 and merged cols)
-    yPos += eccRowHeight
+    const drawSummaryRow = (label, value) => {
+      if (yPos > pageHeight - 30) {
+        doc.addPage()
+        yPos = margin
+      }
 
-    // Allowable Deviation (label in first column, value centered in merged last two columns)
-    if (yPos > pageHeight - 20) {
-      doc.addPage()
-      yPos = margin
-    }
-    const allowDevY = yPos - 3
-    doc.text('Allowable Deviation:', margin + cellPadding, yPos)
-    const allowDevValue = eccentricity.allowableDeviation || ''
-    const allowDevValueWidth = doc.getTextWidth(allowDevValue)
-    // Center the value in merged columns 2 and 3
-    const allowMergedColWidth = eccCol2Width + eccCol3Width
-    const allowMergedColStartX = margin + eccCol1Width
-    doc.text(allowDevValue, allowMergedColStartX + allowMergedColWidth / 2 - allowDevValueWidth / 2, yPos)
-    // Draw complete row borders - all sides (no vertical divider between columns 2 and 3)
-    doc.line(margin, allowDevY, margin, allowDevY + eccRowHeight) // Left border
-    doc.line(pageWidth - margin, allowDevY, pageWidth - margin, allowDevY + eccRowHeight) // Right border
-    doc.line(margin, allowDevY + eccRowHeight, pageWidth - margin, allowDevY + eccRowHeight) // Bottom border
-    doc.line(margin + eccCol1Width, allowDevY, margin + eccCol1Width, allowDevY + eccRowHeight) // Vertical divider (only between col1 and merged cols)
-    yPos += eccRowHeight
+      doc.setFontSize(9)
+      doc.setFont('helvetica', 'normal')
+      doc.setTextColor(0, 0, 0)
+      const rowY = yPos
+      const borderColorRow = [200, 200, 200]
+      doc.setDrawColor(borderColorRow[0], borderColorRow[1], borderColorRow[2])
+      doc.setLineWidth(0.2)
+      doc.rect(margin, rowY, contentWidth, eccRowHeight, 'S')
 
-    // Within Tolerances (label in first column, value centered in merged last two columns)
-    if (yPos > pageHeight - 20) {
-      doc.addPage()
-      yPos = margin
+      // Label (left-aligned)
+      doc.text(label, margin + cellPadding, rowY + 5)
+      doc.line(margin + eccCol1Width, rowY, margin + eccCol1Width, rowY + eccRowHeight)
+
+      // Value (centered in merged columns)
+      const mergedWidth = eccCol2Width + eccCol3Width
+      const valueWidth = doc.getTextWidth(value)
+      doc.text(value, margin + eccCol1Width + mergedWidth / 2 - valueWidth / 2, rowY + 5)
+
+      yPos += eccRowHeight
     }
-    const withinTolY = yPos - 3
-    doc.text('Within Tolerances:', margin + cellPadding, yPos)
-    const withinTolValue = eccentricity.withinTolerances || ''
-    const withinTolValueWidth = doc.getTextWidth(withinTolValue)
-    // Center the value in merged columns 2 and 3
-    const withinMergedColWidth = eccCol2Width + eccCol3Width
-    const withinMergedColStartX = margin + eccCol1Width
-    doc.text(withinTolValue, withinMergedColStartX + withinMergedColWidth / 2 - withinTolValueWidth / 2, yPos)
-    // Draw final row borders - all sides (no vertical divider between columns 2 and 3)
-    doc.line(margin, withinTolY, margin, withinTolY + eccRowHeight) // Left border
-    doc.line(pageWidth - margin, withinTolY, pageWidth - margin, withinTolY + eccRowHeight) // Right border
-    doc.line(margin, withinTolY + eccRowHeight, pageWidth - margin, withinTolY + eccRowHeight) // Bottom border
-    doc.line(margin + eccCol1Width, withinTolY, margin + eccCol1Width, withinTolY + eccRowHeight) // Vertical divider (only between col1 and merged cols)
+
+    drawSummaryRow('Maximum Deviation:', eccentricity.maximumDeviation || '')
+    drawSummaryRow('Allowable Deviation:', eccentricity.allowableDeviation || '')
+    drawSummaryRow('Within Tolerances:', eccentricity.withinTolerances || '')
 
     // Add spacing after the table
-    yPos += eccRowHeight + 10
+    yPos += 12
 
-    // Repeatability Section
-    yPos += 15
+    // ==================== REPEATABILITY SECTION ====================
     // Check if we need a new page
-    if (yPos > pageHeight - 100) {
+    if (yPos > pageHeight - 120) {
       doc.addPage()
       yPos = margin
     }
 
-    doc.setFontSize(12)
-    doc.setFont(undefined, 'bold')
-    doc.text('Repeatability :', margin, yPos)
-    doc.setFont(undefined, 'normal')
-    yPos += 10
+    // Section heading
+    doc.setFontSize(10) // Reduced font size
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(0, 0, 0)
+    doc.text('Repeatability', margin, yPos)
+    yPos += 5 // Reduced spacing
+    drawSectionDivider(yPos - 1) // Only bottom divider, no top border
+    yPos += 6 // Reduced spacing after divider
 
     // Filter out empty records
     const validMeasurements = repeatability.measurements.filter(
@@ -1292,203 +1337,229 @@ const CreateCertificate = () => {
 
     if (validMeasurements.length > 0) {
       // Repeatability Table Setup
-      const repTableWidth = pageWidth - margin * 2
-      const repCol1Width = repTableWidth * 0.33 // Without Test Weight column
-      const repCol2Width = repTableWidth * 0.33 // With Test Weight column
-      const repCol3Width = repTableWidth * 0.34 // As Found column
-      const repRowHeight = 8
+      const repCol1Width = contentWidth * 0.33 // Without Test Weight column
+      const repCol2Width = contentWidth * 0.33 // With Test Weight column
+      const repCol3Width = contentWidth * 0.34 // As Found column
+      const repRowHeight = 7
       const repHeaderRowHeight = 8
-      const borderWidth = 0.3 // Thin border (normal weight)
-      const borderColor = [150, 150, 150] // Gray color for borders
-
-      // Set consistent border style for all borders
-      doc.setLineWidth(borderWidth)
-      doc.setDrawColor(borderColor[0], borderColor[1], borderColor[2])
+      const borderColor = [180, 180, 180]
+      const cellPadding = 4
 
       // Header Row 1: "Test Weight" | "75 kg" (merged cols 2-3)
       const repHeader1Y = yPos
-      doc.setFontSize(9)
-      doc.setFont(undefined, 'normal')
-
-      // Draw borders for header row 1 - complete rectangle with all sides
-      doc.rect(margin, repHeader1Y - 5, repTableWidth, repHeaderRowHeight, 'S')
-
-      // "Test Weight" (centered in first column)
-      const testWeightLabelText = 'Test Weight'
-      const testWeightLabelWidth = doc.getTextWidth(testWeightLabelText)
-      doc.text(testWeightLabelText, margin + repCol1Width / 2 - testWeightLabelWidth / 2, repHeader1Y)
-
-      // Test weight value (centered in merged cell spanning cols 2-3)
-      const repTestWeightX = margin + repCol1Width
-      const repTestWeightWidth = repCol2Width + repCol3Width
-      const repTestWeightText = repeatability.testWeight || '75 kg'
-      const repTestWeightTextWidth = doc.getTextWidth(repTestWeightText)
-      doc.text(repTestWeightText, repTestWeightX + repTestWeightWidth / 2 - repTestWeightTextWidth / 2, repHeader1Y)
-
-      // Vertical line after "Test Weight"
-      doc.line(margin + repCol1Width, repHeader1Y - 5, margin + repCol1Width, repHeader1Y - 5 + repHeaderRowHeight)
-
+      drawMergedHeaderCell('Test Weight', margin, repCol1Width, repHeader1Y, repHeaderRowHeight, 'center')
+      drawMergedHeaderCell(
+        repeatability.testWeight || '75 kg',
+        margin + repCol1Width,
+        repCol2Width + repCol3Width,
+        repHeader1Y,
+        repHeaderRowHeight,
+        'center'
+      )
+      doc.setDrawColor(borderColor[0], borderColor[1], borderColor[2])
+      doc.line(margin + repCol1Width, repHeader1Y, margin + repCol1Width, repHeader1Y + repHeaderRowHeight)
       yPos += repHeaderRowHeight
 
       // Header Row 2: "Without Test Weight" | "With Test Weight" | "As Found"
       const repHeader2Y = yPos
-      doc.setFontSize(9)
-      doc.setFont(undefined, 'normal')
-
-      // Draw borders for header row 2 - complete rectangle with all sides
-      doc.rect(margin, repHeader2Y - 5, repTableWidth, repHeaderRowHeight, 'S')
-
-      // Header text (centered in each column)
-      const withoutText = 'Without Test Weight'
-      const withoutTextWidth = doc.getTextWidth(withoutText)
-      doc.text(withoutText, margin + repCol1Width / 2 - withoutTextWidth / 2, repHeader2Y)
-
-      const withText = 'With Test Weight'
-      const withTextWidth = doc.getTextWidth(withText)
-      doc.text(withText, margin + repCol1Width + repCol2Width / 2 - withTextWidth / 2, repHeader2Y)
-
-      const repAsFoundText = 'As Found'
-      const repAsFoundTextWidth = doc.getTextWidth(repAsFoundText)
-      doc.text(
-        repAsFoundText,
-        margin + repCol1Width + repCol2Width + repCol3Width / 2 - repAsFoundTextWidth / 2,
-        repHeader2Y
+      drawMergedHeaderCell('Without Test Weight', margin, repCol1Width, repHeader2Y, repHeaderRowHeight, 'center')
+      drawMergedHeaderCell(
+        'With Test Weight',
+        margin + repCol1Width,
+        repCol2Width,
+        repHeader2Y,
+        repHeaderRowHeight,
+        'center'
       )
-
-      // Vertical lines
-      doc.line(margin + repCol1Width, repHeader2Y - 5, margin + repCol1Width, repHeader2Y - 5 + repHeaderRowHeight)
+      drawMergedHeaderCell(
+        'As Found',
+        margin + repCol1Width + repCol2Width,
+        repCol3Width,
+        repHeader2Y,
+        repHeaderRowHeight,
+        'center'
+      )
+      doc.line(margin + repCol1Width, repHeader2Y, margin + repCol1Width, repHeader2Y + repHeaderRowHeight)
       doc.line(
         margin + repCol1Width + repCol2Width,
-        repHeader2Y - 5,
+        repHeader2Y,
         margin + repCol1Width + repCol2Width,
-        repHeader2Y - 5 + repHeaderRowHeight
+        repHeader2Y + repHeaderRowHeight
       )
-
       yPos += repHeaderRowHeight
 
       // Data Rows: Each measurement is a row
       validMeasurements.forEach(measurement => {
         // Check if we need a new page
-        if (yPos > pageHeight - 20) {
+        if (yPos > pageHeight - 30) {
           doc.addPage()
           yPos = margin
         }
 
-        const rowY = yPos - 3
+        const values = [
+          measurement.withoutTestWeight || '',
+          measurement.withTestWeight || '',
+          measurement.asFound || ''
+        ]
+
+        // Draw row with centered values
         doc.setFontSize(9)
+        doc.setFont('helvetica', 'normal')
+        doc.setTextColor(0, 0, 0)
+        const rowY = yPos
+        const borderColorRow = [200, 200, 200]
+        doc.setDrawColor(borderColorRow[0], borderColorRow[1], borderColorRow[2])
+        doc.setLineWidth(0.2)
+        doc.rect(margin, rowY, contentWidth, repRowHeight, 'S')
 
         // Without Test Weight (centered)
-        const withoutValue = measurement.withoutTestWeight || ''
-        const withoutValueWidth = doc.getTextWidth(withoutValue)
-        doc.text(withoutValue, margin + repCol1Width / 2 - withoutValueWidth / 2, yPos)
+        const withoutTextWidth = doc.getTextWidth(values[0])
+        doc.text(values[0], margin + repCol1Width / 2 - withoutTextWidth / 2, rowY + 5)
+        doc.line(margin + repCol1Width, rowY, margin + repCol1Width, rowY + repRowHeight)
 
         // With Test Weight (centered)
-        const withValue = measurement.withTestWeight || ''
-        const withValueWidth = doc.getTextWidth(withValue)
-        doc.text(withValue, margin + repCol1Width + repCol2Width / 2 - withValueWidth / 2, yPos)
+        const withTextWidth = doc.getTextWidth(values[1])
+        doc.text(values[1], margin + repCol1Width + repCol2Width / 2 - withTextWidth / 2, rowY + 5)
+        doc.line(margin + repCol1Width + repCol2Width, rowY, margin + repCol1Width + repCol2Width, rowY + repRowHeight)
 
         // As Found (centered)
-        const asFoundValue = measurement.asFound || ''
-        const asFoundValueWidth = doc.getTextWidth(asFoundValue)
-        doc.text(asFoundValue, margin + repCol1Width + repCol2Width + repCol3Width / 2 - asFoundValueWidth / 2, yPos)
-
-        // Draw complete row borders - all sides with consistent border
-        // Left border
-        doc.line(margin, rowY, margin, rowY + repRowHeight)
-        // Right border
-        doc.line(pageWidth - margin, rowY, pageWidth - margin, rowY + repRowHeight)
-        // Bottom border
-        doc.line(margin, rowY + repRowHeight, pageWidth - margin, rowY + repRowHeight)
-        // Vertical dividers
-        doc.line(margin + repCol1Width, rowY, margin + repCol1Width, rowY + repRowHeight)
-        doc.line(margin + repCol1Width + repCol2Width, rowY, margin + repCol1Width + repCol2Width, rowY + repRowHeight)
+        const asFoundTextWidth = doc.getTextWidth(values[2])
+        doc.text(values[2], margin + repCol1Width + repCol2Width + repCol3Width / 2 - asFoundTextWidth / 2, rowY + 5)
 
         yPos += repRowHeight
       })
-    }
 
-    // Summary Rows (only if we have measurements)
-    if (validMeasurements.length > 0) {
-      // Reuse variables from data rows section
-      const repTableWidth = pageWidth - margin * 2
-      const repCol1Width = repTableWidth * 0.33
-      const repCol2Width = repTableWidth * 0.33
-      const repCol3Width = repTableWidth * 0.34
-      const repRowHeight = 8
-      const repMergedColWidth = repCol2Width + repCol3Width
-      const repMergedColStartX = margin + repCol1Width
-      const cellPadding = 4 // Padding inside cells
-      const borderWidth = 0.3 // Thin border (normal weight)
-      const borderColor = [150, 150, 150] // Gray color for borders
+      // Summary Rows
+      const drawRepSummaryRow = (label, value) => {
+        if (yPos > pageHeight - 30) {
+          doc.addPage()
+          yPos = margin
+        }
 
-      // Set consistent border style for summary rows
-      doc.setLineWidth(borderWidth)
-      doc.setDrawColor(borderColor[0], borderColor[1], borderColor[2])
+        doc.setFontSize(9)
+        doc.setFont('helvetica', 'normal')
+        doc.setTextColor(0, 0, 0)
+        const rowY = yPos
+        const borderColorRow = [200, 200, 200]
+        doc.setDrawColor(borderColorRow[0], borderColorRow[1], borderColorRow[2])
+        doc.setLineWidth(0.2)
+        doc.rect(margin, rowY, contentWidth, repRowHeight, 'S')
 
-      // Deviation (label in first column, value centered in merged last two columns)
-      if (yPos > pageHeight - 20) {
-        doc.addPage()
-        yPos = margin
+        // Label (left-aligned)
+        doc.text(label, margin + cellPadding, rowY + 5)
+        doc.line(margin + repCol1Width, rowY, margin + repCol1Width, rowY + repRowHeight)
+
+        // Value (centered in merged columns)
+        const mergedWidth = repCol2Width + repCol3Width
+        const valueWidth = doc.getTextWidth(value)
+        doc.text(value, margin + repCol1Width + mergedWidth / 2 - valueWidth / 2, rowY + 5)
+
+        yPos += repRowHeight
       }
-      const repDevY = yPos - 3
-      doc.setFontSize(9)
-      doc.text('Deviation:', margin + cellPadding, yPos)
-      const repDevValue = repeatability.deviation || ''
-      const repDevValueWidth = doc.getTextWidth(repDevValue)
-      // Center the value in merged columns 2 and 3
-      doc.text(repDevValue, repMergedColStartX + repMergedColWidth / 2 - repDevValueWidth / 2, yPos)
-      // Draw complete row borders - all sides (no vertical divider between columns 2 and 3)
-      doc.line(margin, repDevY, margin, repDevY + repRowHeight) // Left border
-      doc.line(pageWidth - margin, repDevY, pageWidth - margin, repDevY + repRowHeight) // Right border
-      doc.line(margin, repDevY + repRowHeight, pageWidth - margin, repDevY + repRowHeight) // Bottom border
-      doc.line(margin + repCol1Width, repDevY, margin + repCol1Width, repDevY + repRowHeight) // Vertical divider (only between col1 and merged cols)
-      yPos += repRowHeight
 
-      // Allowable Error (label in first column, value centered in merged last two columns)
-      if (yPos > pageHeight - 20) {
-        doc.addPage()
-        yPos = margin
-      }
-      const repAllowY = yPos - 3
-      doc.text('Allowable Error:', margin + cellPadding, yPos)
-      const repAllowValue = repeatability.allowableError || ''
-      const repAllowValueWidth = doc.getTextWidth(repAllowValue)
-      // Center the value in merged columns 2 and 3
-      doc.text(repAllowValue, repMergedColStartX + repMergedColWidth / 2 - repAllowValueWidth / 2, yPos)
-      // Draw complete row borders - all sides (no vertical divider between columns 2 and 3)
-      doc.line(margin, repAllowY, margin, repAllowY + repRowHeight) // Left border
-      doc.line(pageWidth - margin, repAllowY, pageWidth - margin, repAllowY + repRowHeight) // Right border
-      doc.line(margin, repAllowY + repRowHeight, pageWidth - margin, repAllowY + repRowHeight) // Bottom border
-      doc.line(margin + repCol1Width, repAllowY, margin + repCol1Width, repAllowY + repRowHeight) // Vertical divider (only between col1 and merged cols)
-      yPos += repRowHeight
-
-      // Within Tolerances (label in first column, value centered in merged last two columns)
-      if (yPos > pageHeight - 20) {
-        doc.addPage()
-        yPos = margin
-      }
-      const repWithinY = yPos - 3
-      doc.text('Within Tolerances:', margin + cellPadding, yPos)
-      const repWithinValue = repeatability.withinTolerances || ''
-      const repWithinValueWidth = doc.getTextWidth(repWithinValue)
-      // Center the value in merged columns 2 and 3
-      doc.text(repWithinValue, repMergedColStartX + repMergedColWidth / 2 - repWithinValueWidth / 2, yPos)
-      // Draw final row borders - all sides (no vertical divider between columns 2 and 3)
-      doc.line(margin, repWithinY, margin, repWithinY + repRowHeight) // Left border
-      doc.line(pageWidth - margin, repWithinY, pageWidth - margin, repWithinY + repRowHeight) // Right border
-      doc.line(margin, repWithinY + repRowHeight, pageWidth - margin, repWithinY + repRowHeight) // Bottom border
-      doc.line(margin + repCol1Width, repWithinY, margin + repCol1Width, repWithinY + repRowHeight) // Vertical divider (only between col1 and merged cols)
+      drawRepSummaryRow('Deviation:', repeatability.deviation || '')
+      drawRepSummaryRow('Allowable Error:', repeatability.allowableError || '')
+      drawRepSummaryRow('Within Tolerances:', repeatability.withinTolerances || '')
 
       // Add spacing after the table
-      yPos += repRowHeight + 10
+      yPos += 12
     } else {
-      // Add spacing even if no measurements
-      yPos += 10
+      yPos += 8
+    }
+
+    // ==================== SIGNATURE SECTION ====================
+    // Check if we need a new page
+    if (yPos > pageHeight - 80) {
+      doc.addPage()
+      yPos = margin
+    }
+
+    // Section heading
+    doc.setFontSize(10) // Reduced font size
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(0, 0, 0)
+    doc.text('Authorization', margin, yPos)
+    yPos += 4 // Reduced spacing
+    drawSectionDivider(yPos - 1) // Only bottom divider, no top border
+    yPos += 5 // Reduced spacing after divider
+
+    // Engineer name and signature
+    const signatureY = yPos
+    const signatureX = margin
+
+    // Engineer name
+    doc.setFontSize(9)
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(100, 100, 100)
+    doc.text('Engineer Name:', signatureX, signatureY)
+    doc.setTextColor(0, 0, 0)
+    doc.text(calibrationDetails.engineerName || '', signatureX + 45, signatureY)
+    yPos += 8 // Reduced spacing after engineer name
+
+    // Signature placeholder or image
+    // Draw signature line
+    doc.setDrawColor(150, 150, 150)
+    doc.setLineWidth(0.5)
+    doc.line(signatureX, yPos, signatureX + 80, yPos)
+    doc.setFontSize(8)
+    doc.setTextColor(120, 120, 120)
+    doc.text('Signature', signatureX, yPos + 6) // Reduced spacing for signature label
+
+    // Note: If signature image needs to be added, use jsPDF's addImage method
+    // with proper base64 image format handling
+
+    yPos += 12 // Reduced spacing after signature
+
+    // Issue date
+    if (calibrationDetails.issueDate) {
+      doc.setFontSize(9)
+      doc.setFont('helvetica', 'normal')
+      doc.setTextColor(100, 100, 100)
+      doc.text('Issue Date:', signatureX, yPos)
+      doc.setTextColor(0, 0, 0)
+      doc.text(formatDate(calibrationDetails.issueDate), signatureX + 35, yPos)
+    }
+
+    // Remarks section (if exists)
+    if (calibrationDetails.remarks) {
+      yPos += 10 // Reduced spacing before remarks section
+      if (yPos > pageHeight - 50) {
+        doc.addPage()
+        yPos = margin
+      }
+      doc.setFontSize(10) // Reduced font size
+      doc.setFont('helvetica', 'bold')
+      doc.setTextColor(0, 0, 0)
+      doc.text('Remarks', margin, yPos)
+      yPos += 5 // Reduced spacing
+      drawSectionDivider(yPos - 1) // Only bottom divider, no top border
+      yPos += 6 // Reduced spacing after divider
+      doc.setFontSize(9)
+      doc.setFont('helvetica', 'normal')
+      doc.setTextColor(0, 0, 0)
+      const remarksLines = doc.splitTextToSize(calibrationDetails.remarks, contentWidth)
+      remarksLines.forEach(line => {
+        if (yPos > pageHeight - 20) {
+          doc.addPage()
+          yPos = margin
+        }
+        doc.text(line, margin, yPos)
+        yPos += 5
+      })
     }
 
     // Open PDF in new window
     doc.output('dataurlnewwindow')
-  }, [certificateNo, customer, device, procedureTemplate, linearityRecords, eccentricity, repeatability])
+  }, [
+    certificateNo,
+    customer,
+    device,
+    procedureTemplate,
+    linearityRecords,
+    eccentricity,
+    repeatability,
+    calibrationDetails
+  ])
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', flexDirection: 'row' }}>
