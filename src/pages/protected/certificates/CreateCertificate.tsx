@@ -752,68 +752,6 @@ const CreateCertificate = () => {
       return lines.length > 0 ? lines : ['']
     }
 
-    // Helper function to draw table with gray header
-    const drawTableHeader = (headers, colWidths, startY, headerHeight = 8) => {
-      const headerBgColor = [240, 240, 240] // Light gray background
-      const headerTextColor = [50, 50, 50] // Dark gray text
-      const borderColor = [180, 180, 180] // Gray border
-
-      // Draw header background
-      doc.setFillColor(headerBgColor[0], headerBgColor[1], headerBgColor[2])
-      doc.rect(margin, startY, contentWidth, headerHeight, 'F')
-
-      // Draw header borders
-      doc.setDrawColor(borderColor[0], borderColor[1], borderColor[2])
-      doc.setLineWidth(0.3)
-      doc.rect(margin, startY, contentWidth, headerHeight, 'S')
-
-      // Draw header text
-      doc.setFontSize(9)
-      doc.setFont('helvetica', 'bold')
-      doc.setTextColor(headerTextColor[0], headerTextColor[1], headerTextColor[2])
-      let xPos = margin + 4
-      headers.forEach((header, index) => {
-        doc.text(header, xPos, startY + 6)
-        xPos += colWidths[index]
-        // Draw vertical line
-        if (index < headers.length - 1) {
-          doc.line(xPos, startY, xPos, startY + headerHeight)
-        }
-      })
-
-      // Reset text color
-      doc.setTextColor(0, 0, 0)
-      doc.setFont('helvetica', 'normal')
-      return startY + headerHeight
-    }
-
-    // Helper function to draw table row
-    const drawTableRow = (values, colWidths, startY, rowHeight = 7) => {
-      const borderColor = [200, 200, 200]
-      doc.setDrawColor(borderColor[0], borderColor[1], borderColor[2])
-      doc.setLineWidth(0.2)
-      doc.setFontSize(9)
-      doc.setFont('helvetica', 'normal')
-      doc.setTextColor(0, 0, 0)
-
-      // Draw row borders
-      doc.rect(margin, startY, contentWidth, rowHeight, 'S')
-
-      // Draw cell content
-      let xPos = margin + 4
-      values.forEach((value, index) => {
-        const cellText = value || ''
-        doc.text(cellText, xPos, startY + 5)
-        xPos += colWidths[index]
-        // Draw vertical line
-        if (index < values.length - 1) {
-          doc.line(xPos, startY, xPos, startY + rowHeight)
-        }
-      })
-
-      return startY + rowHeight
-    }
-
     // Helper to draw merged header cell with gray background
     const drawMergedHeaderCell = (text, startX, width, y, height, align = 'center') => {
       const headerBgColor = [240, 240, 240]
@@ -1128,28 +1066,72 @@ const CreateCertificate = () => {
     )
 
     if (validRecords.length > 0) {
-      // Table setup with equal column widths
-      const colWidths = [
-        contentWidth * 0.2, // Nominal Value
-        contentWidth * 0.2, // Reading
-        contentWidth * 0.2, // Error
-        contentWidth * 0.2, // Allowable Error
-        contentWidth * 0.2 // Within Tolerances
-      ]
-      const rowHeight = 7
+      // Linearity Table Setup - Improved styling with proper spacing and borders
+      // Optimized column widths for better readability
+      const linCol1Width = contentWidth * 0.18 // Nominal Value
+      const linCol2Width = contentWidth * 0.22 // Reading
+      const linCol3Width = contentWidth * 0.18 // Error
+      const linCol4Width = contentWidth * 0.24 // Allowable Error
+      const linCol5Width = contentWidth * 0.18 // Within Tolerances
+      const linRowHeight = 8 // Increased row height for better spacing
+      const linHeaderRowHeight = 8 // Header height same as rows for consistency
+      const linBorderColor = [180, 180, 180]
+      const linCellPadding = 5 // Increased padding for better spacing
 
-      // Draw table header with gray background
+      // Column headers
       const headers = ['Nominal Value', 'Reading', 'Error', 'Allowable Error', 'Within Tolerances']
-      yPos = drawTableHeader(headers, colWidths, yPos, 8)
+      const colWidths = [linCol1Width, linCol2Width, linCol3Width, linCol4Width, linCol5Width]
 
-      // Draw table rows
+      // Helper function to draw a complete row with all borders
+      const drawLinearRow = (rowY, values, isHeader = false, rowHeight = linRowHeight) => {
+        const bgColor = isHeader ? [240, 240, 240] : [255, 255, 255]
+        const textColor = isHeader ? [50, 50, 50] : [0, 0, 0]
+        const borderColor = isHeader ? linBorderColor : [200, 200, 200]
+        const fontWeight = isHeader ? 'bold' : 'normal'
+        const lineWidth = isHeader ? 0.3 : 0.2
+
+        // Set background color
+        doc.setFillColor(bgColor[0], bgColor[1], bgColor[2])
+        doc.rect(margin, rowY, contentWidth, rowHeight, 'F')
+
+        // Draw outer border
+        doc.setDrawColor(borderColor[0], borderColor[1], borderColor[2])
+        doc.setLineWidth(lineWidth)
+        doc.rect(margin, rowY, contentWidth, rowHeight, 'S')
+
+        // Draw vertical lines between cells
+        let xPos = margin
+        for (let i = 0; i < colWidths.length - 1; i++) {
+          xPos += colWidths[i]
+          doc.line(xPos, rowY, xPos, rowY + rowHeight)
+        }
+
+        // Draw text in each cell with proper vertical centering
+        doc.setFontSize(9)
+        doc.setFont('helvetica', fontWeight)
+        doc.setTextColor(textColor[0], textColor[1], textColor[2])
+        let cellXPos = margin + linCellPadding
+        const textY = rowY + rowHeight / 2 + 2 // Center text vertically
+        values.forEach((value, index) => {
+          doc.text(value || '', cellXPos, textY)
+          cellXPos += colWidths[index]
+        })
+      }
+
+      // Draw header row
+      const headerY = yPos
+      drawLinearRow(headerY, headers, true, linHeaderRowHeight)
+      yPos += linHeaderRowHeight
+
+      // Draw data rows
       validRecords.forEach(record => {
         // Check if we need a new page
         if (yPos > pageHeight - 30) {
           doc.addPage()
           yPos = margin
           // Redraw header on new page
-          yPos = drawTableHeader(headers, colWidths, yPos, 8)
+          drawLinearRow(yPos, headers, true, linHeaderRowHeight)
+          yPos += linHeaderRowHeight
         }
 
         const values = [
@@ -1159,7 +1141,10 @@ const CreateCertificate = () => {
           record.allowableError || '',
           record.withinTolerances || ''
         ]
-        yPos = drawTableRow(values, colWidths, yPos, rowHeight)
+
+        // Draw data row
+        drawLinearRow(yPos, values, false)
+        yPos += linRowHeight
       })
 
       // Add spacing after the table
