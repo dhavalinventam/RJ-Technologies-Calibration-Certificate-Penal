@@ -1452,7 +1452,7 @@ const CreateCertificate = () => {
       yPos += 8
     }
 
-    // ==================== SIGNATURE SECTION ====================
+    // ==================== AUTHORIZATION SECTION ====================
     // Check if we need a new page
     if (yPos > pageHeight - 80) {
       doc.addPage()
@@ -1460,49 +1460,141 @@ const CreateCertificate = () => {
     }
 
     // Section heading
-    doc.setFontSize(10) // Reduced font size
+    doc.setFontSize(10)
     doc.setFont('helvetica', 'bold')
     doc.setTextColor(0, 0, 0)
     doc.text('Authorization', margin, yPos)
-    yPos += 4 // Reduced spacing
-    drawSectionDivider(yPos - 1) // Only bottom divider, no top border
-    yPos += 5 // Reduced spacing after divider
+    yPos += 6 // Spacing after heading
+    drawSectionDivider(yPos - 1) // Divider line
+    yPos += 8 // Spacing after divider
 
-    // Engineer name and signature
-    const signatureY = yPos
-    const signatureX = margin
+    // Engineer name section - improved spacing and alignment
+    const authSectionX = margin
+    const authLabelWidth = 50 // Label width for authorization section
+    const authLabelValueSpacing = 3 // Spacing between label and value
 
-    // Engineer name
     doc.setFontSize(9)
     doc.setFont('helvetica', 'normal')
-    doc.setTextColor(100, 100, 100)
-    doc.text('Engineer Name:', signatureX, signatureY)
-    doc.setTextColor(0, 0, 0)
-    doc.text(calibrationDetails.engineerName || '', signatureX + 45, signatureY)
-    yPos += 8 // Reduced spacing after engineer name
+    doc.setTextColor(100, 100, 100) // Gray label
+    doc.text('Engineer Name:', authSectionX, yPos)
+    doc.setTextColor(0, 0, 0) // Black value
+    doc.setFont('helvetica', 'normal')
+    const engineerName = calibrationDetails.engineerName || ''
+    const engineerNameX = authSectionX + authLabelWidth + authLabelValueSpacing
+    doc.text(engineerName, engineerNameX, yPos)
+    yPos += 12 // Increased spacing after engineer name for better separation
 
-    // Signature placeholder or image
-    // Draw signature line
-    doc.setDrawColor(150, 150, 150)
-    doc.setLineWidth(0.5)
-    doc.line(signatureX, yPos, signatureX + 80, yPos)
-    doc.setFontSize(8)
-    doc.setTextColor(120, 120, 120)
-    doc.text('Signature', signatureX, yPos + 6) // Reduced spacing for signature label
+    // Signature section - improved spacing and positioning
+    const signatureImageY = yPos
+    const signatureImageMaxWidth = 50 // Max width for signature image (50px)
+    const signatureLineWidth = 80 // Width for signature line placeholder
 
-    // Note: If signature image needs to be added, use jsPDF's addImage method
-    // with proper base64 image format handling
+    if (calibrationDetails.engineerSignature) {
+      try {
+        // Extract image format and base64 data from data URL
+        const base64Data = calibrationDetails.engineerSignature
+        let imageFormat = 'PNG' // Default format
+        let imageData = base64Data
 
-    yPos += 12 // Reduced spacing after signature
+        // Check if it's a data URL (format: data:image/type;base64,data)
+        if (base64Data.startsWith('data:image/')) {
+          // Split by comma to separate metadata from base64 data
+          const commaIndex = base64Data.indexOf(',')
+          if (commaIndex > 0) {
+            const metadataPart = base64Data.substring(0, commaIndex)
+            imageData = base64Data.substring(commaIndex + 1)
 
-    // Issue date
+            // Extract image type from metadata (e.g., "data:image/png;base64")
+            const typeMatch = metadataPart.match(/image\/([^;]+)/i)
+            if (typeMatch) {
+              const mimeType = typeMatch[1].toLowerCase()
+              // Map MIME type to jsPDF format
+              if (mimeType === 'jpeg' || mimeType === 'jpg') {
+                imageFormat = 'JPEG'
+              } else if (mimeType === 'png') {
+                imageFormat = 'PNG'
+              } else if (mimeType === 'webp') {
+                imageFormat = 'WEBP'
+              }
+            }
+          }
+        } else {
+          // If it's already just base64 data, default to PNG
+          imageData = base64Data
+          imageFormat = 'PNG'
+        }
+
+        // Load image to get actual dimensions for proportional scaling
+        const img = new Image()
+        img.src = calibrationDetails.engineerSignature
+
+        // Calculate dimensions
+        let signatureImageWidth = signatureImageMaxWidth
+        let signatureImageHeight = 15 // Default height (typical signature ratio)
+
+        // Try to get image dimensions synchronously if possible
+        if (img.complete && img.naturalWidth > 0) {
+          const aspectRatio = img.naturalWidth / img.naturalHeight
+          if (img.naturalWidth > signatureImageMaxWidth) {
+            signatureImageWidth = signatureImageMaxWidth
+            signatureImageHeight = signatureImageMaxWidth / aspectRatio
+          } else {
+            signatureImageWidth = img.naturalWidth
+            signatureImageHeight = img.naturalHeight
+          }
+        } else {
+          // Image not loaded yet, use typical signature aspect ratio (3.3:1)
+          const defaultAspectRatio = 3.3
+          signatureImageWidth = signatureImageMaxWidth
+          signatureImageHeight = Math.round(signatureImageMaxWidth / defaultAspectRatio)
+        }
+
+        // Add signature image to PDF
+        doc.addImage(
+          imageData,
+          imageFormat,
+          authSectionX,
+          signatureImageY,
+          signatureImageWidth,
+          signatureImageHeight,
+          undefined,
+          'FAST' // Compression mode
+        )
+
+        yPos += signatureImageHeight + 8 // Space after image
+      } catch (error) {
+        // If image fails to load, fallback to signature line
+        console.error('Error adding signature image to PDF:', error)
+        doc.setDrawColor(150, 150, 150)
+        doc.setLineWidth(0.5)
+        doc.line(authSectionX, signatureImageY, authSectionX + signatureLineWidth, signatureImageY)
+        doc.setFontSize(8)
+        doc.setTextColor(120, 120, 120)
+        doc.text('Signature', authSectionX, signatureImageY + 6)
+        yPos += 15 // Spacing after signature line
+      }
+    } else {
+      // No signature image, draw signature line as placeholder
+      doc.setDrawColor(150, 150, 150)
+      doc.setLineWidth(0.5)
+      doc.line(authSectionX, signatureImageY, authSectionX + signatureLineWidth, signatureImageY)
+      doc.setFontSize(8)
+      doc.setTextColor(120, 120, 120)
+      doc.text('Signature', authSectionX, signatureImageY + 6)
+      yPos += 15 // Spacing after signature line
+    }
+
+    // Issue date section - improved spacing and alignment
     if (calibrationDetails.issueDate) {
+      yPos += 8 // Spacing before issue date for better separation from signature
       doc.setFontSize(9)
       doc.setFont('helvetica', 'normal')
-      doc.setTextColor(100, 100, 100)
-      doc.text('Issue Date:', signatureX, yPos)
-      doc.setTextColor(0, 0, 0)
-      doc.text(formatDate(calibrationDetails.issueDate), signatureX + 35, yPos)
+      doc.setTextColor(100, 100, 100) // Gray label
+      doc.text('Issue Date:', authSectionX, yPos)
+      doc.setTextColor(0, 0, 0) // Black value
+      doc.setFont('helvetica', 'normal')
+      const issueDateX = authSectionX + authLabelWidth + authLabelValueSpacing
+      doc.text(formatDate(calibrationDetails.issueDate), issueDateX, yPos)
     }
 
     // Remarks section (if exists)
