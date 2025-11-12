@@ -1,18 +1,7 @@
 import React, { useCallback, useMemo, useState } from 'react'
-import {
-  Box,
-  Typography,
-  Button,
-  useTheme,
-  useMediaQuery,
-  IconButton,
-  Paper,
-  TextField,
-  InputAdornment
-} from '@mui/material'
+import { Box, Typography, Button, useTheme, useMediaQuery, IconButton, Paper } from '@mui/material'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import EditIcon from '@mui/icons-material/Edit'
-import SearchIcon from '@mui/icons-material/Search'
 import { useNavigate, useParams } from 'react-router-dom'
 import Sidebar from '@/layout/Sidebar'
 import Header from '@/layout/Header'
@@ -46,30 +35,12 @@ const ViewWeightSet = () => {
     backgroundColor: '#FFFFFF'
   }
 
-  const inputStyles = {
-    '& .MuiOutlinedInput-root': {
-      borderRadius: '12px',
-      backgroundColor: '#FFFFFF',
-      transition: 'box-shadow 0.2s ease, border-color 0.2s ease',
-      '& fieldset': { borderColor: 'rgba(148, 163, 184, 0.4)' },
-      '&:hover fieldset': { borderColor: PRIMARY_COLOR },
-      '&.Mui-focused fieldset': { borderColor: PRIMARY_COLOR }
-    },
-    '& .MuiOutlinedInput-root.Mui-focused': {
-      boxShadow: '0 0 0 2px #93C5FD'
-    },
-    '& .MuiOutlinedInput-input': {
-      py: 1.1
-    }
-  }
-
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
   const [sidebarOpen, setSidebarOpen] = useState(!isMobile)
   const { mode, toggleTheme } = useThemeContext()
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
-  const [searchTerm, setSearchTerm] = useState('')
 
   // Sample weight set data - replace with actual data from API
   const [weightSet] = useState<WeightSet | null>({
@@ -236,24 +207,6 @@ const ViewWeightSet = () => {
                 Edit Weight Set
               </Button>
             </Box>
-          </Paper>
-
-          <Paper sx={{ ...cardBaseStyles, mb: 3, p: { xs: 2, md: 2.5 } }}>
-            <TextField
-              fullWidth
-              placeholder='Search related records...'
-              size='small'
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position='start'>
-                    <SearchIcon sx={{ color: '#9CA3AF' }} />
-                  </InputAdornment>
-                )
-              }}
-              sx={{ ...inputStyles }}
-            />
           </Paper>
 
           <Paper sx={{ ...cardBaseStyles, mb: 3 }}>

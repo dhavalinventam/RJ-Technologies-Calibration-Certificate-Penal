@@ -1,18 +1,6 @@
 import React, { useCallback, useState } from 'react'
-import {
-  Box,
-  Typography,
-  TextField,
-  Button,
-  MenuItem,
-  useTheme,
-  useMediaQuery,
-  Paper,
-  InputAdornment,
-  IconButton
-} from '@mui/material'
+import { Box, Typography, TextField, Button, MenuItem, useTheme, useMediaQuery, Paper, IconButton } from '@mui/material'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
-import SearchIcon from '@mui/icons-material/Search'
 import { useNavigate } from 'react-router-dom'
 import Sidebar from '@/layout/Sidebar'
 import Header from '@/layout/Header'
@@ -95,7 +83,6 @@ const AddUser = () => {
     role: '',
     status: 'Active'
   })
-  const [searchTerm, setSearchTerm] = useState('')
 
   const handleToggleSidebar = useCallback(() => {
     setSidebarOpen(!sidebarOpen)
@@ -254,24 +241,6 @@ const AddUser = () => {
                 Save User
               </Button>
             </Box>
-          </Paper>
-
-          <Paper sx={{ ...cardBaseStyles, mb: 3, p: { xs: 2, md: 2.5 } }}>
-            <TextField
-              fullWidth
-              placeholder='Search existing users...'
-              size='small'
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position='start'>
-                    <SearchIcon sx={{ color: '#9CA3AF' }} />
-                  </InputAdornment>
-                )
-              }}
-              sx={{ ...inputStyles }}
-            />
           </Paper>
 
           <Paper sx={{ ...cardBaseStyles }}>
