@@ -1343,6 +1343,28 @@ const CreateCertificate = () => {
                       )}
                     />
                   </div>
+                  <div className='col-12 col-md-6'>
+                    <Typography variant='body2' sx={{ mb: 0.7 }} component='label' className='cc_label'>
+                      Serial Number
+                    </Typography>
+                    <TextField
+                      placeholder='Enter serial number'
+                      fullWidth
+                      size='small'
+                      value={device.serialNo}
+                      onChange={e =>
+                        setDevice(prev => ({
+                          ...prev,
+                          serialNo: e.target.value
+                        }))
+                      }
+                      InputProps={{
+                        sx: {
+                          borderRadius: 1.5
+                        }
+                      }}
+                    />
+                  </div>
                 </div>
 
                 <Box
@@ -2360,16 +2382,11 @@ const CreateCertificate = () => {
                   <Button
                     variant='contained'
                     sx={{
-                      px: 3,
-                      py: 1,
-                      borderRadius: 2,
-                      textTransform: 'none',
-                      fontWeight: 500,
-                      minWidth: '100px',
-                      boxShadow: 'none',
-                      '&:hover': {
-                        boxShadow: theme.shadows[4]
-                      }
+                      ...primaryButtonStyles,
+                      minWidth: '120px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
                     }}
                     endIcon={<ArrowForwardIcon fontSize='small' />}
                     onClick={() => setActiveStep(s => Math.min(steps.length - 1, s + 1))}
