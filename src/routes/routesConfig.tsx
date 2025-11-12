@@ -17,9 +17,7 @@ import UserManagement from '@/pages/protected/user-management'
 import AddUser from '@/pages/protected/user-management/AddUser'
 import ViewUser from '@/pages/protected/user-management/ViewUser'
 import EditUser from '@/pages/protected/user-management/EditUser'
-// JS component import
-// @ts-expect-error - importing .jsx file in TS route config
-import CreateCertificate from '@/pages/protected/certificates/CreateCertificate.jsx'
+import CreateCertificate from '@/pages/protected/certificates/CreateCertificate'
 
 export const publicRoutes = [
   { path: '/dashboard', element: <Dashboard /> },
