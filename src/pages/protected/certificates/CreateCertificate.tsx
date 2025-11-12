@@ -29,6 +29,7 @@ import { useTheme as useThemeContext } from '@/context/ThemeContext'
 import './CreateCertificate.css'
 import { useNavigate } from 'react-router-dom'
 import jsPDF from 'jspdf'
+import { Device, defaultDevices } from '@/pages/protected/devices/deviceData'
 
 const PRIMARY_COLOR = '#2563EB'
 const PAGE_BACKGROUND = '#F8FAFC'
@@ -138,14 +139,6 @@ const defaultCustomerOptions = [
   }
 ]
 
-const deviceNameOptions = [
-  'Analytical Balance XS205',
-  'Bench Scale B300',
-  'Moisture Analyzer MA160',
-  'Platform Scale PS1T',
-  'Precision Balance PB220'
-]
-
 const defaultProcedureTemplates = [
   {
     id: '1',
@@ -164,6 +157,58 @@ const defaultProcedureTemplates = [
   }
 ]
 
+const ECCENTRICITY_POSITION_MAP = [
+  { key: 'center', label: 'Center' },
+  { key: 'leftFront', label: 'Left Front' },
+  { key: 'leftRear', label: 'Left Rear' },
+  { key: 'rightRear', label: 'Right Rear' },
+  { key: 'rightFront', label: 'Right Front' }
+] as const
+
+const createInitialDeviceFields = () => ({
+  manufacturer: '',
+  serialNo: '',
+  model: '',
+  terminalModel: '',
+  maxCapacity: '',
+  tagNo: '',
+  readability: '',
+  verificationValue: '',
+  location: ''
+})
+
+const createInitialLinearityRecords = () => [
+  {
+    nominalValue: '',
+    reading: '',
+    error: '',
+    allowableError: '',
+    withinTolerances: ''
+  }
+]
+
+const createInitialEccentricity = () => ({
+  testWeight: '50 kg',
+  positions: [
+    { position: 'Center', displayedValue: '50.000 kg', deviation: 'N/A' },
+    { position: 'Left Front', displayedValue: '50.000 kg', deviation: '0.000 kg' },
+    { position: 'Left Rear', displayedValue: '50.000 kg', deviation: '0.000 kg' },
+    { position: 'Right Rear', displayedValue: '50.000 kg', deviation: '0.000 kg' },
+    { position: 'Right Front', displayedValue: '50.000 kg', deviation: '0.000 kg' }
+  ],
+  maximumDeviation: '0.000 kg',
+  allowableDeviation: '0.002 kg',
+  withinTolerances: 'YES'
+})
+
+const createInitialRepeatability = () => ({
+  testWeight: '75 kg',
+  measurements: [{ withoutTestWeight: '0.000 kg', withTestWeight: '75.000 kg', asFound: '75.000 kg' }],
+  deviation: '0.000 kg',
+  allowableError: '0.002 kg',
+  withinTolerances: 'YES'
+})
+
 const CreateCertificate = () => {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
@@ -181,8 +226,10 @@ const CreateCertificate = () => {
 
   // Editable values (initial examples)
   const [certificateNo, setCertificateNo] = useState('RJ-2511-018')
-  const [selectedDeviceName, setSelectedDeviceName] = useState(null)
+  const [devices, setDevices] = useState<Device[]>([])
+  const [selectedDeviceName, setSelectedDeviceName] = useState<string | null>(null)
   const [deviceNameInputValue, setDeviceNameInputValue] = useState('')
+  const [serialNumberInputValue, setSerialNumberInputValue] = useState('')
   const [customerOptions, setCustomerOptions] = useState(defaultCustomerOptions)
   const [selectedCustomer, setSelectedCustomer] = useState(null)
   const [customerNameInputValue, setCustomerNameInputValue] = useState('')
@@ -249,55 +296,156 @@ const CreateCertificate = () => {
   })
 
   // Device (Step 2) fields
-  const [device, setDevice] = useState({
-    manufacturer: '',
-    serialNo: '',
-    model: '',
-    terminalModel: '',
-    maxCapacity: '',
-    tagNo: '',
-    readability: '',
-    verificationValue: '',
-    location: ''
-  })
+  const [device, setDevice] = useState(() => createInitialDeviceFields())
 
   // Procedure Template (Step 3) field
   const [procedureTemplate, setProcedureTemplate] = useState('')
 
   // Linearity (Step 4) records
-  const [linearityRecords, setLinearityRecords] = useState([
-    {
-      nominalValue: '',
-      reading: '',
-      error: '',
-      allowableError: '',
-      withinTolerances: ''
-    }
-  ])
+  const [linearityRecords, setLinearityRecords] = useState(() => createInitialLinearityRecords())
 
   // Eccentricity (Step 5) data
-  const [eccentricity, setEccentricity] = useState({
-    testWeight: '50 kg',
-    positions: [
-      { position: 'Center', displayedValue: '50.000 kg', deviation: 'N/A' },
-      { position: 'Left Front', displayedValue: '50.000 kg', deviation: '0.000 kg' },
-      { position: 'Left Rear', displayedValue: '50.000 kg', deviation: '0.000 kg' },
-      { position: 'Right Rear', displayedValue: '50.000 kg', deviation: '0.000 kg' },
-      { position: 'Right Front', displayedValue: '50.000 kg', deviation: '0.000 kg' }
-    ],
-    maximumDeviation: '0.000 kg',
-    allowableDeviation: '0.002 kg',
-    withinTolerances: 'YES'
-  })
+  const [eccentricity, setEccentricity] = useState(() => createInitialEccentricity())
 
   // Repeatability (Step 6) data
-  const [repeatability, setRepeatability] = useState({
-    testWeight: '75 kg',
-    measurements: [{ withoutTestWeight: '0.000 kg', withTestWeight: '75.000 kg', asFound: '75.000 kg' }],
-    deviation: '0.000 kg',
-    allowableError: '0.002 kg',
-    withinTolerances: 'YES'
-  })
+  const [repeatability, setRepeatability] = useState(() => createInitialRepeatability())
+
+  const resetDeviceDependentState = () => {
+    setDevice(createInitialDeviceFields())
+    setLinearityRecords(createInitialLinearityRecords())
+    setEccentricity(createInitialEccentricity())
+    setRepeatability(createInitialRepeatability())
+  }
+
+  const applyDeviceData = deviceRecord => {
+    setDevice({
+      manufacturer: deviceRecord.manufacturer || '',
+      serialNo: deviceRecord.serialNumber || '',
+      model: deviceRecord.model || '',
+      terminalModel: deviceRecord.terminalModel || '',
+      maxCapacity: deviceRecord.maxCapacity || '',
+      tagNo: deviceRecord.tagNumber || '',
+      readability: deviceRecord.readability || '',
+      verificationValue: deviceRecord.verificationValue || '',
+      location: deviceRecord.location || ''
+    })
+
+    if (Array.isArray(deviceRecord.linearityRows) && deviceRecord.linearityRows.length > 0) {
+      setLinearityRecords(
+        deviceRecord.linearityRows.map(row => ({
+          nominalValue: row.nominalValue || '',
+          reading: row.reading || '',
+          error: row.error || '',
+          allowableError: row.allowableError || '',
+          withinTolerances: row.withinTolerance || ''
+        }))
+      )
+    } else {
+      setLinearityRecords(createInitialLinearityRecords())
+    }
+
+    if (deviceRecord.eccentricityData) {
+      const eccData = deviceRecord.eccentricityData
+      setEccentricity({
+        testWeight: eccData.testWeight || '',
+        positions: ECCENTRICITY_POSITION_MAP.map(position => ({
+          position: position.label,
+          displayedValue: (eccData.positions[position.key]?.displayedValue as string) || '',
+          deviation: (eccData.positions[position.key]?.deviation as string) || ''
+        })),
+        maximumDeviation: eccData.maximumDeviation || '',
+        allowableDeviation: eccData.allowableDeviation || '',
+        withinTolerances: eccData.withinTolerance || ''
+      })
+    } else {
+      setEccentricity(createInitialEccentricity())
+    }
+
+    if (deviceRecord.repeatabilityData) {
+      const repeatData = deviceRecord.repeatabilityData
+      const defaultMeasurements = createInitialRepeatability().measurements
+      const mappedMeasurements =
+        Array.isArray(repeatData.measurements) && repeatData.measurements.length > 0
+          ? repeatData.measurements.map(entry => ({
+              withoutTestWeight: entry.withoutTestWeight || '',
+              withTestWeight: entry.withTestWeight || '',
+              asFound: entry.asFound || ''
+            }))
+          : defaultMeasurements
+      setRepeatability({
+        testWeight: repeatData.testWeight || '',
+        measurements: mappedMeasurements,
+        deviation: repeatData.deviation || '',
+        allowableError: repeatData.allowableError || '',
+        withinTolerances: repeatData.withinTolerance || ''
+      })
+    } else {
+      setRepeatability(createInitialRepeatability())
+    }
+  }
+
+  useEffect(() => {
+    try {
+      const storedDevices = localStorage.getItem('devices')
+      if (storedDevices) {
+        const parsed = JSON.parse(storedDevices)
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setDevices(parsed)
+          return
+        }
+      }
+      setDevices(defaultDevices)
+    } catch (error) {
+      console.error('Failed to load devices:', error)
+      setDevices(defaultDevices)
+    }
+  }, [])
+
+  const deviceNameOptions = useMemo(() => {
+    const uniqueNames = new Set<string>()
+    devices.forEach(item => {
+      if (item.deviceName) {
+        uniqueNames.add(item.deviceName)
+      }
+    })
+    return Array.from(uniqueNames).sort((a, b) => a.localeCompare(b))
+  }, [devices])
+
+  const serialNumberOptions = useMemo(() => {
+    if (!selectedDeviceName) return []
+    const serials = new Set<string>()
+    devices.forEach(item => {
+      if (item.deviceName === selectedDeviceName && item.serialNumber) {
+        serials.add(item.serialNumber)
+      }
+    })
+    return Array.from(serials).sort((a, b) => a.localeCompare(b))
+  }, [devices, selectedDeviceName])
+
+  const handleDeviceNameSelect = (_, newValue) => {
+    setSelectedDeviceName(newValue)
+    setDeviceNameInputValue(newValue || '')
+    setSerialNumberInputValue('')
+    resetDeviceDependentState()
+  }
+
+  const handleSerialNumberSelect = (_, newValue) => {
+    setSerialNumberInputValue(newValue || '')
+    if (!newValue) {
+      resetDeviceDependentState()
+      return
+    }
+
+    const targetDevice = devices.find(
+      item => item.serialNumber === newValue && (!selectedDeviceName || item.deviceName === selectedDeviceName)
+    )
+
+    if (targetDevice) {
+      applyDeviceData(targetDevice)
+    } else {
+      resetDeviceDependentState()
+    }
+  }
 
   const handleCalibrationFieldChange = (field, value) => {
     setCalibrationDetails(prev => ({
@@ -1304,7 +1452,7 @@ const CreateCertificate = () => {
                     <Autocomplete
                       options={deviceNameOptions}
                       value={selectedDeviceName}
-                      onChange={(_, newValue) => setSelectedDeviceName(newValue)}
+                      onChange={handleDeviceNameSelect}
                       inputValue={deviceNameInputValue}
                       onInputChange={(_, newInputValue) => setDeviceNameInputValue(newInputValue)}
                       renderInput={params => (
@@ -1326,22 +1474,26 @@ const CreateCertificate = () => {
                     <Typography variant='body2' sx={{ mb: 0.7 }} component='label' className='cc_label'>
                       Serial Number
                     </Typography>
-                    <TextField
-                      placeholder='Enter serial number'
-                      fullWidth
-                      size='small'
-                      value={device.serialNo}
-                      onChange={e =>
-                        setDevice(prev => ({
-                          ...prev,
-                          serialNo: e.target.value
-                        }))
-                      }
-                      InputProps={{
-                        sx: {
-                          borderRadius: 1.5
-                        }
-                      }}
+                    <Autocomplete
+                      options={serialNumberOptions}
+                      value={device.serialNo ? device.serialNo : null}
+                      onChange={handleSerialNumberSelect}
+                      inputValue={serialNumberInputValue}
+                      onInputChange={(_, newInputValue) => setSerialNumberInputValue(newInputValue)}
+                      disabled={!selectedDeviceName || serialNumberOptions.length === 0}
+                      renderInput={params => (
+                        <TextField
+                          {...params}
+                          placeholder={selectedDeviceName ? 'Select serial number' : 'Select device first'}
+                          size='small'
+                          InputProps={{
+                            ...params.InputProps,
+                            sx: {
+                              borderRadius: 1.5
+                            }
+                          }}
+                        />
+                      )}
                     />
                   </div>
                 </div>
@@ -1764,7 +1916,11 @@ const CreateCertificate = () => {
                     </Typography>
                     <TextField
                       value={device.serialNo}
-                      onChange={e => setDevice(p => ({ ...p, serialNo: e.target.value }))}
+                      onChange={e => {
+                        const value = e.target.value
+                        setDevice(p => ({ ...p, serialNo: value }))
+                        setSerialNumberInputValue(value)
+                      }}
                       fullWidth
                       size='small'
                     />
