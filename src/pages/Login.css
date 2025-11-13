@@ -1,0 +1,247 @@
+.login-container {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* Left Panel - Login Form */
+.login-form-panel {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #ffffff;
+  padding: 3rem 2.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+.login-form-content {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+}
+
+.login-logo-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.login-logo-image {
+  height: 42px;
+  width: auto;
+  object-fit: contain;
+}
+
+.logo-text {
+  font-weight: 600;
+  font-size: 1.375rem;
+  color: #111827;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.welcome-title {
+  font-weight: 700;
+  font-size: 2rem;
+  color: #111827;
+  margin-bottom: 0.75rem;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+}
+
+.welcome-subtitle {
+  color: #6b7280;
+  font-size: 0.9375rem;
+  margin-bottom: 2.75rem;
+  line-height: 1.5;
+  margin-top: 3px !important;
+}
+
+.login-form {
+  width: 100%;
+  margin-top: 35px;
+}
+
+.input-wrapper {
+  margin-bottom: 1.5rem;
+}
+
+.input-label {
+  display: block;
+  color: #374151;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem !important;
+  line-height: 1.5;
+}
+
+.login-options {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.remember-me-container {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.remember-me-text {
+  color: #374151;
+  font-size: 0.875rem;
+  font-weight: 400;
+  user-select: none;
+  margin-left: 0.25rem;
+}
+
+.forgot-password-link {
+  color: #2563eb;
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.forgot-password-link:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
+.sign-up-container {
+  text-align: center;
+  margin-top: 1.5rem;
+}
+
+.sign-up-text {
+  color: #6b7280;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.sign-up-link {
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s ease;
+}
+
+.sign-up-link:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
+/* Right Panel - Image */
+.login-illustration-panel {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  min-height: 100vh;
+  background-color: #f3f4f6;
+}
+
+.login-page-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+
+/* Responsive Design */
+@media (max-width: 960px) {
+  .login-container {
+    flex-direction: column;
+  }
+
+  .login-form-panel {
+    min-height: 100vh;
+    padding: 2.5rem 1.5rem;
+  }
+
+  .login-illustration-panel {
+    display: none; /* Hide illustration on mobile for better UX */
+  }
+
+  .welcome-title {
+    font-size: 1.75rem;
+  }
+
+  .login-logo-container {
+    margin-bottom: 2.5rem;
+  }
+
+  .welcome-subtitle {
+    margin-bottom: 2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .login-form-panel {
+    padding: 2rem 1.25rem;
+  }
+
+  .login-form-content {
+    max-width: 100%;
+  }
+
+  .welcome-title {
+    font-size: 1.625rem;
+  }
+
+  .welcome-subtitle {
+    font-size: 0.875rem;
+    margin-bottom: 2rem;
+  }
+
+  .login-logo-container {
+    margin-bottom: 2.5rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .login-form-panel {
+    padding: 1.5rem 1rem;
+  }
+
+  .welcome-title {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .welcome-subtitle {
+    font-size: 0.875rem;
+    margin-bottom: 1.75rem;
+  }
+
+  .login-logo-container {
+    margin-bottom: 2rem;
+  }
+
+  .input-wrapper {
+    margin-bottom: 1.25rem;
+  }
+
+  .login-options {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+  }
+
+  .forgot-password-link {
+    align-self: flex-end;
+  }
+}
+
+

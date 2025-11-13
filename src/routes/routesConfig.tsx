@@ -18,8 +18,12 @@ import AddUser from '@/pages/protected/user-management/AddUser'
 import ViewUser from '@/pages/protected/user-management/ViewUser'
 import EditUser from '@/pages/protected/user-management/EditUser'
 import CreateCertificate from '@/pages/protected/certificates/CreateCertificate'
+import Login from '@/pages/Login'
+import ForgotPassword from '@/pages/ForgotPassword'
 
 export const publicRoutes = [
+  { path: '/login', element: <Login /> },
+  { path: '/forgot-password', element: <ForgotPassword /> },
   { path: '/dashboard', element: <Dashboard /> },
   { path: '/certificates', element: <Certificates /> },
   { path: '/certificates/create', element: <CreateCertificate /> },
