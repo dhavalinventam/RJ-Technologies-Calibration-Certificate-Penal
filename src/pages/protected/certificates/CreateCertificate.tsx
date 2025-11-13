@@ -863,7 +863,7 @@ const CreateCertificate = () => {
     const doc = new jsPDF()
     const pageWidth = doc.internal.pageSize.getWidth()
     const pageHeight = doc.internal.pageSize.getHeight()
-    const margin = 12 // Further reduced margin for maximum space utilization
+    const margin = 10 // Optimized margin for 3-page layout
     const contentWidth = pageWidth - margin * 2
     let yPos = margin
 
@@ -890,7 +890,7 @@ const CreateCertificate = () => {
 
     // Helper function to draw labeled value (clean layout without underlines)
     const drawLabelValue = (label, value, x, y, labelWidth = 48, allowWrap = true) => {
-      doc.setFontSize(9)
+      doc.setFontSize(8.5) // Slightly reduced font size
       doc.setFont('helvetica', 'normal')
       doc.setTextColor(100, 100, 100) // Gray for labels
       doc.text(label + ':', x, y)
@@ -901,20 +901,20 @@ const CreateCertificate = () => {
       const maxWidth = contentWidth / 2 - labelWidth - 8 // Adjusted for tighter layout
 
       if (!value) {
-        return 4 // Reduced minimum height
+        return 3.5 // Reduced minimum height
       }
 
       // For fields that shouldn't wrap (phone, serial, etc.), display as-is
       if (!allowWrap) {
         // Display value directly
         doc.text(value, valueX, y)
-        return 4
+        return 3.5
       }
 
       // Allow wrapping for addresses and long text
       const wrappedText = doc.splitTextToSize(value, maxWidth)
       doc.text(wrappedText, valueX, y)
-      return Math.max(wrappedText.length * 4.5, 4) // Reduced line height
+      return Math.max(wrappedText.length * 4, 3.5) // Reduced line height
     }
 
     // Helper function to split address into multiple lines
@@ -942,26 +942,26 @@ const CreateCertificate = () => {
     const drawMergedHeaderCell = (text, startX, width, y, height, align = 'center') => {
       const headerBgColor = [240, 240, 240]
       const borderColor = [180, 180, 180]
-      const cellPadding = 4
+      const cellPadding = 3 // Reduced padding
 
       doc.setFillColor(headerBgColor[0], headerBgColor[1], headerBgColor[2])
       doc.rect(startX, y, width, height, 'F')
       doc.setDrawColor(borderColor[0], borderColor[1], borderColor[2])
       doc.setLineWidth(0.3)
       doc.rect(startX, y, width, height, 'S')
-      doc.setFontSize(9)
+      doc.setFontSize(8.5) // Slightly reduced font size
       doc.setFont('helvetica', 'bold')
       doc.setTextColor(50, 50, 50)
       const textWidth = doc.getTextWidth(text)
       const textX = align === 'center' ? startX + width / 2 - textWidth / 2 : startX + cellPadding
-      doc.text(text, textX, y + 6)
+      doc.text(text, textX, y + 5) // Reduced vertical offset
       doc.setTextColor(0, 0, 0)
       doc.setFont('helvetica', 'normal')
     }
 
     // ==================== HEADER SECTION ====================
     // Company Name (centered at top)
-    doc.setFontSize(15)
+    doc.setFontSize(14) // Reduced from 15
     doc.setFont('helvetica', 'bold')
     doc.setTextColor(0, 0, 0)
     const companyName = 'RJ Technologies'
@@ -969,26 +969,26 @@ const CreateCertificate = () => {
     doc.text(companyName, (pageWidth - companyNameWidth) / 2, yPos)
 
     // Company Address (centered below name)
-    yPos += 6 // Increased spacing for better visual separation
-    doc.setFontSize(9)
+    yPos += 5 // Reduced spacing
+    doc.setFontSize(8.5) // Reduced font size
     doc.setFont('helvetica', 'normal')
     doc.setTextColor(80, 80, 80)
     const companyAddress = '301, Shahjanand Plaza, Bhattha, Paldi, Ahmedabad - 380007'
     const addressLines = splitAddress(companyAddress, contentWidth - 10)
     addressLines.forEach((line, index) => {
       const lineWidth = doc.getTextWidth(line)
-      doc.text(line, (pageWidth - lineWidth) / 2, yPos + index * 4.5)
+      doc.text(line, (pageWidth - lineWidth) / 2, yPos + index * 4)
     })
-    yPos += addressLines.length * 4.5 + 10 // Increased top spacing before title for better look
+    yPos += addressLines.length * 4 + 6 // Reduced spacing before title
 
     // Certificate Title and Number (on same line)
-    doc.setFontSize(14) // Reduced font size from 18 to 14
+    doc.setFontSize(12) // Reduced font size
     doc.setFont('helvetica', 'bold')
     doc.setTextColor(0, 0, 0)
     const title = 'Calibration Certificate'
 
     // Certificate Number (right-aligned on same line as title)
-    doc.setFontSize(9)
+    doc.setFontSize(8) // Reduced font size
     doc.setFont('helvetica', 'normal')
     doc.setTextColor(80, 80, 80)
     const certNoText = `Certificate No.: ${certificateNo || 'N/A'}`
@@ -997,50 +997,46 @@ const CreateCertificate = () => {
 
     // Title left-aligned, certificate number on right
     const titleX = margin
-    doc.setFontSize(14) // Reduced font size
+    doc.setFontSize(12) // Reduced font size
     doc.setFont('helvetica', 'bold')
     doc.setTextColor(0, 0, 0)
     doc.text(title, titleX, yPos)
 
     // Certificate number on same line, right-aligned
-    doc.setFontSize(9)
+    doc.setFontSize(8) // Reduced font size
     doc.setFont('helvetica', 'normal')
     doc.setTextColor(80, 80, 80)
     doc.text(certNoText, certNoX, yPos)
 
-    yPos += 8 // Increased spacing after title
-
-    // Horizontal divider line below title
-    drawSectionDivider(yPos)
-    yPos += 6 // Increased spacing after divider
+    yPos += 10 // Increased spacing after main heading
 
     // Common spacing variables for all sections
     const leftColX = margin
-    const rightColX = margin + contentWidth / 2 + 8 // Reduced gap between columns
-    const labelWidth = 48 // Reduced label width for tighter spacing
-    const lineSpacing = 4.5 // Reduced line spacing
+    const rightColX = margin + contentWidth / 2 + 6 // Reduced gap between columns
+    const labelWidth = 45 // Reduced label width for tighter spacing
+    const lineSpacing = 3.5 // Reduced line spacing
 
     // ==================== CUSTOMER SECTION ====================
     // Check if we need a new page
-    if (yPos > pageHeight - 80) {
+    if (yPos > pageHeight - 70) {
       doc.addPage()
       yPos = margin
     }
 
     // Section heading
-    doc.setFontSize(10) // Reduced font size
+    doc.setFontSize(9.5) // Reduced font size
     doc.setFont('helvetica', 'bold')
     doc.setTextColor(0, 0, 0)
     doc.text('Customer Information', margin, yPos)
-    yPos += 5 // Reduced spacing
+    yPos += 4 // Reduced spacing
     drawSectionDivider(yPos - 1) // Only bottom divider, no top border
-    yPos += 6 // Reduced spacing after divider
+    yPos += 4 // Reduced spacing after divider
 
     // Customer details in two columns with clean layout
     let maxY = yPos
 
     // Left column
-    doc.setFontSize(9)
+    doc.setFontSize(8.5)
     let leftY = yPos
 
     // Company
@@ -1050,17 +1046,17 @@ const CreateCertificate = () => {
     // Address handling (allow wrapping)
     const addressText = customer.address || ''
     if (addressText) {
-      doc.setFontSize(9)
+      doc.setFontSize(8.5)
       doc.setFont('helvetica', 'normal')
       doc.setTextColor(100, 100, 100)
       doc.text('Address:', leftColX, leftY)
       doc.setTextColor(0, 0, 0)
-      const addressMaxWidth = contentWidth / 2 - labelWidth - 10 // Reduced padding
+      const addressMaxWidth = contentWidth / 2 - labelWidth - 8 // Reduced padding
       const addressLines = doc.splitTextToSize(addressText.replace(/\n/g, ' '), addressMaxWidth)
       addressLines.forEach((line, idx) => {
-        doc.text(line, leftColX + labelWidth + 2, leftY + idx * 4.5) // Closer to label, tighter line spacing
+        doc.text(line, leftColX + labelWidth + 2, leftY + idx * 4) // Reduced line spacing
       })
-      leftY += Math.max(addressLines.length * 4.5, lineSpacing)
+      leftY += Math.max(addressLines.length * 4, lineSpacing)
     } else {
       leftY += drawLabelValue('Address', '', leftColX, leftY, labelWidth, true)
       leftY += lineSpacing
@@ -1088,23 +1084,23 @@ const CreateCertificate = () => {
     rightY += drawLabelValue('Mobile No.', customer.mobile || '', rightColX, rightY, labelWidth, false)
 
     maxY = Math.max(leftY, rightY)
-    yPos = maxY + 8 // Reduced spacing after customer section
+    yPos = maxY + 6 // Reduced spacing after customer section
 
     // ==================== DEVICE SECTION ====================
     // Check if we need a new page
-    if (yPos > pageHeight - 80) {
+    if (yPos > pageHeight - 70) {
       doc.addPage()
       yPos = margin
     }
 
     // Section heading
-    doc.setFontSize(10) // Reduced font size
+    doc.setFontSize(9.5) // Reduced font size
     doc.setFont('helvetica', 'bold')
     doc.setTextColor(0, 0, 0)
     doc.text('Device Information', margin, yPos)
-    yPos += 5 // Reduced spacing
+    yPos += 4 // Reduced spacing
     drawSectionDivider(yPos - 1) // Only bottom divider, no top border
-    yPos += 6 // Reduced spacing after divider
+    yPos += 4 // Reduced spacing after divider
 
     // Device details in two columns (reuse same spacing settings)
     leftY = yPos
@@ -1132,23 +1128,23 @@ const CreateCertificate = () => {
     rightY += drawLabelValue('Verification Value', device.verificationValue || '', rightColX, rightY, labelWidth, false)
 
     maxY = Math.max(leftY, rightY)
-    yPos = maxY + 8 // Reduced spacing after device section
+    yPos = maxY + 6 // Reduced spacing after device section
 
     // ==================== CALIBRATION DATES SECTION ====================
     // Check if we need a new page
-    if (yPos > pageHeight - 80) {
+    if (yPos > pageHeight - 70) {
       doc.addPage()
       yPos = margin
     }
 
     // Section heading
-    doc.setFontSize(10) // Reduced font size
+    doc.setFontSize(9.5) // Reduced font size
     doc.setFont('helvetica', 'bold')
     doc.setTextColor(0, 0, 0)
     doc.text('Calibration Dates', margin, yPos)
-    yPos += 5 // Reduced spacing
+    yPos += 4 // Reduced spacing
     drawSectionDivider(yPos - 1) // Only bottom divider, no top border
-    yPos += 6 // Reduced spacing after divider
+    yPos += 4 // Reduced spacing after divider
 
     // Calibration dates in two columns
     leftY = yPos
@@ -1191,31 +1187,31 @@ const CreateCertificate = () => {
     )
 
     maxY = Math.max(leftY, rightY)
-    yPos = maxY + 8 // Reduced spacing
+    yPos = maxY + 6 // Reduced spacing
 
     // ==================== PROCEDURE TEMPLATE SECTION ====================
     // Check if we need a new page
-    if (yPos > pageHeight - 80) {
+    if (yPos > pageHeight - 70) {
       doc.addPage()
       yPos = margin
     }
 
     // Section heading
-    doc.setFontSize(10) // Reduced font size
+    doc.setFontSize(9.5) // Reduced font size
     doc.setFont('helvetica', 'bold')
     doc.setTextColor(0, 0, 0)
     doc.text('Procedure Template', margin, yPos)
-    yPos += 5 // Reduced spacing
+    yPos += 4 // Reduced spacing
     drawSectionDivider(yPos - 1) // Only bottom divider, no top border
-    yPos += 6 // Reduced spacing after divider
+    yPos += 4 // Reduced spacing after divider
 
     // Display Procedure Template with word wrapping
     const procedureText = procedureTemplate || ''
-    doc.setFontSize(9)
+    doc.setFontSize(8.5) // Reduced font size
     doc.setFont('helvetica', 'normal')
     doc.setTextColor(0, 0, 0)
     const procedureLines = doc.splitTextToSize(procedureText, contentWidth)
-    const templateLineHeight = 5
+    const templateLineHeight = 4.2 // Reduced line height
 
     procedureLines.forEach(line => {
       // Check if we need a new page
@@ -1227,23 +1223,23 @@ const CreateCertificate = () => {
       yPos += templateLineHeight
     })
 
-    yPos += 8
+    yPos += 6 // Reduced spacing
 
     // ==================== LINEARITY SECTION ====================
     // Check if we need a new page
-    if (yPos > pageHeight - 80) {
+    if (yPos > pageHeight - 70) {
       doc.addPage()
       yPos = margin
     }
 
     // Section heading
-    doc.setFontSize(10) // Reduced font size
+    doc.setFontSize(9.5) // Reduced font size
     doc.setFont('helvetica', 'bold')
     doc.setTextColor(0, 0, 0)
     doc.text('Linearity', margin, yPos)
-    yPos += 5 // Reduced spacing
+    yPos += 4 // Reduced spacing
     drawSectionDivider(yPos - 1) // Only bottom divider, no top border
-    yPos += 6 // Reduced spacing after divider
+    yPos += 4 // Reduced spacing after divider
 
     // Filter out empty records
     const validRecords = linearityRecords.filter(
@@ -1259,10 +1255,10 @@ const CreateCertificate = () => {
       const linCol3Width = contentWidth * 0.18 // Error
       const linCol4Width = contentWidth * 0.24 // Allowable Error
       const linCol5Width = contentWidth * 0.18 // Within Tolerances
-      const linRowHeight = 8 // Increased row height for better spacing
-      const linHeaderRowHeight = 8 // Header height same as rows for consistency
+      const linRowHeight = 6.5 // Reduced row height for compact layout
+      const linHeaderRowHeight = 7 // Reduced header height
       const linBorderColor = [180, 180, 180]
-      const linCellPadding = 5 // Increased padding for better spacing
+      const linCellPadding = 3 // Reduced padding
 
       // Column headers
       const headers = ['Nominal Value', 'Reading', 'Error', 'Allowable Error', 'Within Tolerances']
@@ -1293,11 +1289,11 @@ const CreateCertificate = () => {
         }
 
         // Draw text in each cell with proper vertical centering
-        doc.setFontSize(9)
+        doc.setFontSize(8.5) // Reduced font size
         doc.setFont('helvetica', fontWeight)
         doc.setTextColor(textColor[0], textColor[1], textColor[2])
         let cellXPos = margin + linCellPadding
-        const textY = rowY + rowHeight / 2 + 2 // Center text vertically
+        const textY = rowY + rowHeight / 2 + 1.5 // Center text vertically
         values.forEach((value, index) => {
           doc.text(value || '', cellXPos, textY)
           cellXPos += colWidths[index]
@@ -1334,29 +1330,29 @@ const CreateCertificate = () => {
       })
 
       // Add spacing after the table
-      yPos += 12
+      yPos += 8 // Reduced spacing
     } else {
-      yPos += 8
+      yPos += 6
     }
 
     // ==================== ECCENTRICITY SECTION ====================
     // Check if we need a new page
-    if (yPos > pageHeight - 120) {
+    if (yPos > pageHeight - 100) {
       doc.addPage()
       yPos = margin
     }
 
     // Section heading
-    doc.setFontSize(10) // Reduced font size
+    doc.setFontSize(9.5) // Reduced font size
     doc.setFont('helvetica', 'bold')
     doc.setTextColor(0, 0, 0)
     doc.text('Eccentricity', margin, yPos)
-    yPos += 5 // Reduced spacing
+    yPos += 4 // Reduced spacing
     drawSectionDivider(yPos - 1) // Only bottom divider, no top border
-    yPos += 6 // Reduced spacing after divider
+    yPos += 4 // Reduced spacing after divider
 
     // Two-column layout setup
-    const columnGap = 8 // Gap between image and table
+    const columnGap = 6 // Reduced gap between image and table
     const imageColumnWidth = contentWidth * 0.2 // Left column (image) - 46% of content width
     const tableColumnWidth = contentWidth * 0.72 // Right column (table) - 46% of content width
     const imageColumnX = margin // Left column starting X position
@@ -1366,10 +1362,10 @@ const CreateCertificate = () => {
     const eccCol1Width = tableColumnWidth * 0.35 // Position column (35% of table width)
     const eccCol2Width = tableColumnWidth * 0.325 // Displayed Value column (32.5% of table width)
     const eccCol3Width = tableColumnWidth * 0.325 // Deviation column (32.5% of table width)
-    const eccRowHeight = 7
-    const eccHeaderRowHeight = 8
+    const eccRowHeight = 6 // Reduced row height
+    const eccHeaderRowHeight = 7 // Reduced header height
     const borderColor = [180, 180, 180]
-    const cellPadding = 4
+    const cellPadding = 3 // Reduced padding
 
     // Calculate total table height
     const numDataRows = eccentricity.positions.length
@@ -1536,7 +1532,7 @@ const CreateCertificate = () => {
       const values = [pos.position || '', pos.displayedValue || '', pos.deviation || '']
 
       // Draw row with special handling for centered columns
-      doc.setFontSize(9)
+      doc.setFontSize(8.5) // Reduced font size
       doc.setFont('helvetica', 'normal')
       doc.setTextColor(0, 0, 0)
       const rowY = currentTableY
@@ -1546,12 +1542,12 @@ const CreateCertificate = () => {
       doc.rect(tableColumnX, rowY, tableColumnWidth, eccRowHeight, 'S')
 
       // Position (left-aligned)
-      doc.text(values[0], tableColumnX + cellPadding, rowY + 5)
+      doc.text(values[0], tableColumnX + cellPadding, rowY + 4.5) // Adjusted vertical position
       doc.line(tableColumnX + eccCol1Width, rowY, tableColumnX + eccCol1Width, rowY + eccRowHeight)
 
       // Displayed Value (centered)
       const dispTextWidth = doc.getTextWidth(values[1])
-      doc.text(values[1], tableColumnX + eccCol1Width + eccCol2Width / 2 - dispTextWidth / 2, rowY + 5)
+      doc.text(values[1], tableColumnX + eccCol1Width + eccCol2Width / 2 - dispTextWidth / 2, rowY + 4.5) // Adjusted vertical position
       doc.line(
         tableColumnX + eccCol1Width + eccCol2Width,
         rowY,
@@ -1561,14 +1557,14 @@ const CreateCertificate = () => {
 
       // Deviation (centered)
       const devTextWidth = doc.getTextWidth(values[2])
-      doc.text(values[2], tableColumnX + eccCol1Width + eccCol2Width + eccCol3Width / 2 - devTextWidth / 2, rowY + 5)
+      doc.text(values[2], tableColumnX + eccCol1Width + eccCol2Width + eccCol3Width / 2 - devTextWidth / 2, rowY + 4.5) // Adjusted vertical position
 
       currentTableY += eccRowHeight
     })
 
     // Summary Rows
     const drawSummaryRow = (label, value) => {
-      doc.setFontSize(9)
+      doc.setFontSize(8.5) // Reduced font size
       doc.setFont('helvetica', 'normal')
       doc.setTextColor(0, 0, 0)
       const rowY = currentTableY
@@ -1578,13 +1574,13 @@ const CreateCertificate = () => {
       doc.rect(tableColumnX, rowY, tableColumnWidth, eccRowHeight, 'S')
 
       // Label (left-aligned)
-      doc.text(label, tableColumnX + cellPadding, rowY + 5)
+      doc.text(label, tableColumnX + cellPadding, rowY + 4.5) // Adjusted vertical position
       doc.line(tableColumnX + eccCol1Width, rowY, tableColumnX + eccCol1Width, rowY + eccRowHeight)
 
       // Value (centered in merged columns)
       const mergedWidth = eccCol2Width + eccCol3Width
       const valueWidth = doc.getTextWidth(value)
-      doc.text(value, tableColumnX + eccCol1Width + mergedWidth / 2 - valueWidth / 2, rowY + 5)
+      doc.text(value, tableColumnX + eccCol1Width + mergedWidth / 2 - valueWidth / 2, rowY + 4.5) // Adjusted vertical position
 
       currentTableY += eccRowHeight
     }
@@ -1594,23 +1590,23 @@ const CreateCertificate = () => {
     drawSummaryRow('Within Tolerances:', eccentricity.withinTolerances || '')
 
     // Update yPos to after the section (use the maximum height of image or table)
-    yPos += Math.max(totalTableHeight, imageHeight) + 12
+    yPos += Math.max(totalTableHeight, imageHeight) + 8 // Reduced spacing
 
     // ==================== REPEATABILITY SECTION ====================
     // Check if we need a new page
-    if (yPos > pageHeight - 120) {
+    if (yPos > pageHeight - 100) {
       doc.addPage()
       yPos = margin
     }
 
     // Section heading
-    doc.setFontSize(10) // Reduced font size
+    doc.setFontSize(9.5) // Reduced font size
     doc.setFont('helvetica', 'bold')
     doc.setTextColor(0, 0, 0)
     doc.text('Repeatability', margin, yPos)
-    yPos += 5 // Reduced spacing
+    yPos += 4 // Reduced spacing
     drawSectionDivider(yPos - 1) // Only bottom divider, no top border
-    yPos += 6 // Reduced spacing after divider
+    yPos += 4 // Reduced spacing after divider
 
     // Filter out empty records
     const validMeasurements = repeatability.measurements.filter(
@@ -1622,10 +1618,10 @@ const CreateCertificate = () => {
       const repCol1Width = contentWidth * 0.33 // Without Test Weight column
       const repCol2Width = contentWidth * 0.33 // With Test Weight column
       const repCol3Width = contentWidth * 0.34 // As Found column
-      const repRowHeight = 7
-      const repHeaderRowHeight = 8
+      const repRowHeight = 6 // Reduced row height
+      const repHeaderRowHeight = 7 // Reduced header height
       const borderColor = [180, 180, 180]
-      const cellPadding = 4
+      const cellPadding = 3 // Reduced padding
 
       // Header Row 1: "Test Weight" | "75 kg" (merged cols 2-3)
       const repHeader1Y = yPos
@@ -1685,7 +1681,7 @@ const CreateCertificate = () => {
         ]
 
         // Draw row with centered values
-        doc.setFontSize(9)
+        doc.setFontSize(8.5) // Reduced font size
         doc.setFont('helvetica', 'normal')
         doc.setTextColor(0, 0, 0)
         const rowY = yPos
@@ -1696,17 +1692,17 @@ const CreateCertificate = () => {
 
         // Without Test Weight (centered)
         const withoutTextWidth = doc.getTextWidth(values[0])
-        doc.text(values[0], margin + repCol1Width / 2 - withoutTextWidth / 2, rowY + 5)
+        doc.text(values[0], margin + repCol1Width / 2 - withoutTextWidth / 2, rowY + 4.5) // Adjusted vertical position
         doc.line(margin + repCol1Width, rowY, margin + repCol1Width, rowY + repRowHeight)
 
         // With Test Weight (centered)
         const withTextWidth = doc.getTextWidth(values[1])
-        doc.text(values[1], margin + repCol1Width + repCol2Width / 2 - withTextWidth / 2, rowY + 5)
+        doc.text(values[1], margin + repCol1Width + repCol2Width / 2 - withTextWidth / 2, rowY + 4.5) // Adjusted vertical position
         doc.line(margin + repCol1Width + repCol2Width, rowY, margin + repCol1Width + repCol2Width, rowY + repRowHeight)
 
         // As Found (centered)
         const asFoundTextWidth = doc.getTextWidth(values[2])
-        doc.text(values[2], margin + repCol1Width + repCol2Width + repCol3Width / 2 - asFoundTextWidth / 2, rowY + 5)
+        doc.text(values[2], margin + repCol1Width + repCol2Width + repCol3Width / 2 - asFoundTextWidth / 2, rowY + 4.5) // Adjusted vertical position
 
         yPos += repRowHeight
       })
@@ -1718,7 +1714,7 @@ const CreateCertificate = () => {
           yPos = margin
         }
 
-        doc.setFontSize(9)
+        doc.setFontSize(8.5) // Reduced font size
         doc.setFont('helvetica', 'normal')
         doc.setTextColor(0, 0, 0)
         const rowY = yPos
@@ -1728,13 +1724,13 @@ const CreateCertificate = () => {
         doc.rect(margin, rowY, contentWidth, repRowHeight, 'S')
 
         // Label (left-aligned)
-        doc.text(label, margin + cellPadding, rowY + 5)
+        doc.text(label, margin + cellPadding, rowY + 4.5) // Adjusted vertical position
         doc.line(margin + repCol1Width, rowY, margin + repCol1Width, rowY + repRowHeight)
 
         // Value (centered in merged columns)
         const mergedWidth = repCol2Width + repCol3Width
         const valueWidth = doc.getTextWidth(value)
-        doc.text(value, margin + repCol1Width + mergedWidth / 2 - valueWidth / 2, rowY + 5)
+        doc.text(value, margin + repCol1Width + mergedWidth / 2 - valueWidth / 2, rowY + 4.5) // Adjusted vertical position
 
         yPos += repRowHeight
       }
@@ -1744,26 +1740,26 @@ const CreateCertificate = () => {
       drawRepSummaryRow('Within Tolerances:', repeatability.withinTolerances || '')
 
       // Add spacing after the table
-      yPos += 12
+      yPos += 8 // Reduced spacing
     } else {
-      yPos += 8
+      yPos += 6
     }
 
     // ==================== UNCERTAINTY SECTION ====================
     // Check if we need a new page
-    if (yPos > pageHeight - 80) {
+    if (yPos > pageHeight - 70) {
       doc.addPage()
       yPos = margin
     }
 
     // Section heading
-    doc.setFontSize(10)
+    doc.setFontSize(9.5) // Reduced font size
     doc.setFont('helvetica', 'bold')
     doc.setTextColor(0, 0, 0)
     doc.text('Uncertainty', margin, yPos)
-    yPos += 5
+    yPos += 4 // Reduced spacing
     drawSectionDivider(yPos - 1)
-    yPos += 6
+    yPos += 4 // Reduced spacing
 
     // Get loads from uncertainty tables
     const tableOneLoads = Object.keys(uncertainty.tableOne).filter(load => load && load.trim() !== '')
@@ -1780,22 +1776,22 @@ const CreateCertificate = () => {
       }
 
       // Table label
-      doc.setFontSize(9)
+      doc.setFontSize(8.5) // Reduced font size
       doc.setFont('helvetica', 'bold')
       doc.setTextColor(0, 0, 0)
       doc.text(tableLabel, margin, yPos)
-      yPos += 8
+      yPos += 6 // Reduced spacing
 
       // Table setup
       const labelColWidth = contentWidth * 0.25 // "Loads Applied" / "Combined Uncertainty (u(E))" column
       const dataColWidth = (contentWidth - labelColWidth) / loads.length // Equal width for each load column
-      const rowHeight = 8
-      const headerRowHeight = 8
+      const rowHeight = 6.5 // Reduced row height
+      const headerRowHeight = 7 // Reduced header height
       const borderColor = [180, 180, 180]
 
       // Header Row: "Loads Applied" | Load values
       const headerY = yPos
-      doc.setFontSize(9)
+      doc.setFontSize(8.5) // Reduced font size
       doc.setFont('helvetica', 'bold')
       doc.setTextColor(0, 0, 0)
 
@@ -1810,14 +1806,14 @@ const CreateCertificate = () => {
 
       // "Loads Applied" label
       const labelTextWidth = doc.getTextWidth('Loads Applied')
-      doc.text('Loads Applied', margin + labelColWidth / 2 - labelTextWidth / 2, headerY + 5)
+      doc.text('Loads Applied', margin + labelColWidth / 2 - labelTextWidth / 2, headerY + 4.5) // Adjusted vertical position
       doc.line(margin + labelColWidth, headerY, margin + labelColWidth, headerY + headerRowHeight)
 
       // Load values
       loads.forEach((load, index) => {
         const colX = margin + labelColWidth + index * dataColWidth
         const loadTextWidth = doc.getTextWidth(load)
-        doc.text(load, colX + dataColWidth / 2 - loadTextWidth / 2, headerY + 5)
+        doc.text(load, colX + dataColWidth / 2 - loadTextWidth / 2, headerY + 4.5) // Adjusted vertical position
         if (index < loads.length - 1) {
           doc.line(colX + dataColWidth, headerY, colX + dataColWidth, headerY + headerRowHeight)
         }
@@ -1827,7 +1823,7 @@ const CreateCertificate = () => {
 
       // Data Row: "Combined Uncertainty (u(E))" | Uncertainty values
       const dataY = yPos
-      doc.setFontSize(9)
+      doc.setFontSize(8.5) // Reduced font size
       doc.setFont('helvetica', 'normal')
       doc.setTextColor(0, 0, 0)
 
@@ -1843,7 +1839,7 @@ const CreateCertificate = () => {
       // "Combined Uncertainty (u(E))" label
       const uncertaintyLabel = 'Combined Uncertainty (u(E))'
       const uncertaintyLabelWidth = doc.getTextWidth(uncertaintyLabel)
-      doc.text(uncertaintyLabel, margin + labelColWidth / 2 - uncertaintyLabelWidth / 2, dataY + 5)
+      doc.text(uncertaintyLabel, margin + labelColWidth / 2 - uncertaintyLabelWidth / 2, dataY + 4.5) // Adjusted vertical position
       doc.line(margin + labelColWidth, dataY, margin + labelColWidth, dataY + rowHeight)
 
       // Uncertainty values
@@ -1852,14 +1848,14 @@ const CreateCertificate = () => {
         const value = tableData[load] || ''
         if (value) {
           const valueTextWidth = doc.getTextWidth(value)
-          doc.text(value, colX + dataColWidth / 2 - valueTextWidth / 2, dataY + 5)
+          doc.text(value, colX + dataColWidth / 2 - valueTextWidth / 2, dataY + 4.5) // Adjusted vertical position
         }
         if (index < loads.length - 1) {
           doc.line(colX + dataColWidth, dataY, colX + dataColWidth, dataY + rowHeight)
         }
       })
 
-      yPos += rowHeight + 12 // Spacing after table
+      yPos += rowHeight + 8 // Reduced spacing after table
     }
 
     // Draw Table 1
@@ -1874,28 +1870,28 @@ const CreateCertificate = () => {
 
     // If no uncertainty data, add minimal spacing
     if (tableOneLoads.length === 0 && tableTwoLoads.length === 0) {
-      yPos += 8
+      yPos += 6
     }
 
     // ==================== REFERENCE WEIGHTS SECTION ====================
     if (referenceWeights && referenceWeights.length > 0) {
       // Check if we need a new page
-      if (yPos > pageHeight - 100) {
+      if (yPos > pageHeight - 80) {
         doc.addPage()
         yPos = margin
       }
 
       // Section heading
-      doc.setFontSize(10) // Reduced font size
+      doc.setFontSize(9.5) // Reduced font size
       doc.setFont('helvetica', 'bold')
       doc.setTextColor(0, 0, 0)
       doc.text('Reference Weights', margin, yPos)
-      yPos += 5 // Reduced spacing
+      yPos += 4 // Reduced spacing
       drawSectionDivider(yPos - 1) // Only bottom divider, no top border
-      yPos += 6 // Reduced spacing after divider
+      yPos += 4 // Reduced spacing after divider
 
       // Traceability note
-      doc.setFontSize(8)
+      doc.setFontSize(7.5) // Reduced font size
       doc.setFont('helvetica', 'italic')
       doc.setTextColor(80, 80, 80)
       const traceabilityText =
@@ -1907,9 +1903,9 @@ const CreateCertificate = () => {
           yPos = margin
         }
         doc.text(line, margin, yPos)
-        yPos += 4.5
+        yPos += 4 // Reduced line spacing
       })
-      yPos += 6 // Spacing after traceability note
+      yPos += 4 // Reduced spacing after traceability note
 
       // Display each weight set (using same format as Device Information section)
       referenceWeights.forEach((refWeight, index) => {
@@ -1920,11 +1916,11 @@ const CreateCertificate = () => {
         }
 
         // Weight Set Header (similar to Device Information - no underline, just bold text)
-        doc.setFontSize(9)
+        doc.setFontSize(8.5) // Reduced font size
         doc.setFont('helvetica', 'bold')
         doc.setTextColor(0, 0, 0)
         doc.text(`Weight Set ${index + 1}`, margin, yPos)
-        yPos += 8 // Spacing after header (same as Device Information)
+        yPos += 6 // Reduced spacing after header
 
         // Use same spacing settings as Device Information section
         const refWeightLeftY = yPos
@@ -1976,38 +1972,38 @@ const CreateCertificate = () => {
 
         // Move yPos to the maximum of left and right columns
         refWeightMaxY = Math.max(currentLeftY, currentRightY)
-        yPos = refWeightMaxY + 8 // Spacing after weight set (same as Device Information)
+        yPos = refWeightMaxY + 6 // Reduced spacing after weight set
 
         // Divider line between weight sets (except for last one) - same style as section dividers
         if (index < referenceWeights.length - 1) {
           drawSectionDivider(yPos)
-          yPos += 6 // Spacing after divider (same as after section headings)
+          yPos += 4 // Reduced spacing after divider
         }
       })
     }
 
     // ==================== AUTHORIZATION SECTION ====================
     // Check if we need a new page
-    if (yPos > pageHeight - 80) {
+    if (yPos > pageHeight - 70) {
       doc.addPage()
       yPos = margin
     }
 
     // Section heading
-    doc.setFontSize(10)
+    doc.setFontSize(9.5) // Reduced font size
     doc.setFont('helvetica', 'bold')
     doc.setTextColor(0, 0, 0)
     doc.text('Authorization', margin, yPos)
-    yPos += 6 // Spacing after heading
+    yPos += 4 // Reduced spacing after heading
     drawSectionDivider(yPos - 1) // Divider line
-    yPos += 8 // Spacing after divider
+    yPos += 6 // Reduced spacing after divider
 
     // Engineer name section - improved spacing and alignment
     const authSectionX = margin
     const authLabelWidth = 50 // Label width for authorization section
     const authLabelValueSpacing = 3 // Spacing between label and value
 
-    doc.setFontSize(9)
+    doc.setFontSize(8.5) // Reduced font size
     doc.setFont('helvetica', 'normal')
     doc.setTextColor(100, 100, 100) // Gray label
     doc.text('Engineer Name:', authSectionX, yPos)
@@ -2016,7 +2012,7 @@ const CreateCertificate = () => {
     const engineerName = calibrationDetails.engineerName || ''
     const engineerNameX = authSectionX + authLabelWidth + authLabelValueSpacing
     doc.text(engineerName, engineerNameX, yPos)
-    yPos += 12 // Increased spacing after engineer name for better separation
+    yPos += 8 // Reduced spacing after engineer name
 
     // Signature section - improved spacing and positioning
     const signatureImageY = yPos
@@ -2095,33 +2091,33 @@ const CreateCertificate = () => {
           'FAST' // Compression mode
         )
 
-        yPos += signatureImageHeight + 8 // Space after image
+        yPos += signatureImageHeight + 6 // Reduced space after image
       } catch (error) {
         // If image fails to load, fallback to signature line
         console.error('Error adding signature image to PDF:', error)
         doc.setDrawColor(150, 150, 150)
         doc.setLineWidth(0.5)
         doc.line(authSectionX, signatureImageY, authSectionX + signatureLineWidth, signatureImageY)
-        doc.setFontSize(8)
+        doc.setFontSize(7.5) // Reduced font size
         doc.setTextColor(120, 120, 120)
-        doc.text('Signature', authSectionX, signatureImageY + 6)
-        yPos += 15 // Spacing after signature line
+        doc.text('Signature', authSectionX, signatureImageY + 5) // Adjusted vertical position
+        yPos += 10 // Reduced spacing after signature line
       }
     } else {
       // No signature image, draw signature line as placeholder
       doc.setDrawColor(150, 150, 150)
       doc.setLineWidth(0.5)
       doc.line(authSectionX, signatureImageY, authSectionX + signatureLineWidth, signatureImageY)
-      doc.setFontSize(8)
+      doc.setFontSize(7.5) // Reduced font size
       doc.setTextColor(120, 120, 120)
-      doc.text('Signature', authSectionX, signatureImageY + 6)
-      yPos += 15 // Spacing after signature line
+      doc.text('Signature', authSectionX, signatureImageY + 5) // Adjusted vertical position
+      yPos += 10 // Reduced spacing after signature line
     }
 
     // Issue date section - improved spacing and alignment
     if (calibrationDetails.issueDate) {
-      yPos += 8 // Spacing before issue date for better separation from signature
-      doc.setFontSize(9)
+      yPos += 6 // Reduced spacing before issue date
+      doc.setFontSize(8.5) // Reduced font size
       doc.setFont('helvetica', 'normal')
       doc.setTextColor(100, 100, 100) // Gray label
       doc.text('Issue Date:', authSectionX, yPos)
@@ -2133,19 +2129,19 @@ const CreateCertificate = () => {
 
     // Remarks section (if exists)
     if (calibrationDetails.remarks) {
-      yPos += 10 // Reduced spacing before remarks section
+      yPos += 8 // Reduced spacing before remarks section
       if (yPos > pageHeight - 50) {
         doc.addPage()
         yPos = margin
       }
-      doc.setFontSize(10) // Reduced font size
+      doc.setFontSize(9.5) // Reduced font size
       doc.setFont('helvetica', 'bold')
       doc.setTextColor(0, 0, 0)
       doc.text('Remarks', margin, yPos)
-      yPos += 5 // Reduced spacing
+      yPos += 4 // Reduced spacing
       drawSectionDivider(yPos - 1) // Only bottom divider, no top border
-      yPos += 6 // Reduced spacing after divider
-      doc.setFontSize(9)
+      yPos += 4 // Reduced spacing after divider
+      doc.setFontSize(8.5) // Reduced font size
       doc.setFont('helvetica', 'normal')
       doc.setTextColor(0, 0, 0)
       const remarksLines = doc.splitTextToSize(calibrationDetails.remarks, contentWidth)
@@ -2155,7 +2151,7 @@ const CreateCertificate = () => {
           yPos = margin
         }
         doc.text(line, margin, yPos)
-        yPos += 5
+        yPos += 4.2 // Reduced line height
       })
     }
 
