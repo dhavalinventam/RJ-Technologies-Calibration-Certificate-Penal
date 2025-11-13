@@ -326,6 +326,29 @@ const createInitialUncertainty = () => ({
   >
 })
 
+// WeightSet interface
+interface WeightSet {
+  id: string
+  weightSetNo: string
+  certificateNumber: string
+  class: string
+  dateOfIssue: string
+  calibrationDueDate: string
+  createdAt?: string
+}
+
+// Reference Weight (editable copy of WeightSet)
+interface ReferenceWeight {
+  id: string
+  weightSetNo: string
+  certificateNumber: string
+  class: string
+  dateOfIssue: string
+  calibrationDueDate: string
+}
+
+const createInitialReferenceWeights = (): ReferenceWeight[] => []
+
 const CreateCertificate = () => {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
@@ -471,6 +494,12 @@ const CreateCertificate = () => {
 
   // Uncertainty (Step 7) data
   const [uncertainty, setUncertainty] = useState(() => createInitialUncertainty())
+
+  // Weight Sets (for selection)
+  const [weightSets, setWeightSets] = useState<WeightSet[]>([])
+
+  // Reference Weights (Step 8) data
+  const [referenceWeights, setReferenceWeights] = useState<ReferenceWeight[]>(() => createInitialReferenceWeights())
 
   const resetDeviceDependentState = () => {
     setDevice(createInitialDeviceFields())
@@ -647,6 +676,72 @@ const CreateCertificate = () => {
     }
   }, [])
 
+  // Load weight sets from localStorage
+  useEffect(() => {
+    try {
+      const storedWeightSets = localStorage.getItem('weightSets')
+      if (storedWeightSets) {
+        const parsed = JSON.parse(storedWeightSets)
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setWeightSets(parsed)
+          return
+        }
+      }
+      // If no stored weight sets, use default sample data
+      const defaultWeightSets: WeightSet[] = [
+        {
+          id: '1',
+          weightSetNo: 'Colgate Std. Weights – 20 kg',
+          certificateNumber: 'KC/M/0097/25-27',
+          class: 'M1',
+          dateOfIssue: '12.08.2025',
+          calibrationDueDate: '11.08.2027',
+          createdAt: '14.10.2025 18:39'
+        },
+        {
+          id: '2',
+          weightSetNo: 'Amnel Pharma Weights – 5 kg',
+          certificateNumber: 'RJ/M/0145/25-27',
+          class: 'F2',
+          dateOfIssue: '03.09.2025',
+          calibrationDueDate: '02.09.2026',
+          createdAt: '05.09.2025 09:15'
+        },
+        {
+          id: '3',
+          weightSetNo: 'Vertex Lab Weights – 10 kg',
+          certificateNumber: 'RJ/M/0225/24-26',
+          class: 'M2',
+          dateOfIssue: '18.11.2024',
+          calibrationDueDate: '17.11.2026',
+          createdAt: '19.11.2024 16:42'
+        },
+        {
+          id: '4',
+          weightSetNo: 'Everest Biotech Weights – 50 kg',
+          certificateNumber: 'RJ/M/0310/25-27',
+          class: 'M1',
+          dateOfIssue: '22.01.2025',
+          calibrationDueDate: '21.01.2027',
+          createdAt: '24.01.2025 11:20'
+        },
+        {
+          id: '5',
+          weightSetNo: 'Zenith Industries Weights – 2 kg',
+          certificateNumber: 'RJ/M/0412/25-26',
+          class: 'F1',
+          dateOfIssue: '05.02.2025',
+          calibrationDueDate: '04.02.2026',
+          createdAt: '06.02.2025 14:08'
+        }
+      ]
+      setWeightSets(defaultWeightSets)
+    } catch (error) {
+      console.error('Failed to load weight sets:', error)
+      setWeightSets([])
+    }
+  }, [])
+
   const deviceNameOptions = useMemo(() => {
     const uniqueNames = new Set<string>()
     devices.forEach(item => {
@@ -721,6 +816,46 @@ const CreateCertificate = () => {
     if (calibrationSignatureInputRef.current) {
       calibrationSignatureInputRef.current.value = ''
     }
+  }
+
+  // Reference Weights handlers
+  const handleWeightSetSelect = (event, selectedWeightSets) => {
+    if (!selectedWeightSets || selectedWeightSets.length === 0) {
+      setReferenceWeights([])
+      return
+    }
+
+    // Convert selected WeightSets to ReferenceWeights
+    const newReferenceWeights: ReferenceWeight[] = selectedWeightSets.map((ws: WeightSet) => {
+      // Check if this weight set is already in reference weights
+      const existing = referenceWeights.find(rw => rw.id === ws.id)
+      if (existing) {
+        return existing // Keep existing data if already added
+      }
+      // Create new reference weight from weight set
+      return {
+        id: ws.id,
+        weightSetNo: ws.weightSetNo,
+        certificateNumber: ws.certificateNumber,
+        class: ws.class,
+        dateOfIssue: ws.dateOfIssue,
+        calibrationDueDate: ws.calibrationDueDate
+      }
+    })
+
+    // Remove weight sets that are no longer selected
+    const selectedIds = new Set(selectedWeightSets.map((ws: WeightSet) => ws.id))
+    const filteredReferenceWeights = newReferenceWeights.filter(rw => selectedIds.has(rw.id))
+
+    setReferenceWeights(filteredReferenceWeights)
+  }
+
+  const handleReferenceWeightChange = (id: string, field: keyof ReferenceWeight, value: string) => {
+    setReferenceWeights(prev => prev.map(rw => (rw.id === id ? { ...rw, [field]: value } : rw)))
+  }
+
+  const handleRemoveReferenceWeight = (id: string) => {
+    setReferenceWeights(prev => prev.filter(rw => rw.id !== id))
   }
 
   // PDF Generation function
@@ -1614,6 +1749,115 @@ const CreateCertificate = () => {
       yPos += 8
     }
 
+    // ==================== REFERENCE WEIGHTS SECTION ====================
+    if (referenceWeights && referenceWeights.length > 0) {
+      // Check if we need a new page
+      if (yPos > pageHeight - 100) {
+        doc.addPage()
+        yPos = margin
+      }
+
+      // Section heading
+      doc.setFontSize(10) // Reduced font size
+      doc.setFont('helvetica', 'bold')
+      doc.setTextColor(0, 0, 0)
+      doc.text('Reference Weights', margin, yPos)
+      yPos += 5 // Reduced spacing
+      drawSectionDivider(yPos - 1) // Only bottom divider, no top border
+      yPos += 6 // Reduced spacing after divider
+
+      // Traceability note
+      doc.setFontSize(8)
+      doc.setFont('helvetica', 'italic')
+      doc.setTextColor(80, 80, 80)
+      const traceabilityText =
+        'All weights used for metrological testing are traceable to national or international standards. The weights were calibrated and certified by an accredited calibration laboratory.'
+      const traceabilityLines = doc.splitTextToSize(traceabilityText, contentWidth)
+      traceabilityLines.forEach(line => {
+        if (yPos > pageHeight - 20) {
+          doc.addPage()
+          yPos = margin
+        }
+        doc.text(line, margin, yPos)
+        yPos += 4.5
+      })
+      yPos += 6 // Spacing after traceability note
+
+      // Display each weight set (using same format as Device Information section)
+      referenceWeights.forEach((refWeight, index) => {
+        // Check if we need a new page
+        if (yPos > pageHeight - 80) {
+          doc.addPage()
+          yPos = margin
+        }
+
+        // Weight Set Header (similar to Device Information - no underline, just bold text)
+        doc.setFontSize(9)
+        doc.setFont('helvetica', 'bold')
+        doc.setTextColor(0, 0, 0)
+        doc.text(`Weight Set ${index + 1}`, margin, yPos)
+        yPos += 8 // Spacing after header (same as Device Information)
+
+        // Use same spacing settings as Device Information section
+        const refWeightLeftY = yPos
+        const refWeightRightY = yPos
+        let refWeightMaxY = yPos
+
+        // Left Column: Weight Set No., Class, Calibration Due Date (no wrapping)
+        doc.setFontSize(9)
+        let currentLeftY = refWeightLeftY
+        currentLeftY += drawLabelValue(
+          'Weight Set No.',
+          refWeight.weightSetNo || '',
+          leftColX,
+          currentLeftY,
+          labelWidth,
+          false
+        )
+        currentLeftY += lineSpacing
+        currentLeftY += drawLabelValue('Class', refWeight.class || '', leftColX, currentLeftY, labelWidth, false)
+        currentLeftY += lineSpacing
+        currentLeftY += drawLabelValue(
+          'Calibration Due Date',
+          refWeight.calibrationDueDate || '',
+          leftColX,
+          currentLeftY,
+          labelWidth,
+          false
+        )
+
+        // Right Column: Certificate Number, Date of Issue (no wrapping)
+        let currentRightY = refWeightRightY
+        currentRightY += drawLabelValue(
+          'Certificate Number',
+          refWeight.certificateNumber || '',
+          rightColX,
+          currentRightY,
+          labelWidth,
+          false
+        )
+        currentRightY += lineSpacing
+        currentRightY += drawLabelValue(
+          'Date of Issue',
+          refWeight.dateOfIssue || '',
+          rightColX,
+          currentRightY,
+          labelWidth,
+          false
+        )
+
+        // Move yPos to the maximum of left and right columns
+        refWeightMaxY = Math.max(currentLeftY, currentRightY)
+        yPos = refWeightMaxY + 8 // Spacing after weight set (same as Device Information)
+
+        // Divider line between weight sets (except for last one) - same style as section dividers
+        if (index < referenceWeights.length - 1) {
+          drawSectionDivider(yPos)
+          yPos += 6 // Spacing after divider (same as after section headings)
+        }
+      })
+    }
+
     // ==================== AUTHORIZATION SECTION ====================
     // Check if we need a new page
     if (yPos > pageHeight - 80) {
@@ -1797,6 +2041,8 @@ const CreateCertificate = () => {
     linearityRecords,
     eccentricity,
     repeatability,
+    uncertainty,
+    referenceWeights,
     calibrationDetails
   ])
 
@@ -3031,6 +3277,287 @@ const CreateCertificate = () => {
                       </div>
                     ))}
                   </div>
+                </Box>
+              </Box>
+            ) : activeStep === 8 ? (
+              <Box className='cc_card'>
+                <Box sx={{ mb: 3 }}>
+                  <Typography variant='h6' sx={{ fontWeight: 600, mb: 0.5, fontSize: '1.125rem' }}>
+                    Reference Weights
+                  </Typography>
+                  <Typography variant='body2' color='text.secondary' sx={{ mb: 2 }}>
+                    Select and manage reference weights used for calibration.
+                  </Typography>
+
+                  {/* Traceability Note */}
+                  <Box
+                    sx={{
+                      p: 2,
+                      mb: 3,
+                      backgroundColor: '#F8FAFC',
+                      border: '1px solid rgba(148, 163, 184, 0.2)',
+                      borderRadius: 2,
+                      borderLeft: '4px solid #2563EB'
+                    }}
+                  >
+                    <Typography variant='body2' sx={{ color: '#1F2937', fontStyle: 'italic', lineHeight: 1.6 }}>
+                      All weights used for metrological testing are traceable to national or international standards.
+                      The weights were calibrated and certified by an accredited calibration laboratory.
+                    </Typography>
+                  </Box>
+
+                  {/* Multi-select dropdown for weight sets */}
+                  <Box sx={{ mb: 3 }}>
+                    <Typography variant='body2' sx={{ mb: 1, fontWeight: 600 }} component='label' className='cc_label'>
+                      Select Weight Sets
+                    </Typography>
+                    <Autocomplete
+                      multiple
+                      options={weightSets}
+                      getOptionLabel={option => option.weightSetNo || ''}
+                      value={weightSets.filter(ws => referenceWeights.some(rw => rw.id === ws.id))}
+                      onChange={handleWeightSetSelect}
+                      renderInput={params => (
+                        <TextField
+                          {...params}
+                          placeholder='Select weight sets...'
+                          size='small'
+                          sx={{
+                            '& .MuiOutlinedInput-root': {
+                              borderRadius: '8px',
+                              backgroundColor: '#FFFFFF',
+                              '& fieldset': { borderColor: 'rgba(148, 163, 184, 0.4)' },
+                              '&:hover fieldset': { borderColor: PRIMARY_COLOR },
+                              '&.Mui-focused fieldset': { borderColor: PRIMARY_COLOR }
+                            }
+                          }}
+                        />
+                      )}
+                      renderOption={(props, option) => (
+                        <Box component='li' {...props} key={option.id}>
+                          <Box>
+                            <Typography variant='body2' sx={{ fontWeight: 500 }}>
+                              {option.weightSetNo}
+                            </Typography>
+                            <Typography variant='caption' sx={{ color: SUBTEXT_COLOR }}>
+                              Cert: {option.certificateNumber} | Class: {option.class}
+                            </Typography>
+                          </Box>
+                        </Box>
+                      )}
+                      renderTags={(value, getTagProps) =>
+                        value.map((option, index) => (
+                          <Box
+                            key={option.id}
+                            {...getTagProps({ index })}
+                            sx={{
+                              backgroundColor: '#EFF6FF',
+                              color: PRIMARY_COLOR,
+                              borderRadius: '6px',
+                              px: 1,
+                              py: 0.5,
+                              fontSize: '0.875rem',
+                              fontWeight: 500
+                            }}
+                          >
+                            {option.weightSetNo}
+                          </Box>
+                        ))
+                      }
+                    />
+                  </Box>
+
+                  {/* Display selected weight sets */}
+                  {referenceWeights.length > 0 && (
+                    <Box>
+                      {referenceWeights.map((refWeight, index) => (
+                        <Box key={refWeight.id}>
+                          {/* Weight Set Section */}
+                          <Box
+                            sx={{
+                              p: 2.5,
+                              mb: 2,
+                              border: '1px solid rgba(148, 163, 184, 0.25)',
+                              borderRadius: 2,
+                              backgroundColor: '#FFFFFF',
+                              position: 'relative'
+                            }}
+                          >
+                            {/* Section Header */}
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                              <Typography variant='subtitle1' sx={{ fontWeight: 600, color: TITLE_COLOR }}>
+                                Weight Set {index + 1}
+                              </Typography>
+                              <IconButton
+                                size='small'
+                                onClick={() => handleRemoveReferenceWeight(refWeight.id)}
+                                sx={{
+                                  color: '#EF4444',
+                                  '&:hover': { backgroundColor: '#FEE2E2' }
+                                }}
+                              >
+                                <DeleteIcon fontSize='small' />
+                              </IconButton>
+                            </Box>
+
+                            {/* Divider */}
+                            <Box
+                              sx={{
+                                height: '1px',
+                                backgroundColor: 'rgba(148, 163, 184, 0.2)',
+                                mb: 2
+                              }}
+                            />
+
+                            {/* Weight Set Fields */}
+                            <div className='row'>
+                              <div className='col-12 col-md-6' style={{ marginBottom: '16px' }}>
+                                <Typography variant='body2' sx={{ mb: 0.7 }} component='label' className='cc_label'>
+                                  Weight Set No.
+                                </Typography>
+                                <TextField
+                                  fullWidth
+                                  size='small'
+                                  value={refWeight.weightSetNo}
+                                  onChange={e =>
+                                    handleReferenceWeightChange(refWeight.id, 'weightSetNo', e.target.value)
+                                  }
+                                  sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                      borderRadius: '8px',
+                                      backgroundColor: '#FFFFFF',
+                                      '& fieldset': { borderColor: 'rgba(148, 163, 184, 0.4)' },
+                                      '&:hover fieldset': { borderColor: PRIMARY_COLOR },
+                                      '&.Mui-focused fieldset': { borderColor: PRIMARY_COLOR }
+                                    }
+                                  }}
+                                />
+                              </div>
+
+                              <div className='col-12 col-md-6' style={{ marginBottom: '16px' }}>
+                                <Typography variant='body2' sx={{ mb: 0.7 }} component='label' className='cc_label'>
+                                  Class
+                                </Typography>
+                                <TextField
+                                  fullWidth
+                                  size='small'
+                                  value={refWeight.class}
+                                  onChange={e => handleReferenceWeightChange(refWeight.id, 'class', e.target.value)}
+                                  sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                      borderRadius: '8px',
+                                      backgroundColor: '#FFFFFF',
+                                      '& fieldset': { borderColor: 'rgba(148, 163, 184, 0.4)' },
+                                      '&:hover fieldset': { borderColor: PRIMARY_COLOR },
+                                      '&.Mui-focused fieldset': { borderColor: PRIMARY_COLOR }
+                                    }
+                                  }}
+                                />
+                              </div>
+
+                              <div className='col-12 col-md-6' style={{ marginBottom: '16px' }}>
+                                <Typography variant='body2' sx={{ mb: 0.7 }} component='label' className='cc_label'>
+                                  Calibration Due Date
+                                </Typography>
+                                <TextField
+                                  fullWidth
+                                  size='small'
+                                  value={refWeight.calibrationDueDate}
+                                  onChange={e =>
+                                    handleReferenceWeightChange(refWeight.id, 'calibrationDueDate', e.target.value)
+                                  }
+                                  placeholder='DD.MM.YYYY'
+                                  sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                      borderRadius: '8px',
+                                      backgroundColor: '#FFFFFF',
+                                      '& fieldset': { borderColor: 'rgba(148, 163, 184, 0.4)' },
+                                      '&:hover fieldset': { borderColor: PRIMARY_COLOR },
+                                      '&.Mui-focused fieldset': { borderColor: PRIMARY_COLOR }
+                                    }
+                                  }}
+                                />
+                              </div>
+
+                              <div className='col-12 col-md-6' style={{ marginBottom: '16px' }}>
+                                <Typography variant='body2' sx={{ mb: 0.7 }} component='label' className='cc_label'>
+                                  Certificate Number
+                                </Typography>
+                                <TextField
+                                  fullWidth
+                                  size='small'
+                                  value={refWeight.certificateNumber}
+                                  onChange={e =>
+                                    handleReferenceWeightChange(refWeight.id, 'certificateNumber', e.target.value)
+                                  }
+                                  sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                      borderRadius: '8px',
+                                      backgroundColor: '#FFFFFF',
+                                      '& fieldset': { borderColor: 'rgba(148, 163, 184, 0.4)' },
+                                      '&:hover fieldset': { borderColor: PRIMARY_COLOR },
+                                      '&.Mui-focused fieldset': { borderColor: PRIMARY_COLOR }
+                                    }
+                                  }}
+                                />
+                              </div>
+
+                              <div className='col-12 col-md-6' style={{ marginBottom: '16px' }}>
+                                <Typography variant='body2' sx={{ mb: 0.7 }} component='label' className='cc_label'>
+                                  Date of Issue
+                                </Typography>
+                                <TextField
+                                  fullWidth
+                                  size='small'
+                                  value={refWeight.dateOfIssue}
+                                  onChange={e =>
+                                    handleReferenceWeightChange(refWeight.id, 'dateOfIssue', e.target.value)
+                                  }
+                                  placeholder='DD.MM.YYYY'
+                                  sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                      borderRadius: '8px',
+                                      backgroundColor: '#FFFFFF',
+                                      '& fieldset': { borderColor: 'rgba(148, 163, 184, 0.4)' },
+                                      '&:hover fieldset': { borderColor: PRIMARY_COLOR },
+                                      '&.Mui-focused fieldset': { borderColor: PRIMARY_COLOR }
+                                    }
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          </Box>
+
+                          {/* Divider between weight sets (except for last one) */}
+                          {index < referenceWeights.length - 1 && (
+                            <Box
+                              sx={{
+                                height: '1px',
+                                backgroundColor: 'rgba(148, 163, 184, 0.2)',
+                                my: 2
+                              }}
+                            />
+                          )}
+                        </Box>
+                      ))}
+                    </Box>
+                  )}
+
+                  {referenceWeights.length === 0 && (
+                    <Box
+                      sx={{
+                        p: 3,
+                        textAlign: 'center',
+                        backgroundColor: '#F8FAFC',
+                        borderRadius: 2,
+                        border: '1px dashed rgba(148, 163, 184, 0.3)'
+                      }}
+                    >
+                      <Typography variant='body2' sx={{ color: SUBTEXT_COLOR }}>
+                        No weight sets selected. Use the dropdown above to select weight sets.
+                      </Typography>
+                    </Box>
+                  )}
                 </Box>
               </Box>
             ) : (
