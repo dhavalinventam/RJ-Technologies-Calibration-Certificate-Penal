@@ -31,6 +31,7 @@ import { useNavigate } from 'react-router-dom'
 import jsPDF from 'jspdf'
 import { Device, defaultDevices } from '@/pages/protected/devices/deviceData'
 import { CUSTOMER_STORAGE_KEY } from '@/pages/protected/customers/customerData'
+import eccentricityDiagramImage from '@/assets/jpg/Eccentricity-weight-diagram.jpg'
 
 const PRIMARY_COLOR = '#2563EB'
 const PAGE_BACKGROUND = '#F8FAFC'
@@ -399,6 +400,56 @@ const CreateCertificate = () => {
     remarks: ''
   })
   const calibrationSignatureInputRef = useRef(null)
+
+  // Eccentricity diagram image data (base64)
+  const [eccentricityImageData, setEccentricityImageData] = useState<string | null>(null)
+  const [eccentricityImageDimensions, setEccentricityImageDimensions] = useState<{
+    width: number
+    height: number
+  } | null>(null)
+
+  // Load eccentricity diagram image on component mount
+  useEffect(() => {
+    const loadEccentricityImage = () => {
+      // Load image directly using Image element (works with Vite's asset handling)
+      const img = new Image()
+      img.onload = () => {
+        try {
+          // Get dimensions first
+          const dimensions = {
+            width: img.naturalWidth,
+            height: img.naturalHeight
+          }
+          setEccentricityImageDimensions(dimensions)
+
+          // Create canvas to convert image to base64 for PDF
+          const canvas = document.createElement('canvas')
+          canvas.width = img.naturalWidth
+          canvas.height = img.naturalHeight
+          const ctx = canvas.getContext('2d')
+          if (ctx) {
+            ctx.drawImage(img, 0, 0)
+            // Convert to JPEG base64 for better PDF compatibility
+            const base64Data = canvas.toDataURL('image/jpeg', 0.95)
+            setEccentricityImageData(base64Data)
+          } else {
+            console.error('Failed to get canvas context for eccentricity image')
+          }
+        } catch (error) {
+          console.error('Error processing eccentricity image:', error)
+        }
+      }
+      img.onerror = error => {
+        console.error('Error loading eccentricity diagram image:', error)
+        // Set default dimensions as fallback
+        setEccentricityImageDimensions({ width: 400, height: 300 })
+      }
+      // Use the imported image URL directly (Vite handles this)
+      img.src = eccentricityDiagramImage
+    }
+
+    loadEccentricityImage()
+  }, [])
 
   // Customer (Step 1) fields
   const [customer, setCustomer] = useState(() => createInitialCustomerFields())
@@ -1169,135 +1220,246 @@ const CreateCertificate = () => {
     drawSectionDivider(yPos - 1) // Only bottom divider, no top border
     yPos += 6 // Reduced spacing after divider
 
-    // Eccentricity Table Setup
-    const eccCol1Width = contentWidth * 0.25 // Position column
-    const eccCol2Width = contentWidth * 0.375 // Displayed Value column
-    const eccCol3Width = contentWidth * 0.375 // Deviation column
+    // Two-column layout setup
+    const columnGap = 8 // Gap between image and table
+    const imageColumnWidth = contentWidth * 0.2 // Left column (image) - 46% of content width
+    const tableColumnWidth = contentWidth * 0.72 // Right column (table) - 46% of content width
+    const imageColumnX = margin // Left column starting X position
+    const tableColumnX = margin + imageColumnWidth + columnGap // Right column starting X position
+
+    // Calculate table dimensions first (without drawing)
+    const eccCol1Width = tableColumnWidth * 0.35 // Position column (35% of table width)
+    const eccCol2Width = tableColumnWidth * 0.325 // Displayed Value column (32.5% of table width)
+    const eccCol3Width = tableColumnWidth * 0.325 // Deviation column (32.5% of table width)
     const eccRowHeight = 7
     const eccHeaderRowHeight = 8
     const borderColor = [180, 180, 180]
     const cellPadding = 4
 
+    // Calculate total table height
+    const numDataRows = eccentricity.positions.length
+    const numSummaryRows = 3
+    const totalTableHeight =
+      eccHeaderRowHeight * 3 + // 3 header rows
+      eccRowHeight * numDataRows + // Data rows
+      eccRowHeight * numSummaryRows // Summary rows
+
+    // Calculate image dimensions
+    let imageWidth = imageColumnWidth - 4 // Leave 2px padding on each side
+    let imageHeight = 0
+    let imageX = imageColumnX + 2 // 2px padding from left
+    let imageY = yPos
+
+    if (eccentricityImageData && eccentricityImageDimensions) {
+      const aspectRatio = eccentricityImageDimensions.width / eccentricityImageDimensions.height
+      imageHeight = imageWidth / aspectRatio
+
+      // If image is too tall, scale it down to fit within a reasonable height
+      const maxImageHeight = Math.min(totalTableHeight, pageHeight - yPos - 20)
+      if (imageHeight > maxImageHeight) {
+        imageHeight = maxImageHeight
+        imageWidth = imageHeight * aspectRatio
+        // Re-center horizontally if image is smaller than column
+        imageX = imageColumnX + (imageColumnWidth - imageWidth) / 2
+      }
+
+      // Vertically center image if it's shorter than table
+      if (imageHeight < totalTableHeight) {
+        imageY = yPos + (totalTableHeight - imageHeight) / 2
+      }
+    } else {
+      // If image not loaded, use a placeholder height
+      imageHeight = totalTableHeight
+    }
+
+    // Calculate the starting Y position for the table to vertically center it
+    let tableStartY = yPos
+    if (imageHeight < totalTableHeight) {
+      // Table is taller, start at yPos
+      tableStartY = yPos
+    } else {
+      // Image is taller or equal, center the table
+      tableStartY = yPos + (imageHeight - totalTableHeight) / 2
+    }
+
+    // Draw vertical separator line between columns
+    const separatorX = imageColumnX + imageColumnWidth + columnGap / 2
+    const separatorHeight = Math.max(totalTableHeight, imageHeight)
+    doc.setDrawColor(200, 200, 200) // Light gray separator
+    doc.setLineWidth(0.2)
+    doc.line(separatorX, yPos, separatorX, yPos + separatorHeight)
+
+    // Draw the image on the left side
+    if (eccentricityImageData && eccentricityImageDimensions) {
+      try {
+        // Extract base64 data and format
+        let imageData = eccentricityImageData
+        let imageFormat = 'JPEG'
+
+        if (imageData.startsWith('data:image/')) {
+          const commaIndex = imageData.indexOf(',')
+          if (commaIndex > 0) {
+            const metadataPart = imageData.substring(0, commaIndex)
+            imageData = imageData.substring(commaIndex + 1)
+            const typeMatch = metadataPart.match(/image\/([^;]+)/i)
+            if (typeMatch) {
+              const mimeType = typeMatch[1].toLowerCase()
+              if (mimeType === 'jpeg' || mimeType === 'jpg') {
+                imageFormat = 'JPEG'
+              } else if (mimeType === 'png') {
+                imageFormat = 'PNG'
+              }
+            }
+          }
+        }
+
+        // Add image to PDF
+        doc.addImage(imageData, imageFormat, imageX, imageY, imageWidth, imageHeight, undefined, 'FAST')
+      } catch (error) {
+        console.error('Error adding eccentricity image to PDF:', error)
+        // If image fails, draw a placeholder rectangle
+        doc.setDrawColor(220, 220, 220)
+        doc.setLineWidth(0.5)
+        doc.rect(imageColumnX + 2, yPos, imageColumnWidth - 4, Math.min(totalTableHeight, 60), 'S')
+        doc.setFontSize(8)
+        doc.setTextColor(150, 150, 150)
+        doc.text('Image', imageColumnX + imageColumnWidth / 2 - 10, yPos + 30)
+      }
+    } else {
+      // Image not loaded, draw placeholder
+      doc.setDrawColor(220, 220, 220)
+      doc.setLineWidth(0.5)
+      doc.rect(imageColumnX + 2, yPos, imageColumnWidth - 4, Math.min(totalTableHeight, 60), 'S')
+      doc.setFontSize(8)
+      doc.setTextColor(150, 150, 150)
+      doc.text('Diagram', imageColumnX + imageColumnWidth / 2 - 12, yPos + 30)
+    }
+
+    // Draw the table on the right side
+    let currentTableY = tableStartY
+
     // Header Row 1: "Test Weight" | "50 kg" (merged 2 cols)
-    const header1Y = yPos
-    drawMergedHeaderCell('Test Weight', margin, eccCol1Width, header1Y, eccHeaderRowHeight, 'left')
+    const header1Y = currentTableY
+    drawMergedHeaderCell('Test Weight', tableColumnX, eccCol1Width, header1Y, eccHeaderRowHeight, 'left')
     drawMergedHeaderCell(
       eccentricity.testWeight || '50 kg',
-      margin + eccCol1Width,
+      tableColumnX + eccCol1Width,
       eccCol2Width + eccCol3Width,
       header1Y,
       eccHeaderRowHeight,
       'center'
     )
     doc.setDrawColor(borderColor[0], borderColor[1], borderColor[2])
-    doc.line(margin + eccCol1Width, header1Y, margin + eccCol1Width, header1Y + eccHeaderRowHeight)
-    yPos += eccHeaderRowHeight
+    doc.setLineWidth(0.3)
+    doc.line(tableColumnX + eccCol1Width, header1Y, tableColumnX + eccCol1Width, header1Y + eccHeaderRowHeight)
+    currentTableY += eccHeaderRowHeight
 
     // Header Row 2: "Position" | "As Found" (merged 2 cols)
-    const header2Y = yPos
-    drawMergedHeaderCell('Position', margin, eccCol1Width, header2Y, eccHeaderRowHeight, 'left')
+    const header2Y = currentTableY
+    drawMergedHeaderCell('Position', tableColumnX, eccCol1Width, header2Y, eccHeaderRowHeight, 'left')
     drawMergedHeaderCell(
       'As Found',
-      margin + eccCol1Width,
+      tableColumnX + eccCol1Width,
       eccCol2Width + eccCol3Width,
       header2Y,
       eccHeaderRowHeight,
       'center'
     )
-    doc.line(margin + eccCol1Width, header2Y, margin + eccCol1Width, header2Y + eccHeaderRowHeight)
-    yPos += eccHeaderRowHeight
+    doc.line(tableColumnX + eccCol1Width, header2Y, tableColumnX + eccCol1Width, header2Y + eccHeaderRowHeight)
+    currentTableY += eccHeaderRowHeight
 
     // Header Row 3: (empty) | "Displayed Value" | "Deviation"
-    const header3Y = yPos
-    drawMergedHeaderCell('', margin, eccCol1Width, header3Y, eccHeaderRowHeight, 'left')
-    drawMergedHeaderCell('Displayed Value', margin + eccCol1Width, eccCol2Width, header3Y, eccHeaderRowHeight, 'center')
+    const header3Y = currentTableY
+    drawMergedHeaderCell('', tableColumnX, eccCol1Width, header3Y, eccHeaderRowHeight, 'left')
+    drawMergedHeaderCell(
+      'Displayed Value',
+      tableColumnX + eccCol1Width,
+      eccCol2Width,
+      header3Y,
+      eccHeaderRowHeight,
+      'center'
+    )
     drawMergedHeaderCell(
       'Deviation',
-      margin + eccCol1Width + eccCol2Width,
+      tableColumnX + eccCol1Width + eccCol2Width,
       eccCol3Width,
       header3Y,
       eccHeaderRowHeight,
       'center'
     )
-    doc.line(margin + eccCol1Width, header3Y, margin + eccCol1Width, header3Y + eccHeaderRowHeight)
+    doc.line(tableColumnX + eccCol1Width, header3Y, tableColumnX + eccCol1Width, header3Y + eccHeaderRowHeight)
     doc.line(
-      margin + eccCol1Width + eccCol2Width,
+      tableColumnX + eccCol1Width + eccCol2Width,
       header3Y,
-      margin + eccCol1Width + eccCol2Width,
+      tableColumnX + eccCol1Width + eccCol2Width,
       header3Y + eccHeaderRowHeight
     )
-    yPos += eccHeaderRowHeight
+    currentTableY += eccHeaderRowHeight
 
     // Data Rows
     eccentricity.positions.forEach(pos => {
-      // Check if we need a new page
-      if (yPos > pageHeight - 30) {
-        doc.addPage()
-        yPos = margin
-      }
-
       const values = [pos.position || '', pos.displayedValue || '', pos.deviation || '']
 
       // Draw row with special handling for centered columns
       doc.setFontSize(9)
       doc.setFont('helvetica', 'normal')
       doc.setTextColor(0, 0, 0)
-      const rowY = yPos
+      const rowY = currentTableY
       const borderColorRow = [200, 200, 200]
       doc.setDrawColor(borderColorRow[0], borderColorRow[1], borderColorRow[2])
       doc.setLineWidth(0.2)
-      doc.rect(margin, rowY, contentWidth, eccRowHeight, 'S')
+      doc.rect(tableColumnX, rowY, tableColumnWidth, eccRowHeight, 'S')
 
       // Position (left-aligned)
-      doc.text(values[0], margin + cellPadding, rowY + 5)
-      doc.line(margin + eccCol1Width, rowY, margin + eccCol1Width, rowY + eccRowHeight)
+      doc.text(values[0], tableColumnX + cellPadding, rowY + 5)
+      doc.line(tableColumnX + eccCol1Width, rowY, tableColumnX + eccCol1Width, rowY + eccRowHeight)
 
       // Displayed Value (centered)
       const dispTextWidth = doc.getTextWidth(values[1])
-      doc.text(values[1], margin + eccCol1Width + eccCol2Width / 2 - dispTextWidth / 2, rowY + 5)
-      doc.line(margin + eccCol1Width + eccCol2Width, rowY, margin + eccCol1Width + eccCol2Width, rowY + eccRowHeight)
+      doc.text(values[1], tableColumnX + eccCol1Width + eccCol2Width / 2 - dispTextWidth / 2, rowY + 5)
+      doc.line(
+        tableColumnX + eccCol1Width + eccCol2Width,
+        rowY,
+        tableColumnX + eccCol1Width + eccCol2Width,
+        rowY + eccRowHeight
+      )
 
       // Deviation (centered)
       const devTextWidth = doc.getTextWidth(values[2])
-      doc.text(values[2], margin + eccCol1Width + eccCol2Width + eccCol3Width / 2 - devTextWidth / 2, rowY + 5)
+      doc.text(values[2], tableColumnX + eccCol1Width + eccCol2Width + eccCol3Width / 2 - devTextWidth / 2, rowY + 5)
 
-      yPos += eccRowHeight
+      currentTableY += eccRowHeight
     })
 
     // Summary Rows
     const drawSummaryRow = (label, value) => {
-      if (yPos > pageHeight - 30) {
-        doc.addPage()
-        yPos = margin
-      }
-
       doc.setFontSize(9)
       doc.setFont('helvetica', 'normal')
       doc.setTextColor(0, 0, 0)
-      const rowY = yPos
+      const rowY = currentTableY
       const borderColorRow = [200, 200, 200]
       doc.setDrawColor(borderColorRow[0], borderColorRow[1], borderColorRow[2])
       doc.setLineWidth(0.2)
-      doc.rect(margin, rowY, contentWidth, eccRowHeight, 'S')
+      doc.rect(tableColumnX, rowY, tableColumnWidth, eccRowHeight, 'S')
 
       // Label (left-aligned)
-      doc.text(label, margin + cellPadding, rowY + 5)
-      doc.line(margin + eccCol1Width, rowY, margin + eccCol1Width, rowY + eccRowHeight)
+      doc.text(label, tableColumnX + cellPadding, rowY + 5)
+      doc.line(tableColumnX + eccCol1Width, rowY, tableColumnX + eccCol1Width, rowY + eccRowHeight)
 
       // Value (centered in merged columns)
       const mergedWidth = eccCol2Width + eccCol3Width
       const valueWidth = doc.getTextWidth(value)
-      doc.text(value, margin + eccCol1Width + mergedWidth / 2 - valueWidth / 2, rowY + 5)
+      doc.text(value, tableColumnX + eccCol1Width + mergedWidth / 2 - valueWidth / 2, rowY + 5)
 
-      yPos += eccRowHeight
+      currentTableY += eccRowHeight
     }
 
     drawSummaryRow('Maximum Deviation:', eccentricity.maximumDeviation || '')
     drawSummaryRow('Allowable Deviation:', eccentricity.allowableDeviation || '')
     drawSummaryRow('Within Tolerances:', eccentricity.withinTolerances || '')
 
-    // Add spacing after the table
-    yPos += 12
+    // Update yPos to after the section (use the maximum height of image or table)
+    yPos += Math.max(totalTableHeight, imageHeight) + 12
 
     // ==================== REPEATABILITY SECTION ====================
     // Check if we need a new page
