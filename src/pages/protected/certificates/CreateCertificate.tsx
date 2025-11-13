@@ -1749,6 +1749,134 @@ const CreateCertificate = () => {
       yPos += 8
     }
 
+    // ==================== UNCERTAINTY SECTION ====================
+    // Check if we need a new page
+    if (yPos > pageHeight - 80) {
+      doc.addPage()
+      yPos = margin
+    }
+
+    // Section heading
+    doc.setFontSize(10)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(0, 0, 0)
+    doc.text('Uncertainty', margin, yPos)
+    yPos += 5
+    drawSectionDivider(yPos - 1)
+    yPos += 6
+
+    // Get loads from uncertainty tables
+    const tableOneLoads = Object.keys(uncertainty.tableOne).filter(load => load && load.trim() !== '')
+    const tableTwoLoads = Object.keys(uncertainty.tableTwo).filter(load => load && load.trim() !== '')
+
+    // Helper function to draw uncertainty table
+    const drawUncertaintyTable = (tableLabel: string, loads: string[], tableData: Record<string, string>) => {
+      if (loads.length === 0) return
+
+      // Check if we need a new page
+      if (yPos > pageHeight - 60) {
+        doc.addPage()
+        yPos = margin
+      }
+
+      // Table label
+      doc.setFontSize(9)
+      doc.setFont('helvetica', 'bold')
+      doc.setTextColor(0, 0, 0)
+      doc.text(tableLabel, margin, yPos)
+      yPos += 8
+
+      // Table setup
+      const labelColWidth = contentWidth * 0.25 // "Loads Applied" / "Combined Uncertainty (u(E))" column
+      const dataColWidth = (contentWidth - labelColWidth) / loads.length // Equal width for each load column
+      const rowHeight = 8
+      const headerRowHeight = 8
+      const borderColor = [180, 180, 180]
+
+      // Header Row: "Loads Applied" | Load values
+      const headerY = yPos
+      doc.setFontSize(9)
+      doc.setFont('helvetica', 'bold')
+      doc.setTextColor(0, 0, 0)
+
+      // Background for header
+      doc.setFillColor(240, 240, 240)
+      doc.rect(margin, headerY, contentWidth, headerRowHeight, 'F')
+
+      // Border
+      doc.setDrawColor(borderColor[0], borderColor[1], borderColor[2])
+      doc.setLineWidth(0.3)
+      doc.rect(margin, headerY, contentWidth, headerRowHeight, 'S')
+
+      // "Loads Applied" label
+      const labelTextWidth = doc.getTextWidth('Loads Applied')
+      doc.text('Loads Applied', margin + labelColWidth / 2 - labelTextWidth / 2, headerY + 5)
+      doc.line(margin + labelColWidth, headerY, margin + labelColWidth, headerY + headerRowHeight)
+
+      // Load values
+      loads.forEach((load, index) => {
+        const colX = margin + labelColWidth + index * dataColWidth
+        const loadTextWidth = doc.getTextWidth(load)
+        doc.text(load, colX + dataColWidth / 2 - loadTextWidth / 2, headerY + 5)
+        if (index < loads.length - 1) {
+          doc.line(colX + dataColWidth, headerY, colX + dataColWidth, headerY + headerRowHeight)
+        }
+      })
+
+      yPos += headerRowHeight
+
+      // Data Row: "Combined Uncertainty (u(E))" | Uncertainty values
+      const dataY = yPos
+      doc.setFontSize(9)
+      doc.setFont('helvetica', 'normal')
+      doc.setTextColor(0, 0, 0)
+
+      // Background for data row
+      doc.setFillColor(250, 250, 250)
+      doc.rect(margin, dataY, contentWidth, rowHeight, 'F')
+
+      // Border
+      doc.setDrawColor(borderColor[0], borderColor[1], borderColor[2])
+      doc.setLineWidth(0.2)
+      doc.rect(margin, dataY, contentWidth, rowHeight, 'S')
+
+      // "Combined Uncertainty (u(E))" label
+      const uncertaintyLabel = 'Combined Uncertainty (u(E))'
+      const uncertaintyLabelWidth = doc.getTextWidth(uncertaintyLabel)
+      doc.text(uncertaintyLabel, margin + labelColWidth / 2 - uncertaintyLabelWidth / 2, dataY + 5)
+      doc.line(margin + labelColWidth, dataY, margin + labelColWidth, dataY + rowHeight)
+
+      // Uncertainty values
+      loads.forEach((load, index) => {
+        const colX = margin + labelColWidth + index * dataColWidth
+        const value = tableData[load] || ''
+        if (value) {
+          const valueTextWidth = doc.getTextWidth(value)
+          doc.text(value, colX + dataColWidth / 2 - valueTextWidth / 2, dataY + 5)
+        }
+        if (index < loads.length - 1) {
+          doc.line(colX + dataColWidth, dataY, colX + dataColWidth, dataY + rowHeight)
+        }
+      })
+
+      yPos += rowHeight + 12 // Spacing after table
+    }
+
+    // Draw Table 1
+    if (tableOneLoads.length > 0) {
+      drawUncertaintyTable('Loads Applied – Table 1', tableOneLoads, uncertainty.tableOne)
+    }
+
+    // Draw Table 2
+    if (tableTwoLoads.length > 0) {
+      drawUncertaintyTable('Loads Applied – Table 2', tableTwoLoads, uncertainty.tableTwo)
+    }
+
+    // If no uncertainty data, add minimal spacing
+    if (tableOneLoads.length === 0 && tableTwoLoads.length === 0) {
+      yPos += 8
+    }
+
     // ==================== REFERENCE WEIGHTS SECTION ====================
     if (referenceWeights && referenceWeights.length > 0) {
       // Check if we need a new page
