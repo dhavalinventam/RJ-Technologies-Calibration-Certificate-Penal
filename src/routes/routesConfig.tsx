@@ -1,5 +1,7 @@
 import Dashboard from '@/pages/protected/dashboard'
 import Certificates from '@/pages/protected/certificates'
+import CertificateNew from '@/pages/protected/certificate-new'
+import GeneratePDF from '@/pages/protected/certificate-new/GeneratePDF'
 import Customers from '@/pages/protected/customers'
 import ViewCustomer from '@/pages/protected/customers/ViewCustomer'
 import EditCustomer from '@/pages/protected/customers/EditCustomer'
@@ -27,6 +29,8 @@ export const publicRoutes = [
   { path: '/dashboard', element: <Dashboard /> },
   { path: '/certificates', element: <Certificates /> },
   { path: '/certificates/create', element: <CreateCertificate /> },
+  { path: '/certificate-new', element: <CertificateNew /> },
+  { path: '/certificate-new/generate-pdf', element: <GeneratePDF /> },
   { path: '/customers', element: <Customers /> },
   { path: '/customers/:id', element: <ViewCustomer /> },
   { path: '/customers/:id/edit', element: <EditCustomer /> },

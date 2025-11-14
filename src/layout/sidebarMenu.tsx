@@ -6,7 +6,8 @@ import {
   DescriptionOutlined,
   VerifiedOutlined,
   ManageAccountsOutlined,
-  SettingsOutlined
+  SettingsOutlined,
+  ArticleOutlined
 } from '@mui/icons-material'
 
 export const menuItems = [
@@ -44,6 +45,12 @@ export const menuItems = [
     text: 'Certificates',
     icon: <VerifiedOutlined />,
     path: '/certificates',
+    hasArrow: false
+  },
+  {
+    text: 'Certificate New',
+    icon: <ArticleOutlined />,
+    path: '/certificate-new',
     hasArrow: false
   },
   {
