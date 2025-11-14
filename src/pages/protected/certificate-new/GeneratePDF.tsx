@@ -241,7 +241,7 @@ const GeneratePDF = () => {
 
     // ========== DEVICE DETAILS TABLE ==========
     // Create a two-column table for device details (no header row)
-    const deviceDetailsColWidths = [40, 55, 40, 55]
+    const deviceDetailsColWidths = [42, 56, 42, 56]
 
     const deviceDetailsRows = [
       ['Ref. No.', formData.refNo || '', 'Capacity', formData.capacity || ''],
@@ -304,7 +304,7 @@ const GeneratePDF = () => {
     yPos += 3
 
     const calChartHeaders = ['Sr. No.', 'Standard weight in kg/gm', 'Displayed Weight kg/gm', 'Deviation kg/gm']
-    const calChartColWidths = [22, 56, 56, 56]
+    const calChartColWidths = [22, 58, 58, 58]
     const calChartRows = formData.calibrationChart.map(row => [
       row.srNo.toString(),
       row.standardWeight || '',
@@ -333,7 +333,7 @@ const GeneratePDF = () => {
       'Unloading weight kg/gm',
       'Displayed Weight kg/gm'
     ]
-    const linearityColWidths = [22, 42, 42, 42, 42]
+    const linearityColWidths = [22, 43, 43, 44, 44]
     const linearityRows = formData.linearity.map(row => [
       row.srNo.toString(),
       row.loadingWeight || '',
@@ -372,7 +372,7 @@ const GeneratePDF = () => {
     yPos += 3
 
     const eccHeaders = ['Test Point No.', 'Standard weight in kg/gm', 'Displayed Weight kg/gm']
-    const eccColWidths = [22, 47, 47]
+    const eccColWidths = [22, 47, 50]
     const eccRows = formData.eccentricity.map(row => [
       row.testPoint,
       row.standardWeight || '',
@@ -381,7 +381,7 @@ const GeneratePDF = () => {
     const eccEndY = drawTable(eccHeaders, eccRows, yPos, eccColWidths, margin)
 
     const repHeaders = ['No. of Test', 'Displayed Weight kg/gm']
-    const repColWidths = [22, 45]
+    const repColWidths = [22, 50]
     const repRows = formData.repeatability.map(row => [row.testNo, row.displayedWeight || ''])
     const repEndY = drawTable(repHeaders, repRows, yPos, repColWidths, repStartX)
 
@@ -402,7 +402,7 @@ const GeneratePDF = () => {
 
     // Extended Creep Test table with footer information (optimized for single page)
     const creepTableWidth = contentWidth
-    const creepColWidths = [95, 95]
+    const creepColWidths = [95, 101]
     const creepRowHeight = 6
     const creepHeaderHeight = 6
     const creepCellPadding = 2.5
@@ -486,7 +486,7 @@ const GeneratePDF = () => {
     doc.setLineWidth(0.2)
     doc.rect(margin, creepCurrentY, creepColWidths[0], creepRowHeight, 'S')
     doc.rect(margin + creepColWidths[0], creepCurrentY, creepColWidths[1], creepRowHeight, 'S')
-    doc.setFontSize(6)
+    doc.setFontSize(7)
     doc.setFont('helvetica', 'italic')
     doc.setTextColor(100, 100, 100)
     const noteText = 'Note: This Certificate refers to the value obtained at the time of calibration.'
