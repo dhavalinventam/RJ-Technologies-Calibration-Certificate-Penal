@@ -100,7 +100,7 @@ const ForgotPassword = () => {
                 }
               }}
             >
-              Send Instructions
+              Submit
             </Button>
 
             {/* Back to Login Link */}

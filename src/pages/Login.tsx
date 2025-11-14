@@ -1,11 +1,12 @@
 import React, { useState } from 'react'
 import { Box, Typography, TextField, Button, Checkbox } from '@mui/material'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Logo } from '@/assets/png'
 import loginPageImg from '@/assets/jpg/login-page-img.jpg'
 import './Login.css'
 
 const Login = () => {
+  const navigate = useNavigate()
   const [formData, setFormData] = useState({
     email: 'stanley@gmail.com',
     password: '',
@@ -23,6 +24,8 @@ const Login = () => {
     e.preventDefault()
     // Handle login logic here
     console.log('Login submitted', formData)
+    // Redirect to dashboard
+    navigate('/dashboard')
   }
 
   return (

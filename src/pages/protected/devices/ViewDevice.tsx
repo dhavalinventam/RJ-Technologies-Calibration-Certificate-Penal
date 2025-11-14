@@ -202,7 +202,7 @@ const ViewDevice = () => {
             duration: theme.transitions.duration.enteringScreen
           }),
           ml: {
-            xs: sidebarOpen ? '250px' : '60px',
+            xs: sidebarOpen ? '250px' : '0px',
             md: sidebarOpen ? '250px' : '60px'
           },
           mt: {
