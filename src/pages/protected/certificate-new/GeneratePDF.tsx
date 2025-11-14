@@ -181,15 +181,15 @@ const GeneratePDF = () => {
           doc.setLineWidth(0.2)
           doc.rect(xPos, currentY, colWidths[colIdx], rowHeight, 'S')
           doc.setTextColor(0, 0, 0) // Black text
-          const textX = xPos + cellPadding
+          const textX = xPos + colWidths[colIdx] / 2
           const textY = currentY + rowHeight / 2 + 1.5
           const cellText = (cell || '').toString()
           const maxWidth = colWidths[colIdx] - cellPadding * 2
           if (doc.getTextWidth(cellText) > maxWidth) {
             const wrapped = doc.splitTextToSize(cellText, maxWidth)
-            doc.text(wrapped[0], textX, textY)
+            doc.text(wrapped[0], textX, textY, { align: 'center' })
           } else {
-            doc.text(cellText, textX, textY)
+            doc.text(cellText, textX, textY, { align: 'center' })
           }
           xPos += colWidths[colIdx]
         })
@@ -437,11 +437,14 @@ const GeneratePDF = () => {
       doc.setFontSize(8)
       doc.setFont('helvetica', 'normal')
       doc.setTextColor(0, 0, 0)
-      doc.text(row.time || '', margin + creepCellPadding, creepCurrentY + creepRowHeight / 2 + 1.5)
+      doc.text(row.time || '', margin + creepColWidths[0] / 2, creepCurrentY + creepRowHeight / 2 + 1.5, {
+        align: 'center'
+      })
       doc.text(
         row.displayedWeight || '',
-        margin + creepColWidths[0] + creepCellPadding,
-        creepCurrentY + creepRowHeight / 2 + 1.5
+        margin + creepColWidths[0] + creepColWidths[1] / 2,
+        creepCurrentY + creepRowHeight / 2 + 1.5,
+        { align: 'center' }
       )
       creepCurrentY += creepRowHeight
     })
@@ -601,6 +604,7 @@ const GeneratePDF = () => {
                 value={formData.toCompany}
                 onChange={e => handleInputChange('toCompany', e.target.value)}
                 sx={{ mb: 2 }}
+                size='small'
               />
               <TextField
                 fullWidth
@@ -617,90 +621,101 @@ const GeneratePDF = () => {
               <Typography variant='h6' sx={{ mb: 2, fontWeight: 600 }}>
                 General Machine and Calibration Details
               </Typography>
-              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+              <Box
+                sx={{
+                  display: 'grid',
+                  gap: 2,
+                  gridTemplateColumns: {
+                    xs: '1fr', // 1 column on extra-small screens
+                    sm: 'repeat(2, 1fr)', // 2 columns on small screens
+                    md: 'repeat(3, 1fr)', // 4 columns on medium and up
+                    lg: 'repeat(4, 1fr)'
+                  }
+                }}
+              >
                 <TextField
                   label='Ref. No.'
                   value={formData.refNo}
                   onChange={e => handleInputChange('refNo', e.target.value)}
-                  sx={{ flex: 1, minWidth: 200 }}
+                  size='small'
                 />
                 <TextField
                   label='Make'
                   value={formData.make}
                   onChange={e => handleInputChange('make', e.target.value)}
-                  sx={{ flex: 1, minWidth: 200 }}
+                  size='small'
                 />
                 <TextField
                   label='Model'
                   value={formData.model}
                   onChange={e => handleInputChange('model', e.target.value)}
-                  sx={{ flex: 1, minWidth: 200 }}
+                  size='small'
                 />
                 <TextField
                   label='M/C Sr. No.'
                   value={formData.mcSrNo}
                   onChange={e => handleInputChange('mcSrNo', e.target.value)}
-                  sx={{ flex: 1, minWidth: 200 }}
+                  size='small'
                 />
                 <TextField
                   label='ID No.'
                   value={formData.idNo}
                   onChange={e => handleInputChange('idNo', e.target.value)}
-                  sx={{ flex: 1, minWidth: 200 }}
+                  size='small'
                 />
                 <TextField
                   label='Ref. Certificate No.'
                   value={formData.refCertificateNo}
                   onChange={e => handleInputChange('refCertificateNo', e.target.value)}
-                  sx={{ flex: 1, minWidth: 200 }}
+                  size='small'
                 />
                 <TextField
                   label='Ref. Certificate Date'
                   value={formData.refCertificateDate}
                   onChange={e => handleInputChange('refCertificateDate', e.target.value)}
-                  sx={{ flex: 1, minWidth: 200 }}
+                  size='small'
                 />
                 <TextField
                   label='Capacity'
                   value={formData.capacity}
                   onChange={e => handleInputChange('capacity', e.target.value)}
-                  sx={{ flex: 1, minWidth: 200 }}
+                  size='small'
                 />
                 <TextField
                   label='Least Count'
                   value={formData.leastCount}
                   onChange={e => handleInputChange('leastCount', e.target.value)}
-                  sx={{ flex: 1, minWidth: 200 }}
+                  size='small'
                 />
                 <TextField
                   label='Acceptance Criteria'
                   value={formData.acceptanceCriteria}
                   onChange={e => handleInputChange('acceptanceCriteria', e.target.value)}
-                  sx={{ flex: 1, minWidth: 200 }}
+                  size='small'
                 />
                 <TextField
                   label='Type of weight used for Calibration'
                   value={formData.typeOfWeight}
                   onChange={e => handleInputChange('typeOfWeight', e.target.value)}
-                  sx={{ flex: 1, minWidth: 200 }}
+                  size='small'
                 />
                 <TextField
                   label='M/C Location'
                   value={formData.mcLocation}
                   onChange={e => handleInputChange('mcLocation', e.target.value)}
-                  sx={{ flex: 1, minWidth: 200 }}
+                  size='small'
                 />
                 <TextField
                   label='Calibration Done By'
                   value={formData.calibrationDoneBy}
                   onChange={e => handleInputChange('calibrationDoneBy', e.target.value)}
-                  sx={{ flex: 1, minWidth: 200 }}
+                  size='small'
                 />
                 <TextField
                   label='Calibration Date'
                   value={formData.calibrationDate}
                   onChange={e => handleInputChange('calibrationDate', e.target.value)}
-                  sx={{ flex: 1, minWidth: 200 }}
+                  size='small'
                 />
               </Box>
             </Box>
@@ -950,18 +965,21 @@ const GeneratePDF = () => {
                 value={formData.status}
                 onChange={e => handleInputChange('status', e.target.value)}
                 sx={{ mb: 2 }}
+                size='small'
               />
               <TextField
                 label='Next Calibration Due Date'
                 value={formData.nextCalibrationDueDate}
                 onChange={e => handleInputChange('nextCalibrationDueDate', e.target.value)}
                 sx={{ mr: 2, minWidth: 250 }}
+                size='small'
               />
               <TextField
                 label='Calibrated By'
                 value={formData.calibratedBy}
                 onChange={e => handleInputChange('calibratedBy', e.target.value)}
                 sx={{ minWidth: 250 }}
+                size='small'
               />
             </Box>
           </Paper>
