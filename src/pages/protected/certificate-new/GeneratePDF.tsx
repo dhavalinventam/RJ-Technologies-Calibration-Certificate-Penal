@@ -133,24 +133,13 @@ const GeneratePDF = () => {
   const generatePDF = useCallback(() => {
     const doc = new jsPDF()
     const pageWidth = doc.internal.pageSize.getWidth()
-    const pageHeight = doc.internal.pageSize.getHeight()
-    const margin = 10 // Professional margin matching CreateCertificate
+    const margin = 7 // Optimized margin for single page
     const contentWidth = pageWidth - margin * 2
     let yPos = margin
 
     doc.setFont('helvetica')
 
-    // Helper function to check and add new page if needed
-    const checkPageBreak = (requiredHeight: number) => {
-      if (yPos + requiredHeight > pageHeight - margin) {
-        doc.addPage()
-        yPos = margin
-        return true
-      }
-      return false
-    }
-
-    // Professional table drawing function matching CreateCertificate style with page break handling
+    // Optimized table drawing function for single page layout
     const drawTable = (
       headers: string[],
       rows: any[][],
@@ -158,20 +147,12 @@ const GeneratePDF = () => {
       colWidths: number[],
       startX: number = margin
     ) => {
-      const rowHeight = 6.5 // Professional row height
-      const headerHeight = 7 // Professional header height
+      const rowHeight = 6 // Increased row height for better spacing
+      const headerHeight = 6 // Increased header height for better spacing
       const borderColor = [180, 180, 180] // Gray border for headers
       const cellBorderColor = [200, 200, 200] // Lighter gray for cells
-      const cellPadding = 3 // Professional padding
+      const cellPadding = 2.5 // Slightly increased padding
       let currentY = startY
-
-      // Check if table will fit on current page
-      const totalTableHeight = headerHeight + rows.length * rowHeight
-      if (currentY + totalTableHeight > pageHeight - margin) {
-        doc.addPage()
-        currentY = margin
-        startY = margin
-      }
 
       // Draw header with borders only (no background color) for clear visibility
       doc.setDrawColor(borderColor[0], borderColor[1], borderColor[2])
@@ -180,7 +161,7 @@ const GeneratePDF = () => {
       headers.forEach((header, idx) => {
         // Draw border only, no fill - for clear heading visibility
         doc.rect(xPos, currentY, colWidths[idx], headerHeight, 'S')
-        doc.setFontSize(8.5) // Professional font size
+        doc.setFontSize(8) // Increased font size
         doc.setFont('helvetica', 'bold')
         doc.setTextColor(0, 0, 0) // Black text for clear visibility
         const textX = xPos + colWidths[idx] / 2
@@ -192,33 +173,13 @@ const GeneratePDF = () => {
 
       // Draw rows with borders
       doc.setFont('helvetica', 'normal')
-      doc.setFontSize(8.5) // Professional font size
+      doc.setFontSize(8) // Increased font size
       rows.forEach(row => {
-        // Check if we need a new page for this row
-        if (currentY + rowHeight > pageHeight - margin) {
-          doc.addPage()
-          currentY = margin
-          // Redraw header on new page
-          xPos = startX
-          headers.forEach((header, idx) => {
-            doc.rect(xPos, currentY, colWidths[idx], headerHeight, 'S')
-            doc.setFontSize(8.5)
-            doc.setFont('helvetica', 'bold')
-            doc.setTextColor(0, 0, 0)
-            const textX = xPos + colWidths[idx] / 2
-            const textY = currentY + headerHeight / 2 + 1.5
-            doc.text(header, textX, textY, { align: 'center' })
-            xPos += colWidths[idx]
-          })
-          currentY += headerHeight
-        }
-
         xPos = startX
         row.forEach((cell, colIdx) => {
-          doc.setFillColor(255, 255, 255) // White background
           doc.setDrawColor(cellBorderColor[0], cellBorderColor[1], cellBorderColor[2])
           doc.setLineWidth(0.2)
-          doc.rect(xPos, currentY, colWidths[colIdx], rowHeight, 'FD')
+          doc.rect(xPos, currentY, colWidths[colIdx], rowHeight, 'S')
           doc.setTextColor(0, 0, 0) // Black text
           const textX = xPos + cellPadding
           const textY = currentY + rowHeight / 2 + 1.5
@@ -240,48 +201,45 @@ const GeneratePDF = () => {
 
     // ========== HEADER SECTION ==========
     // "To," block
-    doc.setFontSize(8.5)
+    doc.setFontSize(8)
     doc.setFont('helvetica', 'normal')
     doc.setTextColor(0, 0, 0)
     doc.text('To,', margin, yPos)
     yPos += 4
 
     // Company Name
-    doc.setFontSize(9)
+    doc.setFontSize(8.5)
     doc.setFont('helvetica', 'bold')
     doc.setTextColor(0, 0, 0)
     doc.text(formData.toCompany, margin, yPos)
     yPos += 4
 
     // Address
-    doc.setFontSize(8.5)
+    doc.setFontSize(8)
     doc.setFont('helvetica', 'normal')
     doc.setTextColor(80, 80, 80)
     const addressLines = doc.splitTextToSize(formData.toAddress, contentWidth)
     addressLines.forEach((line: string) => {
       doc.text(line, margin, yPos)
-      yPos += 3.5
+      yPos += 5
     })
     yPos += 5
 
     // Main Title: CALIBRATION CERTIFICATE (centered, bold)
-    doc.setFontSize(12)
+    doc.setFontSize(11)
     doc.setFont('helvetica', 'bold')
     doc.setTextColor(0, 0, 0)
     const title = 'CALIBRATION CERTIFICATE'
     const titleWidth = doc.getTextWidth(title)
     doc.text(title, (pageWidth - titleWidth) / 2, yPos)
-    yPos += 2.5
+    yPos += 2
     // Underline
-    doc.setLineWidth(0.4)
+    doc.setLineWidth(0.3)
     doc.setDrawColor(0, 0, 0)
     doc.line((pageWidth - titleWidth) / 2, yPos, (pageWidth - titleWidth) / 2 + titleWidth, yPos)
-    yPos += 5
+    yPos += 3
 
     // ========== DEVICE DETAILS TABLE ==========
-    // Check page break before section
-    checkPageBreak(50)
-
     // Create a two-column table for device details (no header row)
     const deviceDetailsColWidths = [40, 55, 40, 55]
 
@@ -300,32 +258,25 @@ const GeneratePDF = () => {
       ['Ref. Certificate Date', formData.refCertificateDate || '', 'Calibration Date', formData.calibrationDate || '']
     ]
 
-    // Draw table without headers
-    const rowHeight = 6.5
-    const cellBorderColor = [200, 200, 200]
-    const cellPadding = 3
+    // Draw table without headers (optimized for single page)
+    const deviceRowHeight = 6
+    const deviceCellBorderColor = [200, 200, 200]
+    const deviceCellPadding = 2.5
     let currentY = yPos
 
     deviceDetailsRows.forEach(row => {
-      // Check if we need a new page for this row
-      if (currentY + rowHeight > pageHeight - margin) {
-        doc.addPage()
-        currentY = margin
-      }
-
       let xPos = margin
       row.forEach((cell, colIdx) => {
-        doc.setFillColor(255, 255, 255) // White background
-        doc.setDrawColor(cellBorderColor[0], cellBorderColor[1], cellBorderColor[2])
+        doc.setDrawColor(deviceCellBorderColor[0], deviceCellBorderColor[1], deviceCellBorderColor[2])
         doc.setLineWidth(0.2)
-        doc.rect(xPos, currentY, deviceDetailsColWidths[colIdx], rowHeight, 'FD')
+        doc.rect(xPos, currentY, deviceDetailsColWidths[colIdx], deviceRowHeight, 'S')
         doc.setTextColor(0, 0, 0) // Black text
-        doc.setFontSize(8.5)
+        doc.setFontSize(8)
         doc.setFont('helvetica', 'normal')
-        const textX = xPos + cellPadding
-        const textY = currentY + rowHeight / 2 + 1.5
+        const textX = xPos + deviceCellPadding
+        const textY = currentY + deviceRowHeight / 2 + 1.5
         const cellText = (cell || '').toString()
-        const maxWidth = deviceDetailsColWidths[colIdx] - cellPadding * 2
+        const maxWidth = deviceDetailsColWidths[colIdx] - deviceCellPadding * 2
         if (doc.getTextWidth(cellText) > maxWidth) {
           const wrapped = doc.splitTextToSize(cellText, maxWidth)
           doc.text(wrapped[0], textX, textY)
@@ -334,26 +285,23 @@ const GeneratePDF = () => {
         }
         xPos += deviceDetailsColWidths[colIdx]
       })
-      currentY += rowHeight
+      currentY += deviceRowHeight
     })
 
     yPos = currentY + 3
 
     // ========== CALIBRATION CHART ==========
-    // Check page break before section
-    checkPageBreak(60)
-
     // Add top space before title
-    yPos += 4
+    yPos += 3
 
     // Section heading (centered)
-    doc.setFontSize(9.5)
+    doc.setFontSize(9)
     doc.setFont('helvetica', 'bold')
     doc.setTextColor(0, 0, 0)
     const calChartTitle = 'Calibration Chart'
     const calChartTitleWidth = doc.getTextWidth(calChartTitle)
     doc.text(calChartTitle, (pageWidth - calChartTitleWidth) / 2, yPos)
-    yPos += 4
+    yPos += 3
 
     const calChartHeaders = ['Sr. No.', 'Standard weight in kg/gm', 'Displayed Weight kg/gm', 'Deviation kg/gm']
     const calChartColWidths = [22, 56, 56, 56]
@@ -366,20 +314,17 @@ const GeneratePDF = () => {
     yPos = drawTable(calChartHeaders, calChartRows, yPos, calChartColWidths) + 3
 
     // ========== LINEARITY ==========
-    // Check page break before section
-    checkPageBreak(60)
-
     // Add top space before title
-    yPos += 4
+    yPos += 3
 
     // Section heading (centered)
-    doc.setFontSize(9.5)
+    doc.setFontSize(9)
     doc.setFont('helvetica', 'bold')
     doc.setTextColor(0, 0, 0)
     const linearityTitle = 'Linearity'
     const linearityTitleWidth = doc.getTextWidth(linearityTitle)
     doc.text(linearityTitle, (pageWidth - linearityTitleWidth) / 2, yPos)
-    yPos += 4
+    yPos += 3
 
     const linearityHeaders = [
       'Sr. No.',
@@ -399,11 +344,8 @@ const GeneratePDF = () => {
     yPos = drawTable(linearityHeaders, linearityRows, yPos, linearityColWidths) + 3
 
     // ========== ECCENTRICITY AND REPEATABILITY (SIDE BY SIDE) ==========
-    // Check page break before section
-    checkPageBreak(60)
-
     // Add top space before titles
-    yPos += 4
+    yPos += 3
 
     const eccTableWidth = 116 // Sum of column widths (22 + 47 + 47)
     const repTableWidth = 70 // Sum of column widths (22 + 48)
@@ -412,20 +354,8 @@ const GeneratePDF = () => {
     // Calculate table positions
     const repStartX = margin + eccTableWidth + gapBetweenTables
 
-    // Check if tables will fit on current page
-    const eccTableHeight = 7 + formData.eccentricity.length * 6.5
-    const repTableHeight = 7 + formData.repeatability.length * 6.5
-    const maxTableHeight = Math.max(eccTableHeight, repTableHeight)
-
-    if (yPos + maxTableHeight > pageHeight - margin) {
-      doc.addPage()
-      yPos = margin
-      // Add top space on new page
-      yPos += 4
-    }
-
     // Eccentricity (left side) - Section heading (centered above its table)
-    doc.setFontSize(9.5)
+    doc.setFontSize(9)
     doc.setFont('helvetica', 'bold')
     doc.setTextColor(0, 0, 0)
     const eccTitle = 'Eccentricity'
@@ -439,7 +369,7 @@ const GeneratePDF = () => {
     const repTableCenterX = repStartX + repTableWidth / 2
     doc.text(repTitle, repTableCenterX - repTitleWidth / 2, yPos)
 
-    yPos += 4
+    yPos += 3
 
     const eccHeaders = ['Test Point No.', 'Standard weight in kg/gm', 'Displayed Weight kg/gm']
     const eccColWidths = [22, 47, 47]
@@ -458,50 +388,34 @@ const GeneratePDF = () => {
     yPos = Math.max(eccEndY, repEndY) + 3
 
     // ========== CREEP TEST (Extended Table with Footer) ==========
-    // Check page break before section
-    checkPageBreak(80)
-
     // Add top space before title
-    yPos += 4
+    yPos += 3
 
     // Section heading (centered)
-    doc.setFontSize(9.5)
+    doc.setFontSize(9)
     doc.setFont('helvetica', 'bold')
     doc.setTextColor(0, 0, 0)
     const creepTitle = 'Creep Test'
     const creepTitleWidth = doc.getTextWidth(creepTitle)
     doc.text(creepTitle, (pageWidth - creepTitleWidth) / 2, yPos)
-    yPos += 4
+    yPos += 3
 
-    // Extended Creep Test table with footer information
+    // Extended Creep Test table with footer information (optimized for single page)
     const creepTableWidth = contentWidth
     const creepColWidths = [95, 95]
-    const creepRowHeight = 6.5
-    const creepHeaderHeight = 7
-    const creepCellPadding = 3
+    const creepRowHeight = 6
+    const creepHeaderHeight = 6
+    const creepCellPadding = 2.5
     const creepBorderColor = [180, 180, 180]
     const creepCellBorderColor = [200, 200, 200]
     let creepCurrentY = yPos
 
-    // Check if table will fit on current page
-    const estimatedTableHeight = creepHeaderHeight + formData.creepTest.length * creepRowHeight + 4 * creepRowHeight // time rows + footer rows
-    if (creepCurrentY + estimatedTableHeight > pageHeight - margin) {
-      doc.addPage()
-      creepCurrentY = margin
-      // Redraw title on new page
-      doc.setFontSize(9.5)
-      doc.setFont('helvetica', 'bold')
-      doc.setTextColor(0, 0, 0)
-      doc.text(creepTitle, (pageWidth - creepTitleWidth) / 2, creepCurrentY)
-      creepCurrentY += 4
-    }
-
     // Draw header row (no background color, borders only)
     doc.setDrawColor(creepBorderColor[0], creepBorderColor[1], creepBorderColor[2])
-    doc.setLineWidth(0.3)
+    doc.setLineWidth(0.2)
     doc.rect(margin, creepCurrentY, creepColWidths[0], creepHeaderHeight, 'S')
     doc.rect(margin + creepColWidths[0], creepCurrentY, creepColWidths[1], creepHeaderHeight, 'S')
-    doc.setFontSize(8.5)
+    doc.setFontSize(8)
     doc.setFont('helvetica', 'bold')
     doc.setTextColor(0, 0, 0)
     doc.text('Time', margin + creepColWidths[0] / 2, creepCurrentY + creepHeaderHeight / 2 + 1.5, { align: 'center' })
@@ -515,17 +429,12 @@ const GeneratePDF = () => {
 
     // Draw time data rows (no background color, borders only)
     formData.creepTest.forEach(row => {
-      if (creepCurrentY + creepRowHeight > pageHeight - margin) {
-        doc.addPage()
-        creepCurrentY = margin
-      }
-
       doc.setDrawColor(creepCellBorderColor[0], creepCellBorderColor[1], creepCellBorderColor[2])
       doc.setLineWidth(0.2)
       doc.rect(margin, creepCurrentY, creepColWidths[0], creepRowHeight, 'S')
       doc.rect(margin + creepColWidths[0], creepCurrentY, creepColWidths[1], creepRowHeight, 'S')
 
-      doc.setFontSize(8.5)
+      doc.setFontSize(8)
       doc.setFont('helvetica', 'normal')
       doc.setTextColor(0, 0, 0)
       doc.text(row.time || '', margin + creepCellPadding, creepCurrentY + creepRowHeight / 2 + 1.5)
@@ -538,10 +447,6 @@ const GeneratePDF = () => {
     })
 
     // Draw Remarks row (spans both columns, no background color, borders only)
-    if (creepCurrentY + creepRowHeight > pageHeight - margin) {
-      doc.addPage()
-      creepCurrentY = margin
-    }
     doc.setDrawColor(creepCellBorderColor[0], creepCellBorderColor[1], creepCellBorderColor[2])
     doc.setLineWidth(0.2)
     doc.rect(margin, creepCurrentY, creepTableWidth, creepRowHeight, 'S')
@@ -553,22 +458,14 @@ const GeneratePDF = () => {
     doc.text(remarksLines[0], margin + creepCellPadding, creepCurrentY + creepRowHeight / 2 + 1.5)
     if (remarksLines.length > 1) {
       creepCurrentY += creepRowHeight
-      if (creepCurrentY + creepRowHeight > pageHeight - margin) {
-        doc.addPage()
-        creepCurrentY = margin
-      }
       doc.rect(margin, creepCurrentY, creepTableWidth, creepRowHeight, 'S')
       doc.setFont('helvetica', 'normal')
-      doc.setFontSize(7)
+      doc.setFontSize(6.5)
       doc.text(remarksLines[1], margin + creepCellPadding, creepCurrentY + creepRowHeight / 2 + 1.5)
     }
     creepCurrentY += creepRowHeight
 
     // Draw Status and Next Calibration Due Date row (no background color, borders only)
-    if (creepCurrentY + creepRowHeight > pageHeight - margin) {
-      doc.addPage()
-      creepCurrentY = margin
-    }
     doc.setDrawColor(creepCellBorderColor[0], creepCellBorderColor[1], creepCellBorderColor[2])
     doc.setLineWidth(0.2)
     doc.rect(margin, creepCurrentY, creepColWidths[0], creepRowHeight, 'S')
@@ -585,15 +482,11 @@ const GeneratePDF = () => {
     creepCurrentY += creepRowHeight
 
     // Draw Note and Calibrated By row (no background color, borders only)
-    if (creepCurrentY + creepRowHeight > pageHeight - margin) {
-      doc.addPage()
-      creepCurrentY = margin
-    }
     doc.setDrawColor(creepCellBorderColor[0], creepCellBorderColor[1], creepCellBorderColor[2])
     doc.setLineWidth(0.2)
     doc.rect(margin, creepCurrentY, creepColWidths[0], creepRowHeight, 'S')
     doc.rect(margin + creepColWidths[0], creepCurrentY, creepColWidths[1], creepRowHeight, 'S')
-    doc.setFontSize(6.5)
+    doc.setFontSize(6)
     doc.setFont('helvetica', 'italic')
     doc.setTextColor(100, 100, 100)
     const noteText = 'Note: This Certificate refers to the value obtained at the time of calibration.'
@@ -610,6 +503,9 @@ const GeneratePDF = () => {
     creepCurrentY += creepRowHeight
 
     yPos = creepCurrentY
+
+    // Add bottom space
+    yPos += 5
 
     // Save PDF
     doc.save('calibration-certificate.pdf')
