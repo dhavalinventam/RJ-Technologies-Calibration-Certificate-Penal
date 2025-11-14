@@ -140,13 +140,6 @@ const GeneratePDF = () => {
 
     doc.setFont('helvetica')
 
-    // Helper function to draw section divider
-    const drawSectionDivider = (y: number) => {
-      doc.setDrawColor(200, 200, 200)
-      doc.setLineWidth(0.3)
-      doc.line(margin, y, pageWidth - margin, y)
-    }
-
     // Helper function to check and add new page if needed
     const checkPageBreak = (requiredHeight: number) => {
       if (yPos + requiredHeight > pageHeight - margin) {
@@ -464,9 +457,9 @@ const GeneratePDF = () => {
 
     yPos = Math.max(eccEndY, repEndY) + 3
 
-    // ========== CREEP TEST ==========
+    // ========== CREEP TEST (Extended Table with Footer) ==========
     // Check page break before section
-    checkPageBreak(50)
+    checkPageBreak(80)
 
     // Add top space before title
     yPos += 4
@@ -480,86 +473,143 @@ const GeneratePDF = () => {
     doc.text(creepTitle, (pageWidth - creepTitleWidth) / 2, yPos)
     yPos += 4
 
-    const creepHeaders = ['Time', 'Displayed Weight kg/gm']
+    // Extended Creep Test table with footer information
+    const creepTableWidth = contentWidth
     const creepColWidths = [95, 95]
-    const creepRows = formData.creepTest.map(row => [row.time, row.displayedWeight || ''])
-    yPos = drawTable(creepHeaders, creepRows, yPos, creepColWidths) + 3
+    const creepRowHeight = 6.5
+    const creepHeaderHeight = 7
+    const creepCellPadding = 3
+    const creepBorderColor = [180, 180, 180]
+    const creepCellBorderColor = [200, 200, 200]
+    let creepCurrentY = yPos
 
-    // ========== REMARKS ==========
-    // Check page break before section
-    checkPageBreak(40)
+    // Check if table will fit on current page
+    const estimatedTableHeight = creepHeaderHeight + formData.creepTest.length * creepRowHeight + 4 * creepRowHeight // time rows + footer rows
+    if (creepCurrentY + estimatedTableHeight > pageHeight - margin) {
+      doc.addPage()
+      creepCurrentY = margin
+      // Redraw title on new page
+      doc.setFontSize(9.5)
+      doc.setFont('helvetica', 'bold')
+      doc.setTextColor(0, 0, 0)
+      doc.text(creepTitle, (pageWidth - creepTitleWidth) / 2, creepCurrentY)
+      creepCurrentY += 4
+    }
 
-    doc.setFontSize(7.5)
+    // Draw header row (no background color, borders only)
+    doc.setDrawColor(creepBorderColor[0], creepBorderColor[1], creepBorderColor[2])
+    doc.setLineWidth(0.3)
+    doc.rect(margin, creepCurrentY, creepColWidths[0], creepHeaderHeight, 'S')
+    doc.rect(margin + creepColWidths[0], creepCurrentY, creepColWidths[1], creepHeaderHeight, 'S')
+    doc.setFontSize(8.5)
     doc.setFont('helvetica', 'bold')
     doc.setTextColor(0, 0, 0)
-    doc.text('Remarks:', margin, yPos)
-    yPos += 3.5
-    doc.setFontSize(7)
-    doc.setFont('helvetica', 'normal')
-    const remarksText = formData.remarks
-    const remarksLines = doc.splitTextToSize(remarksText, contentWidth)
-    remarksLines.forEach((line: string) => {
-      // Check page break for each line
-      if (yPos > pageHeight - 15) {
+    doc.text('Time', margin + creepColWidths[0] / 2, creepCurrentY + creepHeaderHeight / 2 + 1.5, { align: 'center' })
+    doc.text(
+      'Displayed Weight kg/gm',
+      margin + creepColWidths[0] + creepColWidths[1] / 2,
+      creepCurrentY + creepHeaderHeight / 2 + 1.5,
+      { align: 'center' }
+    )
+    creepCurrentY += creepHeaderHeight
+
+    // Draw time data rows (no background color, borders only)
+    formData.creepTest.forEach(row => {
+      if (creepCurrentY + creepRowHeight > pageHeight - margin) {
         doc.addPage()
-        yPos = margin
+        creepCurrentY = margin
       }
-      doc.text(line, margin, yPos)
-      yPos += 3.2
+
+      doc.setDrawColor(creepCellBorderColor[0], creepCellBorderColor[1], creepCellBorderColor[2])
+      doc.setLineWidth(0.2)
+      doc.rect(margin, creepCurrentY, creepColWidths[0], creepRowHeight, 'S')
+      doc.rect(margin + creepColWidths[0], creepCurrentY, creepColWidths[1], creepRowHeight, 'S')
+
+      doc.setFontSize(8.5)
+      doc.setFont('helvetica', 'normal')
+      doc.setTextColor(0, 0, 0)
+      doc.text(row.time || '', margin + creepCellPadding, creepCurrentY + creepRowHeight / 2 + 1.5)
+      doc.text(
+        row.displayedWeight || '',
+        margin + creepColWidths[0] + creepCellPadding,
+        creepCurrentY + creepRowHeight / 2 + 1.5
+      )
+      creepCurrentY += creepRowHeight
     })
-    yPos += 2
 
-    // ========== FOOTER SECTION ==========
-    // Check page break before footer
-    checkPageBreak(30)
-
-    drawSectionDivider(yPos)
-    yPos += 3
-
-    // Status
+    // Draw Remarks row (spans both columns, no background color, borders only)
+    if (creepCurrentY + creepRowHeight > pageHeight - margin) {
+      doc.addPage()
+      creepCurrentY = margin
+    }
+    doc.setDrawColor(creepCellBorderColor[0], creepCellBorderColor[1], creepCellBorderColor[2])
+    doc.setLineWidth(0.2)
+    doc.rect(margin, creepCurrentY, creepTableWidth, creepRowHeight, 'S')
     doc.setFontSize(7.5)
     doc.setFont('helvetica', 'bold')
     doc.setTextColor(0, 0, 0)
-    doc.text('Status:', margin, yPos)
-    doc.setFont('helvetica', 'normal')
-    doc.text(` ${formData.status}`, margin + 15, yPos)
-    yPos += 4
-
-    // Next Calibration Due Date
-    if (yPos > pageHeight - 15) {
-      doc.addPage()
-      yPos = margin
+    const remarksText = `Remarks: ${formData.remarks}`
+    const remarksLines = doc.splitTextToSize(remarksText, creepTableWidth - creepCellPadding * 2)
+    doc.text(remarksLines[0], margin + creepCellPadding, creepCurrentY + creepRowHeight / 2 + 1.5)
+    if (remarksLines.length > 1) {
+      creepCurrentY += creepRowHeight
+      if (creepCurrentY + creepRowHeight > pageHeight - margin) {
+        doc.addPage()
+        creepCurrentY = margin
+      }
+      doc.rect(margin, creepCurrentY, creepTableWidth, creepRowHeight, 'S')
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(7)
+      doc.text(remarksLines[1], margin + creepCellPadding, creepCurrentY + creepRowHeight / 2 + 1.5)
     }
+    creepCurrentY += creepRowHeight
+
+    // Draw Status and Next Calibration Due Date row (no background color, borders only)
+    if (creepCurrentY + creepRowHeight > pageHeight - margin) {
+      doc.addPage()
+      creepCurrentY = margin
+    }
+    doc.setDrawColor(creepCellBorderColor[0], creepCellBorderColor[1], creepCellBorderColor[2])
+    doc.setLineWidth(0.2)
+    doc.rect(margin, creepCurrentY, creepColWidths[0], creepRowHeight, 'S')
+    doc.rect(margin + creepColWidths[0], creepCurrentY, creepColWidths[1], creepRowHeight, 'S')
     doc.setFontSize(7.5)
     doc.setFont('helvetica', 'bold')
-    doc.text('Next Calibration Due Date:', margin, yPos)
-    doc.setFont('helvetica', 'normal')
-    doc.text(formData.nextCalibrationDueDate || '_________________', margin + 55, yPos)
-    yPos += 4
+    doc.setTextColor(0, 0, 0)
+    doc.text(`Status: ${formData.status}`, margin + creepCellPadding, creepCurrentY + creepRowHeight / 2 + 1.5)
+    doc.text(
+      `Next Calibration Due Date: ${formData.nextCalibrationDueDate || ''}`,
+      margin + creepColWidths[0] + creepCellPadding,
+      creepCurrentY + creepRowHeight / 2 + 1.5
+    )
+    creepCurrentY += creepRowHeight
 
-    // Note
-    if (yPos > pageHeight - 15) {
+    // Draw Note and Calibrated By row (no background color, borders only)
+    if (creepCurrentY + creepRowHeight > pageHeight - margin) {
       doc.addPage()
-      yPos = margin
+      creepCurrentY = margin
     }
+    doc.setDrawColor(creepCellBorderColor[0], creepCellBorderColor[1], creepCellBorderColor[2])
+    doc.setLineWidth(0.2)
+    doc.rect(margin, creepCurrentY, creepColWidths[0], creepRowHeight, 'S')
+    doc.rect(margin + creepColWidths[0], creepCurrentY, creepColWidths[1], creepRowHeight, 'S')
     doc.setFontSize(6.5)
     doc.setFont('helvetica', 'italic')
     doc.setTextColor(100, 100, 100)
     const noteText = 'Note: This Certificate refers to the value obtained at the time of calibration.'
-    doc.text(noteText, margin, yPos)
-    yPos += 4
-
-    // Calibrated By
-    if (yPos > pageHeight - 15) {
-      doc.addPage()
-      yPos = margin
-    }
+    const noteLines = doc.splitTextToSize(noteText, creepColWidths[0] - creepCellPadding * 2)
+    doc.text(noteLines[0], margin + creepCellPadding, creepCurrentY + creepRowHeight / 2 + 1.5)
     doc.setFontSize(7.5)
     doc.setFont('helvetica', 'bold')
     doc.setTextColor(0, 0, 0)
-    doc.text('Calibrated By:', margin, yPos)
-    doc.setFont('helvetica', 'normal')
-    doc.text(formData.calibratedBy || '_________________', margin + 35, yPos)
+    doc.text(
+      `Calibrated By: ${formData.calibratedBy || ''}`,
+      margin + creepColWidths[0] + creepCellPadding,
+      creepCurrentY + creepRowHeight / 2 + 1.5
+    )
+    creepCurrentY += creepRowHeight
+
+    yPos = creepCurrentY
 
     // Save PDF
     doc.save('calibration-certificate.pdf')
